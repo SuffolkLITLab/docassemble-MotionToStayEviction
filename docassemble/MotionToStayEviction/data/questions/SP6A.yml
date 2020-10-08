@@ -10,6 +10,7 @@ mandatory: True
 code: |
   user_role = "defendant"
   basic_questions_intro_screen
+  info_screen
   users[0].name.first
   users[0].address.address
   users[0].mobile_number
@@ -42,6 +43,25 @@ code: |
   basic_questions_signature_flow
   users[0].signature
   download
+--- 
+id: info screen
+question: |
+  Motion to Stay Eviction
+subquestion: |
+  In civil cases, an application for a stay of the judgment or order of a lower court pending appeal, or for approval of a bond under Rule 6 (a)(2), or for an order suspending, modifying, restoring, or granting an injunction during the pendency of an appeal must ordinarily be made in the first instance in the lower court. 
+  
+  A motion for such relief may be made to the appellate court or to a single justice, but the motion shall show that application to the lower court for the relief sought is not practicable, or that the lower court has denied an application, or has failed to afford the relief which the applicant requested, with the reasons given by the lower court for its action. 
+  
+  The motion shall also show the reasons for the relief requested and the facts relied upon, and if the facts are subject to dispute, the motion shall be supported by affidavits or other statements signed under the penalties of perjury or copies thereof. 
+  
+  With the motion shall be filed such parts of the record as are relevant. 
+  
+  Reasonable notice of the motion shall be given to all parties. 
+  
+  The motion shall be filed with the clerk of the appellate court to which the appeal is being taken. 
+  
+  If the court is the Supreme Judicial Court, the motion shall be filed with the clerk of the Supreme Judicial Court for Suffolk County.
+continue button field: info_screen
 --- 
 id: housing court division 
 question: |
@@ -107,7 +127,7 @@ fields:
 ---
 id: date of housing court judgment
 question: |
-  Provide the date on which the **Housing Court** entered judgment against you.
+  Provide the date the **Housing Court** entered judgment against you.
 fields:
   - Date: housing_court_judgment_date
     datatype: date  
@@ -120,16 +140,20 @@ fields:
 ---
 id: date notice of appeal filed
 question: |  
-  Provide the date that you filed a notice of appeal in the **Housing Court**.
+  On what date did you file a notice of appeal in the **Housing Court**?
 subquestion: |
-  The single justice may only grant a stay of your eviction if there is a pending appeal.  To have a pending appeal, you must file a timely notice of appeal in the Housing Court.  You may appeal a judgment or an order granting or denying post-judgment relief, such as a motion to remove a default, to grant a post-judgment stay, or for the issuance of an execution because the plaintiff alleges that you violated an agreement for judgment.
+  The single justice may only grant a stay of your eviction if there is a pending appeal. 
+  
+  To have a pending appeal, you must file a timely notice of appeal in the Housing Court. 
+  
+  You may appeal a judgment or an order granting or denying post-judgment relief, such as a motion to remove a default, to grant a post-judgment stay, or for the issuance of an execution because the plaintiff alleges that you violated an agreement for judgment.
 fields:
   - Date: date_notice_of_appeal_filed
     datatype: date  
 ---
 id: date housing court denied motion to stay
 question: |  
-  Select the date that the **Housing Court** judge denied your motion to stay in the Housing Court.
+  On what date did the **Housing Court** judge deny your motion to stay in the Housing Court?
 subquestion: |
   Before seeking a stay of your eviction from a single justice, the rules of appellate procedure require you to first seek a stay from the Housing Court.
 fields:
@@ -192,7 +216,7 @@ fields:
 ---
 id: service date
 question: |
-  Select the date on which you have made or will make service.
+  Select the date you have made or will make service.
 fields:
   - Date: service_date
     datatype: date  
@@ -323,17 +347,22 @@ fields:
 id: record appendix
 question: |
   You are required to submit copies of relevant Housing Court documents. 
-  
+subquestion: |  
   Examples include: 
+  
     * the Housing Court's docket 
-    * the complaint
-    * your answer
-    * the judgment
-    * filings related to your motion to stay in the Housing Court.  
     
-  **If you entered into an agreement for judgment also include a copy of the agreement for judgment.**
+    * the complaint
+    
+    * your answer
+    
+    * the judgment
+    
+    * filings related to your motion to stay in the Housing Court.
+    
+  **If you entered into an agreement for judgment, include a copy of the agreement for judgment.**
 fields:
-  - Files: record_appendix
+  - no label: record_appendix
     datatype: file
     required: False
 ---
