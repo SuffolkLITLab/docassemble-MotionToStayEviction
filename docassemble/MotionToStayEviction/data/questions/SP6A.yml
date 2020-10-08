@@ -38,6 +38,7 @@ code: |
   method_of_service
   parties_to_be_served
   service_date
+  record_appendix
   basic_questions_signature_flow
   users[0].signature
   download
@@ -165,7 +166,11 @@ id: method of service
 question: |
   Select the **method of delivery** that you have used or will use to provide the required copies of the motion, memorandum and supporting materials to the plaintiffs' attorney(s).
 subquestion: |
-  You are required to provide a copy of this motion, memorandum and supporting materials on the plaintiffs' attorney(s).  If the plaintiff does not have an attorney, you are required to serve a copy on the self-represented plaintiff.  You should not provide a copy of your affidavit of indigency, if any, to anyone except the Appeals Court.  
+  **You are required to provide a copy of this motion, memorandum and supporting materials on the plaintiffs' attorney(s).** 
+  
+  If the plaintiff does not have an attorney, you are required to serve a copy on the self-represented plaintiff.  
+  
+  You should not provide a copy of your affidavit of indigency, if any, to anyone except the Appeals Court.  
 fields: 
   - no label: method_of_service
     input type: radio
@@ -196,7 +201,19 @@ id: procedural history
 question: |
   Describe the **procedural history** of your case.
 subquestion: |
-   The procedural history is a list of the court proceedings in the Housing Court given in chronological order.  It is especially important to describe whether judgment entered against you after a default, on an order for summary judgment, after a trial or pursuant to an agreement for judgment.  Include a list of any motions that you or the plaintiff filed after judgment entered.
+  The procedural history is a list of the court proceedings in the Housing Court given in chronological order.  
+   
+  It is especially important to describe whether the judgment was:
+  
+    * entered against you after a default, 
+     
+    * on an order for summary judgment, 
+     
+    * after a trial, **or**
+     
+    * pursuant to an agreement for judgment.  
+     
+  Include a list of any motions that you or the plaintiff filed after the judgment was entered.
 fields:
   - no label: procedural_history
     input type: area 
@@ -206,7 +223,9 @@ id: statement of facts
 question: |
   Describe the **factual history** of your tenancy or former ownership of the property and how it ended.  
 subquestion: |
-   Include any other relevant factual history that the single justice should know in deciding your motion.  For example, if you filed a complaint with your local inspectional services department, describe the complaint including the date it was made and the resolution after the inspection.
+  Include any other relevant factual history that the single justice should know in deciding your motion.  
+   
+  For example, if you filed a complaint with your local inspectional services department, describe the complaint including the date it was made and the resolution after the inspection.
 fields:
   - no label: statement_of_facts
     input type: area 
@@ -216,7 +235,15 @@ id: likelihood of success
 question: |
   Describe why you are likely to succeed in your appeal.  
 subquestion: |
-   In order to grant your request for a stay, your motion to the single justice must demonstrate the following factors: (1) that you are likely to succeed in your appeal; (2) that you will suffer irreparable harm if the judge does not grant a stay; (3) that the harm to the landlord if the stay is granted is not greater than the harm to you if the stay is not granted; and, in some circumstances, (4) that the stay does not harm the public interest.
+  In order to grant your request for a stay, your motion to the single justice must demonstrate the following factors: 
+   
+  1. that you are likely to succeed in your appeal;
+   
+  2. that you will suffer irreparable harm if the judge does not grant a stay;
+   
+  3. that the harm to the landlord if the stay is granted is not greater than the harm to you if the stay is not granted; **and, in some circumstances,**
+   
+  4. that the stay does not harm the public interest.
 fields:
   - no label: likelihood_of_success
     input type: area 
@@ -226,7 +253,15 @@ id: harm suffered by defendant
 question: |
   Describe the harm that **you or your dependents** will suffer if the single justice denies your motion for a stay. 
 subquestion: |
-   Your motion to the single justice must demonstrate the following factors: (1) that you are likely to succeed in your appeal; (2) that you will suffer irreparable harm if the judge does not grant a stay; (3) that the harm to the landlord if the stay is granted is not greater than the harm to you if the stay is not granted; and, in some circumstances, (4) that the stay does not harm the public interest.
+  Your motion to the single justice must demonstrate the following factors:
+   
+  1. that you are likely to succeed in your appeal; 
+   
+  2. that you will suffer irreparable harm if the judge does not grant a stay; 
+   
+  3. that the harm to the landlord if the stay is granted is not greater than the harm to you if the stay is not granted; **and, in some circumstances,**
+   
+  4. that the stay does not harm the public interest.
 fields:
   - no label: defendant_harm
     input type: area 
@@ -236,7 +271,15 @@ id: harm suffered by plaintiff
 question: |
   Describe the harm that the **plaintiff** (your landlord) would suffer if the single justice allows your motion to stay.
 subquestion: |
-   Your motion to the single justice must demonstrate the following factors: (1) that you are likely to succeed in your appeal; (2) that you will suffer irreparable harm if the judge does not grant a stay; (3) that the harm to the landlord if the stay is granted is not greater than the harm to you if the stay is not granted; and, in some circumstances, (4) that the stay does not harm the public interest.
+  Your motion to the single justice must demonstrate the following factors:
+   
+  1. that you are likely to succeed in your appeal;
+   
+  2. that you will suffer irreparable harm if the judge does not grant a stay;
+   
+  3. that the harm to the landlord if the stay is granted is not greater than the harm to you if the stay is not granted; **and, in some circumstances,**
+   
+  4. that the stay does not harm the public interest.
 fields:
   - no label: plaintiff_harm
     input type: area 
@@ -246,19 +289,32 @@ id: public interest harm
 question: |
   Describe the effect, if any, a stay would have on the **public interest**.
 subquestion: |
-   The public interest is most often implicated in cases involving a federal subsidy ("section 9 voucher") or if you are a tenant in public housing and your eviction was caused by a breach of your lease other than failure to pay rent.  If your case does not implicate the public interest, enter: "N/A".
+  The public interest is most often implicated in cases involving a federal subsidy ("section 9 voucher") or if you are a tenant in public housing and your eviction was caused by a breach of your lease other than failure to pay rent. 
    
-   Your motion to the single justice must demonstrate the following factors: (1) that you are likely to succeed in your appeal; (2) that you will suffer irreparable harm if the judge does not grant a stay; (3) that the harm to the landlord if the stay is granted is not greater than the harm to you if the stay is not granted; and, in some circumstances, (4) that the stay does not harm the public interest.
+  **If your case does not implicate the public interest, this is not required.**
+   
+  Your motion to the single justice must demonstrate the following factors:
+   
+  1. that you are likely to succeed in your appeal;
+   
+  2. that you will suffer irreparable harm if the judge does not grant a stay;
+   
+  3. that the harm to the landlord if the stay is granted is not greater than the harm to you if the stay is not granted; **and, in some circumstances,**
+   
+  4. that the stay does not harm the public interest.
 fields:
   - no label: public_interest_harm
     input type: area 
     rows: 6
+    required: False
 ---
 id: argument summary
 question: |
-  **Summarize your argument** and provide any other relevant information that you want the single justice to know about your case.
+  **Summarize your argument**
 subquestion: |
-   Most motions for a stay are decided on the papers without holding a hearing.  Therefore, it is important that you include anything that you want the single justice to know about your case before deciding your motion is included in your motion and memorandum.  
+  Most motions for a stay are decided on the papers without holding a hearing.  Therefore, it is important that you include anything that you want the single justice to know about your case before deciding your motion is included in your motion and memorandum.  
+   
+  Provide any other relevant information that you want the single justice to know about your case.
 fields:
   - no label: argument_summary
     input type: area 
@@ -266,10 +322,20 @@ fields:
 ---
 id: record appendix
 question: |
-  Pursuant to applicable rules, you are required to submit copies of relevant Housing Court documents such as a copy of the Housing Court's docket, the complaint, your answer, the judgment, and filings related to your motion to stay in the Housing Court.  If you entered into an agreement for judgment also include a copy of the agreement for judgment.
+  You are required to submit copies of relevant Housing Court documents. 
+  
+  Examples include: 
+    * the Housing Court's docket 
+    * the complaint
+    * your answer
+    * the judgment
+    * filings related to your motion to stay in the Housing Court.  
+    
+  **If you entered into an agreement for judgment also include a copy of the agreement for judgment.**
 fields:
   - Files: record_appendix
     datatype: file
+    required: False
 ---
 id: download
 event: download
