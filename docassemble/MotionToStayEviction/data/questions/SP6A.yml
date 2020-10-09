@@ -23,9 +23,9 @@ code: |
   housing_court_docket_number
   housing_court_judgment_date
   housing_court_judge
-  date_notice_of_appeal_filed
   date_housing_court_denied_motion_to_stay
   housing_court_denying_order_text
+  date_notice_of_appeal_filed
   appeals_court_docket_number
   procedural_history
   statement_of_facts
@@ -65,7 +65,7 @@ continue button field: info_screen
 --- 
 id: housing court division 
 question: |
-  Select the **Housing Court** division in which your case was heard.
+  Which **Housing Court** division was your case was heard in?
 fields: 
   - no label: housing_court_division
     input type: radio
@@ -94,25 +94,25 @@ fields:
 ---
 id: plaintiff
 question: |
-  List the **plaintiff or plaintiffs** in your Housing Court case.  
+  Who is the **plaintiff** in your Housing Court case? 
 subquestion: |
-  This could be your landlord or the current owner of the property, such as a foreclosing bank or purchaser. If there are more than one plaintiffs, you may enter more than one name in the provided space.
+  This could be your landlord or the current owner of the property, such as a foreclosing bank or purchaser. 
+  
+  **If there are more than one plaintiffs, you can enter more than one name.**
 fields:
   - Plantiff(s): plaintiff_name
 --- 
 id: defendant
 question: |
-  List all of the **defendants** in your Housing Court case including yourself.
+  Who is the **defendant** in your Housing Court case?
 subquestion: |
-  If there are defendants other than yourself, you may enter more than one name in the provided space.
+  **If there are defendants other than you, you can enter more than one name.**
 fields:
   - Defendant(s): defendant_name
 ---
 id: 48 hour notice
 question: |
-  Have you received a "48-hour notice"?
-subquestion: |
-  A "48-hour notice" is a document that was handed to you or a household member or left at your house by a sheriff or constable indicating the date and time at which the sheriff or constable intends to physically evict you.  
+  Have you received a "{48-hour notice}"?  
 fields: 
   - no label: forty_eight_hour_notice
     datatype: yesnoradio
@@ -123,24 +123,27 @@ fields:
   - At what time of day is the sheriff or constable planning to evict you?: eviction_time
     datatype: time
     js show if: |
-      val('forty_eight_hour_notice') == true  
+      val('forty_eight_hour_notice') == true
+terms:
+  48-hour notice: |
+    A "48-hour notice" is a document that was handed to you (or a household member or left at your house by a sheriff or constable) indicating the date and time at which the sheriff or constable intends to physically evict you.
 ---
 id: date of housing court judgment
 question: |
-  Provide the date the **Housing Court** entered judgment against you.
+  When did the **Housing Court** enter judgment against you?
 fields:
   - Date: housing_court_judgment_date
     datatype: date  
 ---
 id: name of housing court judge
 question: |
-  Enter the name of the **Housing Court** judge who entered the judgment against you.
+  What is the name of the **Housing Court** judge who entered the judgment against you?
 fields:
   - Name: housing_court_judge
 ---
 id: date notice of appeal filed
 question: |  
-  On what date did you file a notice of appeal in the **Housing Court**?
+  When did you file a notice of appeal in the **Housing Court**?
 subquestion: |
   The single justice may only grant a stay of your eviction if there is a pending appeal. 
   
@@ -153,7 +156,7 @@ fields:
 ---
 id: date housing court denied motion to stay
 question: |  
-  On what date did the **Housing Court** judge deny your motion to stay in the Housing Court?
+  When did the **Housing Court** judge deny your motion to stay in the Housing Court?
 subquestion: |
   Before seeking a stay of your eviction from a single justice, the rules of appellate procedure require you to first seek a stay from the Housing Court.
 fields:
@@ -170,7 +173,7 @@ fields:
 ---
 id: legal issues raised
 question: |
-  To the best of your ability, list the **legal issues** raised by this motion.
+  What **legal issues** are raised by your motion to stay?
 fields:
   - no label: legal_issues
     input type: area 
@@ -178,9 +181,11 @@ fields:
 ---
 id: relief_sought
 question: |
-  List the **relief** that you are asking the single justice to provide.
+  What **relief** are you asking for?
 subquestion: |
-  Describe what you are asking the single justice of the Appeals Court to do. Be as specific as possible.
+  Describe what you are asking the single justice of the Appeals Court to do. 
+  
+  Be as specific as possible.
 fields:
   - no label: relief_sought
     input type: area
@@ -188,9 +193,9 @@ fields:
 --- 
 id: method of service
 question: |
-  Select the **method of delivery** that you have used or will use to provide the required copies of the motion, memorandum and supporting materials to the plaintiffs' attorney(s).
+  What **method of delivery** have you used or will you use to provide the required copies of the motion, memorandum and supporting materials to the plaintiffs' attorney(s)?
 subquestion: |
-  **You are required to provide a copy of this motion, memorandum and supporting materials on the plaintiffs' attorney(s).** 
+  **You are required to provide a copy of this motion, memorandum and supporting materials to the plaintiffs' attorney(s).** 
   
   If the plaintiff does not have an attorney, you are required to serve a copy on the self-represented plaintiff.  
   
@@ -216,16 +221,18 @@ fields:
 ---
 id: service date
 question: |
-  Select the date you have made or will make service.
+  When did or will you make service?
+subquestion: |
+  **You are required to provide a copy of this motion, memorandum and supporting materials to the plaintiffs' attorney(s).** 
 fields:
   - Date: service_date
     datatype: date  
 ---
 id: procedural history
 question: |
-  Describe the **procedural history** of your case.
+  What is the **procedural history** of your case?
 subquestion: |
-  The procedural history is a list of the court proceedings in the Housing Court given in chronological order.  
+  **The procedural history is a list of the court proceedings in the Housing Court given in the order they happened.**  
    
   It is especially important to describe whether the judgment was:
   
@@ -245,7 +252,7 @@ fields:
 ---
 id: statement of facts
 question: |
-  Describe the **factual history** of your tenancy or former ownership of the property and how it ended.  
+  What is the **factual history** of your tenancy or former ownership of the property? How did it end?  
 subquestion: |
   Include any other relevant factual history that the single justice should know in deciding your motion.  
    
@@ -257,9 +264,9 @@ fields:
 ---
 id: likelihood of success
 question: |
-  Describe why you are likely to succeed in your appeal.  
+  Why are you likely to succeed in your appeal?  
 subquestion: |
-  In order to grant your request for a stay, your motion to the single justice must demonstrate the following factors: 
+  In order to grant your request for a stay, your motion must demonstrate: 
    
   1. that you are likely to succeed in your appeal;
    
@@ -275,9 +282,9 @@ fields:
 ---
 id: harm suffered by defendant 
 question: |
-  Describe the harm that **you or your dependents** will suffer if the single justice denies your motion for a stay. 
+  What harm will **you or your dependents** suffer if the single justice denies your motion to stay?
 subquestion: |
-  Your motion to the single justice must demonstrate the following factors:
+  Your motion must demonstrate:
    
   1. that you are likely to succeed in your appeal; 
    
@@ -293,9 +300,9 @@ fields:
 ---
 id: harm suffered by plaintiff 
 question: |
-  Describe the harm that the **plaintiff** (your landlord) would suffer if the single justice allows your motion to stay.
+  What harm will the **plaintiff** (your landlord) suffer if the single justice allows your motion to stay?
 subquestion: |
-  Your motion to the single justice must demonstrate the following factors:
+  Your motion must demonstrate:
    
   1. that you are likely to succeed in your appeal;
    
@@ -311,13 +318,11 @@ fields:
 ---
 id: public interest harm
 question: |
-  Describe the effect, if any, a stay would have on the **public interest**.
-subquestion: |
-  The public interest is most often implicated in cases involving a federal subsidy ("section 9 voucher") or if you are a tenant in public housing and your eviction was caused by a breach of your lease other than failure to pay rent. 
+  What effect, if any, would your motion to stay have on the **public interest**?
+subquestion: |   
+  **If your case does not implicate the {public interest}, this is not required.**
    
-  **If your case does not implicate the public interest, this is not required.**
-   
-  Your motion to the single justice must demonstrate the following factors:
+  Your motion must demonstrate:
    
   1. that you are likely to succeed in your appeal;
    
@@ -326,11 +331,20 @@ subquestion: |
   3. that the harm to the landlord if the stay is granted is not greater than the harm to you if the stay is not granted; **and, in some circumstances,**
    
   4. that the stay does not harm the public interest.
+
 fields:
   - no label: public_interest_harm
     input type: area 
     rows: 6
     required: False
+
+terms:
+  public interest: |
+    The public interest is most often implicated:
+    
+    * in cases involving a federal subsidy ("section 9 voucher"), **or** 
+    
+    * if you are a tenant in public housing and your eviction was caused by a breach of your lease other than failure to pay rent. 
 ---
 id: argument summary
 question: |
