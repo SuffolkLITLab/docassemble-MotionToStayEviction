@@ -70,12 +70,12 @@ fields:
   - no label: housing_court_division
     input type: radio
     choices: 
-      - Central
-      - Eastern
-      - Metro South
-      - Northeast
-      - Southeast
-      - Western
+      - Central: CENTRAL
+      - Eastern: EASTERN
+      - Metro South: METRO SOUTH
+      - Northeast: NORTHEAST
+      - Southeast: SOUTHEAST
+      - Western: WESTERN
 --- 
 id: housing court docket number 
 question: |
@@ -181,7 +181,7 @@ fields:
 ---
 id: relief_sought
 question: |
-  What **relief** are you asking for?
+  What are you asking for?
 subquestion: |
   Describe what you are asking the single justice of the Appeals Court to do. 
   
@@ -200,14 +200,12 @@ subquestion: |
   If the plaintiff does not have an attorney, you are required to serve a copy on the self-represented plaintiff.  
   
   You should not provide a copy of your affidavit of indigency, if any, to anyone except the Appeals Court.  
-fields: 
-  - no label: method_of_service
-    input type: radio
-    choices: 
-      - efile and serve (efilema.com)
-      - email
-      - mail
-      - hand delivery
+field: method_of_service
+dropdown:
+  - efile and serve (efilema.com)
+  - email
+  - mail
+  - hand delivery
 ---
 id: parties to be served
 question: |
@@ -348,7 +346,7 @@ terms:
 ---
 id: argument summary
 question: |
-  **Summarize your argument**
+  Summarize your argument
 subquestion: |
   Most motions for a stay are decided on the papers without holding a hearing.  Therefore, it is important that you include anything that you want the single justice to know about your case before deciding your motion is included in your motion and memorandum.  
    
@@ -377,7 +375,7 @@ subquestion: |
   **If you entered into an agreement for judgment, include a copy of the agreement for judgment.**
 fields:
   - no label: record_appendix
-    datatype: file
+    datatype: files
     required: False
 ---
 id: download
