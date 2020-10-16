@@ -21,7 +21,9 @@ code: |
   users.gathered = True
   plaintiff_name
   defendant_name
-  forty_eight_hour_notice
+  if forty_eight_hour_notice:
+    eviction_date
+    eviction_time
   housing_court_division
   housing_court_docket_number
   housing_court_judgment_date
@@ -119,17 +121,18 @@ question: |
 fields: 
   - no label: forty_eight_hour_notice
     datatype: yesnoradio
-  - On which day is the sheriff or constable planning to evict you?: eviction_date
-    datatype: date
-    js show if: |
-      val('forty_eight_hour_notice') == true  
-  - At what time of day is the sheriff or constable planning to evict you?: eviction_time
-    datatype: time
-    js show if: |
-      val('forty_eight_hour_notice') == true
 terms:
   48-hour notice: |
-    A "48-hour notice" is a document that was handed to you (or a household member or left at your house by a sheriff or constable) indicating the date and time at which the sheriff or constable intends to physically evict you.
+    A notice from the constable that tells you that they will be there at a certain day and time to move you out.
+---
+id: 48 hour notice details
+question: |
+  When is the sheriff or constable planning to evict you?
+fields:   
+  - Date: eviction_date
+    datatype: date 
+  - Time: eviction_time
+    datatype: time
 ---
 id: date of housing court judgment
 question: |
