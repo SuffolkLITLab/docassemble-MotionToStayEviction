@@ -1,9 +1,13 @@
 ---
 include:
   - docassemble.MAVirtualCourt:basic-questions.yml
+  - docassemble.AffidavitofIndigencyMAVC:affidavit_body.yml  
 ---
 code: |
   courts[0] = macourts.matching_appeals_court("")
+---
+code: |
+  bcc_failsafe = "cc@example.com"
 ---
 code: |
   interview_short_title = "Ask the court to Stop Your Eviction"
@@ -20,6 +24,12 @@ code: |
   users.there_is_another = False
   users.gathered = True
   plaintiff_name
+  
+  # Copy plaintiff name into the "Other Parties" list
+  other_parties.auto_gather=False
+  other_parties[0].name.first = plaintiff_name
+  other_parties.gathered=True
+  
   defendant_name
   forty_eight_hour_notice
   housing_court_division
@@ -29,7 +39,10 @@ code: |
   date_housing_court_denied_motion_to_stay
   housing_court_denying_order_text
   date_notice_of_appeal_filed
-  appeals_court_docket_number
+  if not is_first_document:
+    appeals_court_docket_number
+  else:
+    explain_need_affidavit
   procedural_history
   statement_of_facts
   defendant_harm
@@ -42,7 +55,15 @@ code: |
   method_of_service
   parties_to_be_served
   service_date
-  record_appendix
+  if has_evidence:
+    review_exhibits
+  if is_first_document:
+    indigency_intro
+    fees['Appeal cost'].waive = True
+    fees['Appeal cost'].amount = 300.00
+    ask_affidavit_questions
+    if not is_indigent:
+      doesnt_qualify_interstitial
   basic_questions_signature_flow
   users[0].signature
   download
@@ -92,8 +113,30 @@ question: |
 subquestion: |
   If this is the first document that you are filing in the Appeals Court, your case has not yet been assigned a docket number, and you may leave this question blank.
 fields:
+  - This is the first document I am filing in the Appeals Court: is_first_document
+    datatype: yesno
   - Docket number: appeals_court_docket_number
     required: False
+    hide if: is_first_document
+---
+id: explain_need_affidavit
+question: |
+  You may qualify for a fee waiver
+subquestion: |
+  There is a filing fee to file an appeal. But you may qualify 
+  to get the fees waived.
+  
+  We will ask you questions to help you find out a little later.
+continue button field: explain_need_affidavit
+---
+id: explain affidavit of indigency
+continue button field: indigency_intro
+question: |
+  Fee waiver questions
+subquestion: |
+  The next questions will be used to find out if you
+  qualify for a fee waiver. The fee to file an appeal
+  is $300.00.
 ---
 id: plaintiff
 question: |
@@ -359,30 +402,14 @@ fields:
     input type: area 
     rows: 6
 ---
-id: record appendix
-question: |
-  You are required to submit copies of relevant Housing Court documents. 
-subquestion: |  
-  Examples include: 
-  
-    * the Housing Court's docket 
-    
-    * the complaint
-    
-    * your answer
-    
-    * the judgment
-    
-    * filings related to your motion to stay in the Housing Court.
-    
-  **If you entered into an agreement for judgment, include a copy of the agreement for judgment.**
-fields:
-  - no label: record_appendix
-    datatype: files
-    required: False
----
 code: |
   form_to_file_no_cover = combined_motion
+---
+code: |
+  if is_first_document and is_indigent:
+    final_form_to_file = [general_cover_sheet, combined_motion, affidavitofindigency_attachment]
+  else:
+    final_form_to_file = [general_cover_sheet, combined_motion ]
 ---
 id: download form
 event: download
@@ -422,18 +449,147 @@ subquestion: |
   Or download/email below:
   % else:
     Your email has already been delivered to ${courts[0]}
-    
-  [:file-download: Download with cover page](${final_form_to_file.url_for()})    
+
+  % for file in final_form_to_file:
+
+  [:file-download: ${ file.info.get("filename") }](${file.url_for()})
+  % endfor 
   % endif
 progress: 100
 section: download
 attachment code: motion_attachment
 ---
+need:
+  - comments_to_clerk
+  - package_version_number
+id: ready to email
+question: |
+  Final Review With Cover Page
+subquestion: |
+  
+  Below is your ${comma_and_list(download_titles)} document with the 
+  cover page that we will deliver to ${courts[0]}.
+  
+  Click "Back" if you need to make any changes.  
+  Click "Send to court" to deliver it.
+  
+  Here is what the clerk at ${courts} will get:
+
+  % for file in final_form_to_file:
+  ${ file }  
+  [:file-download: ${ file.info.get("filename") }](${file.url_for()})  
+  % endfor 
+  
+  % if found_email:
+  We will deliver it securely. Please allow up to 15 minutes for the email to
+  arrive.
+  % else:
+  There was a problem delivering this to the ${courts[0]}. We couldn't
+  locate the contact information for this court.
+  % endif
+ 
+  Press below to deliver the form.
+fields:
+  - Send me a copy: should_cc_user
+    datatype: yesno
+  - Email address: cc_email
+    datatype: email
+    show if: should_cc_user
+    default: ${users[0].email if defined('users[0].email') else ''}
+continue button field: ready_to_email
+continue button label: Send to court
+---
 code: |
-  combined_motion = pdf_concatenate(motion_attachment, record_appendix, filename="motion_to_stay_eviction.pdf")
+  if has_evidence:
+    combined_motion = pdf_concatenate(motion_attachment, exhibits, filename="motion_to_stay_eviction.pdf")
+  else:
+    combined_motion = motion_attachment
 ---
 attachment:
   - name: Motion to Stay Eviction
     variable name: motion_attachment
     filename: Motion_To_Stay_Eviction
     docx template file: Motion_To_Stay_Eviction.docx
+---
+objects:
+  - exhibits: DAFileList.using(auto_gather=False, gathered=True)
+---
+id: record appendix
+question: |
+  You are required to submit copies of relevant Housing Court documents. 
+subquestion: |  
+  Examples include: 
+  
+    * the Housing Court's docket 
+    
+    * the complaint
+    
+    * your answer
+    
+    * the judgment
+    
+    * filings related to your motion to stay in the Housing Court.
+    
+  **If you entered into an agreement for judgment, include a copy of the agreement for judgment.**
+fields:
+  - Do you have any documents to share with the judge?: has_evidence
+    datatype: yesnoradio
+  - Are you ready to take a photo or upload them now?: has_evidence_ready_to_upload
+    datatype: yesnoradio
+    show if: has_evidence
+  - note: |
+      Okay. You may want to call the court to ask the best way to get your
+      documents to the judge.
+    show if: 
+      variable: has_evidence_ready_to_upload      
+      is: False
+  - note: |
+      Take a picture of each document you want to upload, or get the files ready to
+      upload on your computer or phone.
+      
+      When you're ready, use the upload area below.
+    show if: has_evidence_ready_to_upload
+  - Tap "browse" and choose all of the photos you want to upload at once. You can edit or add additional documents on the next screen.: exhibits
+    datatype: files
+    show if: has_evidence_ready_to_upload
+    accept: |
+      "image/*, image/png,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,.pdf"
+---
+table: exhibits.table
+rows: exhibits
+allow reordering: True
+columns:
+  - File name: showifdef(row_item.attr_name('filename'))
+  - Thumbnail: row_item.show(width="100px")  
+delete buttons: True
+---
+id: add additional document
+question: |
+  Exhibit document ${i+1}  
+fields:
+  - no label: exhibits[i]
+    datatype: file
+    accept: |
+      "image/*, image/png,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,.pdf"   
+validation code: |
+  # Upload field creates a DAFileList
+  # We want it to be a plain DAFile instead
+  if isinstance(exhibits[i], DAFileList):
+    temp_name = exhibits[i].instanceName
+    exhibits[i] = next(iter(exhibits[i]))
+    # Make sure the "instanceName" shows the correct position in the list,
+    # instead of showing a nested DAFileList's instanceName
+    exhibits[i].instanceName = temp_name
+---
+id: review exhibits
+question: |
+  Review your exhibits
+subquestion: |
+  Look at the exhibits below. If you want to change the order, use the arrows
+  to move an exhibit up or down in the list. Click "delete" or "add another"
+  to change which exhibits you send to the court.
+  
+  ${ exhibits.table }
+  
+  ${exhibits.add_action() }
+continue button field: review_exhibits  
