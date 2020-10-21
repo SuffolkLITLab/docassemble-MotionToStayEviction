@@ -24,6 +24,7 @@ code: |
   users[0].name.first
   users[0].address.address
   users[0].mobile_number
+  user_needs_interpreter
   users.there_is_another = False
   users.gathered = True
   plaintiff_name
@@ -99,7 +100,7 @@ subquestion: |
     
     * the judgment
     
-    * filings related to your motion to stay in the Housing Court
+    * filings related to your motion to stay in the Housing Court.
   
   For more information on what you need to file an appeal, view the [Housing Appeal Guide](https://www.mass.gov/guides/housing-appeals-guide#-automatic-stay-pending-appeal-).
 continue button field: info_screen
@@ -120,15 +121,14 @@ fields:
 --- 
 id: appeals court docket number 
 question: |
-  What is the **Appeals Court** docket number for your case?
-subquestion: |
-  If this is the first document that you are filing in the Appeals Court, your case has not yet been assigned a docket number, and you may leave this question blank.
+  Is this Motion to Stay the first document you are filing in the **Appeals Court**?
 fields:
-  - This is the first document I am filing in the Appeals Court: is_first_document
-    datatype: yesno
-  - Docket number: appeals_court_docket_number
-    required: False
-    hide if: is_first_document
+  - no label: is_first_document
+    datatype: yesnoradio
+  - What is the **Appeals Court** docket number for your case?: appeals_court_docket_number
+    show if:
+      variable: is_first_document
+      is: False
 ---
 id: explain_need_affidavit
 question: |
@@ -182,7 +182,7 @@ fields:
     datatype: yesnoradio
 terms:
   48-hour notice: |
-    A notice from the constable or sheriff that tells you that they will be there at a certain day and time to move you out.
+    A notice from the constable or sheriff telling you they will move you out on a certain day and time.
 ---
 objects:
   - eviction_notice: DAStaticFile.using(filename='48_Hour_Notice.png', alt_text='48-Hour Notice')
@@ -199,7 +199,7 @@ fields:
     datatype: time
 terms:
   48-hour notice: |
-    A notice from the constable or sheriff that tells you that they will be there at a certain day and time to move you out.
+    A notice from the constable or sheriff telling you they will move you out on a certain day and time.
 ---
 id: date of housing court judgment
 question: |
@@ -220,7 +220,7 @@ question: |
 subquestion: |
   Before using this form, you must first file a Notice of Appeal in the Housing Court. 
   
-  [${Notice.show(width='28em')}](${Notice.url_for()})
+  [${Notice.show(width='33em')}](${Notice.url_for()})
 fields:
   - Date filed: date_notice_of_appeal_filed
     datatype: date  
@@ -230,16 +230,16 @@ objects:
 ---
 id: date housing court denied motion to stay
 question: |  
-  When did the **Housing Court** judge deny your motion to stay in the Housing Court?
+  When did the **Housing Court** judge deny your Motion to Stay?
 subquestion: |
-  Before using this form, you must first ask for a stay from the Housing Court.
+  Before using this form, you must first ask for a stay in the Housing Court.
 fields:
   - Date: date_housing_court_denied_motion_to_stay
     datatype: date  
 ---
 id: housing court judge order text
 question: |
-  Enter the text of the **Housing Court** judge's order denying your motion to stay in the Housing Court.
+  Enter the text of the **Housing Court** judge's order denying your Motion to Stay in the Housing Court.
 fields:
   - no label: housing_court_denying_order_text
     input type: area 
@@ -247,7 +247,7 @@ fields:
 ---
 id: legal issues raised
 question: |
-  What legal mistakes did the **Housing Court** judge make about the legal issues in your case?
+  What legal mistake(s) did the **Housing Court** judge make about the legal issue(s) in your case?
 fields:
   - no label: legal_issues
     input type: area 
@@ -265,7 +265,7 @@ fields:
 --- 
 id: method of service
 question: |
-  How will you deliver the required copies of the motion, memorandum and supporting materials to the plaintiffs' attorney(s)?
+  How will you deliver the required copies of the motion, memorandum, and supporting materials to the plaintiffs' attorney(s)?
 subquestion: |
   You are required to provide a copy of this motion, memorandum, and supporting materials to the plaintiffs' attorney(s).
   
@@ -322,8 +322,10 @@ fields:
 ---
 id: statement of facts
 question: |
-  Describe the **facts** of your case. How did your tenancy or former ownership of the property end? Why were you evicted?  
+  Describe the **facts** of your case.
 subquestion: |
+  How did your tenancy or former ownership of the property end? Why were you evicted?
+  
   This is called the **factual history**.
 fields:
   - no label: statement_of_facts
@@ -347,9 +349,9 @@ fields:
 ---
 id: harm suffered by defendant 
 question: |
-  What harm will **you or your dependents** suffer if your motion to stay is denied?
+  What harm will **you or your dependents** suffer if your Motion to Stay is denied?
 subquestion: |
-  Your motion must show that you or your dependents will suffer irreparable harm if a stay is not granted.
+  Your Motion to Stay must show that you or your dependents will suffer irreparable harm if your motion is denied.
 fields:
   - no label: defendant_harm
     input type: area 
@@ -357,9 +359,9 @@ fields:
 ---
 id: harm suffered by plaintiff 
 question: |
-  What harm will the **{plaintiff}** suffer if your Motion to Stay is denied?
+  What harm will the **{plaintiff}** suffer if your Motion to Stay is granted?
 subquestion: |
-  Your motion must show that the plaintiff will not be harmed more than you or your dependents if the stay is granted.
+  Your Motion to Stay must show that the plaintiff will not be harmed more than you or your dependents if your motion is granted.
 fields:
   - no label: plaintiff_harm
     input type: area 
@@ -376,7 +378,7 @@ subquestion:  |
 fields:
   - no label: public_interest_harm_yesno
     datatype: yesnoradio
-  - What effect would your motion to stay have on the **public interest**?: public_interest_harm
+  - What effect would your Motion to Stay have on the **public interest**?: public_interest_harm
     input type: area 
     rows: 6
     show if: public_interest_harm_yesno
@@ -394,7 +396,7 @@ id: argument summary
 question: |
   Summarize your argument
 subquestion: |
-  Most motions for a stay are decided without holding a hearing.  
+  Most motions to stay are decided without holding a hearing.  
   
   It is important that you include any relevant information that you want the court to know about your case.
 fields:
@@ -529,7 +531,7 @@ subquestion: |
     
     * filings related to your motion to stay in the Housing Court.
     
-  **If you entered into an agreement for judgment, include a copy of the agreement for judgment.**
+  If you entered into an agreement for judgment, include a copy of the agreement for judgment.
 fields:
   - Do you have any documents to share with the judge?: has_evidence
     datatype: yesnoradio
