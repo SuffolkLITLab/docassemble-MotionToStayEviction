@@ -3,6 +3,9 @@ include:
   - docassemble.MAVirtualCourt:basic-questions.yml
   - docassemble.AffidavitofIndigencyMAVC:affidavit_body.yml  
 ---
+metadata:
+  title: Appeal or Stay Your Eviction
+---
 code: |
   courts[0] = macourts.matching_appeals_court("")
 ---
@@ -10,7 +13,7 @@ code: |
   bcc_failsafe = "cc@example.com"
 ---
 code: |
-  interview_short_title = "Ask the court to Stop Your Eviction"
+  interview_short_title = "Ask the Appeals Court to Stop Your Eviction"
 ---
 id: interview order
 mandatory: True
