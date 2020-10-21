@@ -32,8 +32,8 @@ code: |
   housing_court_denying_order_text
   date_notice_of_appeal_filed
   appeals_court_docket_number
-  procedural_history
   statement_of_facts
+  procedural_history
   defendant_harm
   plaintiff_harm
   public_interest_harm
@@ -53,34 +53,32 @@ id: info screen
 question: |
   Motion to Stay Eviction
 subquestion: |
-  In civil cases, an application for a stay of the judgment or order of a lower court pending appeal, or for approval of a bond under Rule 6 (a)(2), or for an order suspending, modifying, restoring, or granting an injunction during the pendency of an appeal must ordinarily be made in the first instance in the lower court. 
+  If a trial court judge has ordered you to be evicted, use this form to prevent your eviction. 
   
-  A motion for such relief may be made to the appellate court or to a single justice, but the motion shall show that application to the lower court for the relief sought is not practicable, or that the lower court has denied an application, or has failed to afford the relief which the applicant requested, with the reasons given by the lower court for its action. 
+  Before using this form, you must:
   
-  The motion shall also show the reasons for the relief requested and the facts relied upon, and if the facts are subject to dispute, the motion shall be supported by affidavits or other statements signed under the penalties of perjury or copies thereof. 
+    1. Ask for a stay in the Housing Court, and 
+    
+    2. Have filed: 
+    
+      - Notice of Appeal 
+      - Waiver of Appeal Bond
   
-  With the motion shall be filed such parts of the record as are relevant. 
-  
-  Reasonable notice of the motion shall be given to all parties. 
-  
-  The motion shall be filed with the clerk of the appellate court to which the appeal is being taken. 
-  
-  If the court is the Supreme Judicial Court, the motion shall be filed with the clerk of the Supreme Judicial Court for Suffolk County.
+  To use this form, you will need the order from the housing court judge and any other housing court documents. 
 continue button field: info_screen
+help:
+  label: |
+    More Information
+  content: |
+    For more information on what you need to file an appeal, view the [Housing Appeal Guide](https://www.mass.gov/guides/housing-appeals-guide#-automatic-stay-pending-appeal-).
 --- 
 id: housing court division 
-question: |
-  Which **Housing Court** division was your case was heard in?
-fields: 
-  - no label: housing_court_division
-    input type: radio
-    choices: 
-      - Central: CENTRAL
-      - Eastern: EASTERN
-      - Metro South: METRO SOUTH
-      - Northeast: NORTHEAST
-      - Southeast: SOUTHEAST
-      - Western: WESTERN
+question: | 
+  Enter the **Housing Court** department and division in which your case was heard 
+fields:
+  - Trial Court: courts[0]
+    datatype: object
+    choices: macourts.filter_courts(["Housing Court"])
 --- 
 id: housing court docket number 
 question: |
@@ -103,27 +101,36 @@ question: |
 subquestion: |
   This could be your landlord or the current owner of the property, such as a foreclosing bank or purchaser. 
   
-  **If there are more than one plaintiffs, you can enter more than one name.**
+  **If there are more than one plaintiffs, you may enter more than one name.**
 fields:
   - Plantiff(s): plaintiff_name
+    input type: area 
+    rows: 6
 --- 
 id: defendant
 question: |
   Who is the **defendant** in your Housing Court case?
 subquestion: |
-  **If there are defendants other than you, you can enter more than one name.**
+  **If there are defendants other than you, you may enter more than one name.**
 fields:
   - Defendant(s): defendant_name
+    input type: area 
+    rows: 6
 ---
 id: 48 hour notice
 question: |
-  Have you received a "{48-hour notice}"?  
+  Have you received a "{48-hour notice}"?
+  
+  [${eviction_notice.show(width='10em')}](${eviction_notice.url_for()})
 fields: 
   - no label: forty_eight_hour_notice
     datatype: yesnoradio
 terms:
   48-hour notice: |
-    A notice from the constable that tells you that they will be there at a certain day and time to move you out.
+    A notice from the constable or sheriff that tells you that they will be there at a certain day and time to move you out.
+---
+objects:
+  - eviction_notice: DAStaticFile.using(filename='48_Hour_Notice.png', alt_text='48-Hour Notice')
 ---
 id: 48 hour notice details
 question: |
@@ -164,7 +171,7 @@ id: date housing court denied motion to stay
 question: |  
   When did the **Housing Court** judge deny your motion to stay in the Housing Court?
 subquestion: |
-  Before seeking a stay of your eviction from a single justice, the rules of appellate procedure require you to first seek a stay from the Housing Court.
+  Before using this form, you must first ask for a stay from the Housing Court.
 fields:
   - Date: date_housing_court_denied_motion_to_stay
     datatype: date  
@@ -179,7 +186,7 @@ fields:
 ---
 id: legal issues raised
 question: |
-  What **legal issues** are raised by your motion to stay?
+  What mistakes did the Housing Court judge make about the legal issues in this case?
 fields:
   - no label: legal_issues
     input type: area 
@@ -208,10 +215,10 @@ subquestion: |
   You should not provide a copy of your affidavit of indigency, if any, to anyone except the Appeals Court.  
 field: method_of_service
 dropdown:
-  - efile and serve (efilema.com)
-  - email
-  - mail
-  - hand delivery
+  - Efile and serve (efilema.com): efile and serve (efilema.com)
+  - Email: email
+  - Mail: mail
+  - Hand delivery: hand delivery
 ---
 id: parties to be served
 question: |
@@ -236,7 +243,9 @@ id: procedural history
 question: |
   What is the **procedural history** of your case?
 subquestion: |
-  **The procedural history is a list of the court proceedings in the Housing Court given in the order they happened.**  
+  Describe the events in your case in the Housing Court in the order they happened.
+  
+  Include a list of any motions that you or the plaintiff filed after the judgment was entered.
    
   It is especially important to describe whether the judgment was:
   
@@ -247,8 +256,6 @@ subquestion: |
     * after a trial, **or**
      
     * pursuant to an agreement for judgment.  
-     
-  Include a list of any motions that you or the plaintiff filed after the judgment was entered.
 fields:
   - no label: procedural_history
     input type: area 
@@ -256,15 +263,18 @@ fields:
 ---
 id: statement of facts
 question: |
-  What is the **factual history** of your tenancy or former ownership of the property? How did it end?  
+  Describe the facts of your case? How did your tenancy or former ownership of the property end? Why were you evicted?  
 subquestion: |
-  Include any other relevant factual history that the single justice should know in deciding your motion.  
-   
-  For example, if you filed a complaint with your local inspectional services department, describe the complaint including the date it was made and the resolution after the inspection.
+  This is called the **factual history**.
 fields:
   - no label: statement_of_facts
     input type: area 
     rows: 6
+help:
+  label: |
+    Example
+  content: |
+    For example, if you filed a complaint with your local inspectional services department, describe the complaint including the date it was made and the resolution after the inspection.
 ---
 id: likelihood of success
 question: |
@@ -286,7 +296,7 @@ fields:
 ---
 id: harm suffered by defendant 
 question: |
-  What harm will **you or your dependents** suffer if the single justice denies your motion to stay?
+  What harm will **you or your dependents** suffer if your motion to stay is denied?
 subquestion: |
   Your motion must demonstrate:
    
@@ -304,7 +314,7 @@ fields:
 ---
 id: harm suffered by plaintiff 
 question: |
-  What harm will the **plaintiff** (your landlord) suffer if the single justice allows your motion to stay?
+  What harm will the **plaintiff** (your landlord) suffer if your motion to stay is denied?
 subquestion: |
   Your motion must demonstrate:
    
