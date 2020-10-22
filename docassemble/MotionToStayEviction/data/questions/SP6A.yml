@@ -71,6 +71,7 @@ code: |
     ask_affidavit_questions
     if not is_indigent:
       doesnt_qualify_interstitial
+  preview_screen
   basic_questions_signature_flow
   users[0].signature
   download
@@ -405,13 +406,34 @@ fields:
     rows: 6
 ---
 code: |
-  form_to_file_no_cover = combined_motion
----
-code: |
   if is_first_document and is_indigent:
     final_form_to_file = [general_cover_sheet, combined_motion, affidavitofindigency_attachment]
   else:
     final_form_to_file = [general_cover_sheet, combined_motion ]
+---
+code: |
+  form_to_file_no_cover = combined_motion
+---
+code: |
+  if has_evidence:
+    form_to_sign = pdf_concatenate(motion_attachment["preview"], exhibits, filename="motion_to_stay_eviction.pdf")
+  else:
+    form_to_sign = motion_attachment["preview"]
+---
+id: review before signature
+need: form_to_sign
+continue button field: preview_screen
+question: |
+  Nearly finished
+subquestion: |
+  You are almost done! Please click on the form below. It will open in a new window so you can review it and make sure it is correct.
+  
+  Don't forget to come back to this page to click to the final step of signing and sending the form to the court. 
+  
+   ${ form_to_sign }
+
+progress: 95
+attachment code: motion_attachment["preview"]
 ---
 id: download form
 event: download
@@ -458,7 +480,7 @@ subquestion: |
   % endif
 progress: 100
 section: download
-attachment code: motion_attachment
+attachment code: motion_attachment["final"]
 ---
 need:
   - comments_to_clerk
@@ -502,13 +524,16 @@ continue button label: Send to court
 ---
 code: |
   if has_evidence:
-    combined_motion = pdf_concatenate(motion_attachment, exhibits, filename="motion_to_stay_eviction.pdf")
+    combined_motion = pdf_concatenate(motion_attachment["final"], exhibits, filename="motion_to_stay_eviction.pdf")
   else:
-    combined_motion = motion_attachment
+    combined_motion = motion_attachment["final"]
+---
+objects:
+  - motion_attachment: DADict
 ---
 attachment:
   - name: Motion to Stay Eviction
-    variable name: motion_attachment
+    variable name: motion_attachment[i]
     filename: Motion_To_Stay_Eviction
     docx template file: Motion_To_Stay_Eviction.docx
 ---
