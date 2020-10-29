@@ -19,7 +19,7 @@ id: interview order
 mandatory: True
 code: |
   user_role = "defendant"
-  basic_questions_intro_screen
+  appeals_basic_questions_intro_screen
   info_screen
   users[0].name.first
   users[0].address.address
@@ -44,7 +44,8 @@ code: |
   housing_court_judge
   date_housing_court_denied_motion_to_stay
   housing_court_denying_order_text
-  date_notice_of_appeal_filed
+  if no_notice_of_appeal_filed:
+    explain_notice_of_appeal
   if not is_first_document:
     appeals_court_docket_number
   else:
@@ -67,7 +68,7 @@ code: |
   if is_first_document:
     indigency_intro
     fees['Appeal cost'].waive = True
-    fees['Appeal cost'].amount = 300.00
+    fees['Appeal cost'].amount = 315.00
     ask_affidavit_questions
     if not is_indigent:
       doesnt_qualify_interstitial
@@ -103,9 +104,47 @@ subquestion: |
     
     * filings related to your motion to stay in the Housing Court.
   
+  This form cannot be directly emailed to the Supreme Judicial Court. For more information, contact the Supreme Judicial Court Clerk's office: (617) 557-1020.
+  
   For more information on what you need to file an appeal, view the [Housing Appeal Guide](https://www.mass.gov/guides/housing-appeals-guide#-automatic-stay-pending-appeal-).
 continue button field: info_screen
---- 
+---
+objects:
+  - users: PeopleList.using(there_are_any=True)
+---
+id: user address
+question: |
+  What is your address?
+subquestion: |
+  List the address where you want the court to mail papers to you.
+fields:
+  - Email address: users[0].email    
+    datatype: email
+    required: False
+  - Street address: users[0].address.address
+    address autocomplete: True
+  - Unit: users[0].address.unit
+    required: False
+  - City: users[0].address.city
+  - State: users[0].address.state
+    code: states_list()
+  - Zip: users[0].address.zip 
+---
+id: contact information
+question: |
+  Contact information
+subquestion: |
+  Provide at least one other way for the court to reach you. 
+fields:
+  - Mobile number: users[0].mobile_number
+    required: False
+  - Other phone number: users[0].phone_number
+    required: False
+validation code: |
+  if (not showifdef('users[0].phone_number') and 
+      (not showifdef('users[0].mobile_number'))):
+    validation_error(word("You need to provide at least one other contact method."))
+---
 id: housing court division 
 question: | 
   Select the **Housing Court** department and division where your case was heard.
@@ -148,7 +187,7 @@ question: |
 subquestion: |
   The next questions will be used to find out if you
   qualify for a fee waiver. The fee to file an appeal
-  is $300.00.
+  is $315.00.
 ---
 id: plaintiff
 question: |
@@ -167,6 +206,8 @@ id: defendant
 question: |
   Who is the **defendant** in your Housing Court case?
 subquestion: |
+  If you are a defendant, please be sure to include yourself.
+  
   If there are defendants other than you, you may enter more than one name.
 fields:
   - Defendant(s): defendant_name
@@ -176,11 +217,13 @@ fields:
 id: 48 hour notice
 question: |
   Have you received a {48-hour notice}?
-subquestion: |  
-  [${eviction_notice.show(width='28em')}](${eviction_notice.url_for()})
-fields: 
-  - no label: forty_eight_hour_notice
-    datatype: yesnoradio
+subquestion: |
+  <CENTER>
+  [${eviction_notice.show(width='20em')}](${eviction_notice.url_for()})
+  </CENTER>
+  
+  A 48-Hour Notice can look like the one above.
+yesno: forty_eight_hour_notice
 terms:
   48-hour notice: |
     A notice from the constable or sheriff telling you they will move you out on a certain day and time.
@@ -223,8 +266,21 @@ subquestion: |
   
   [${Notice.show(width='33em')}](${Notice.url_for()})
 fields:
+  - I did not file a notice of appeal: no_notice_of_appeal_filed
+    datatype: yesno
   - Date filed: date_notice_of_appeal_filed
-    datatype: date  
+    datatype: date
+    hide if: no_notice_of_appeal_filed
+--- 
+id: explain notice of appeal
+question: | 
+  You need to file a Notice of Appeal
+subquestion: | 
+  Failure to file a Notice of Appeal in the Housing Court may result in your Motion to Stay being denied.
+  
+  For more information on what you need to file a Notice of Appeal, view the [Housing Appeal Guide](https://www.mass.gov/guides/housing-appeals-guide#-automatic-stay-pending-appeal-).
+
+continue button field: explain_notice_of_appeal
 ---
 objects:
   - Notice: DAStaticFile.using(filename='Notice_of_Appeal.png', alt_text='Notice of Appeal')  
@@ -234,6 +290,11 @@ question: |
   When did the **Housing Court** judge deny your Motion to Stay?
 subquestion: |
   Before using this form, you must first ask for a stay in the Housing Court.
+  
+  For more information, call the Trial Court’s Emergency HelpLine:
+    833-91-COURT (833-912-6878)
+    Monday-Friday
+    8:30am - 4:30pm
 fields:
   - Date: date_housing_court_denied_motion_to_stay
     datatype: date  
@@ -399,7 +460,7 @@ question: |
 subquestion: |
   Most motions to stay are decided without holding a hearing.  
   
-  It is important that you include any relevant information that you want the court to know about your case.
+  It is important that you include in your Motion to Stay anything that you want the court to know about your case.
 fields:
   - no label: argument_summary
     input type: area 
@@ -418,7 +479,7 @@ code: |
   if has_evidence:
     form_to_sign = pdf_concatenate(motion_attachment["preview"], exhibits, filename="motion_to_stay_eviction.pdf")
   else:
-    form_to_sign = motion_attachment["preview"]
+    form_to_sign = pdf_concatenate(motion_attachment["preview"], filename="motion_to_stay_eviction.pdf")
 ---
 id: review before signature
 need: form_to_sign
@@ -454,12 +515,11 @@ subquestion: |
   1. Click the "Submit to ${courts[0]}" button to send it to the court. 
   1. You will have a chance to add instructions to the clerk and see the cover page before final delivery.
   % else:
-  If you do not hear from the court in 1 business day, call the Trial Court’s
-  Emergency HelpLine 833-91-COURT (833-912-6878).
+  If you do not hear from the court in 1 business day, call the   Appeals Court Clerk's Office: 617-921-4443 
   
-  The Emergency HelpLine is open:  
-  8:30am - 4:30pm,   
-  Monday - Friday.
+  The Appeals Court Clerk's Office is open:  
+  Monday - Friday  
+  8:30am - 4:30pm
   % endif
   
   ${ form_to_file_no_cover }  
