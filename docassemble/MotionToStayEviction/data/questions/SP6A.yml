@@ -264,6 +264,8 @@ question: |
 subquestion: |
   Before using this form, you must first file a Notice of Appeal in the Housing Court. 
   
+  There is no standard form for the Notice of Appeal. Below is a sample.
+  
   [${Notice.show(width='33em')}](${Notice.url_for()})
 fields:
   - I did not file a notice of appeal: no_notice_of_appeal_filed
