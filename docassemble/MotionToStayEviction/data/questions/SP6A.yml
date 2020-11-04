@@ -299,12 +299,29 @@ fields:
 ---
 id: legal issues raised
 question: |
-  What mistake(s) did the **Housing Court** judge make about the legal issue(s) in your case?
-  
+  Select the issues of law in your case.
+subquestion: |
+  A statement of the issue(s) of law is a brief statement of the legal reason that the single justice should allow your motion to stay.
 fields:
   - no label: legal_issues
-    input type: area 
-    rows: 6
+    datatype: checkboxes
+    choices:
+      - Whether the judge abused the judges decision when the judge ordered ${ housing_court_denying_order_text }.: Whether the judge abused the judges decision when the judge ordered ${ housing_court_denying_order_text }.
+      - Whether the judge committed an error of law when the judge failed to follow the summary process statute (G.L. c. 239, §§1, et seq.).: Whether the judge committed an error of law when the judge failed to follow the summary process statute (G.L. c. 239, §§1, et seq.).
+      - Whether the judge committed an error of law by failing to follow the Uniform Summary Process Rules.: Whether the judge committed an error of law by failing to follow the Uniform Summary Process Rules.
+      - Whether the judge committed an error of law by allowing the plaintiff to submit evidence that should not have been considered.: Whether the judge committed an error of law by allowing the plaintiff to submit evidence that should not have been considered.
+      - Whether the judge committed an error of law by not allowing me to submit evidence that should have been considered.: Whether the judge committed an error of law by not allowing me to submit evidence that should have been considered.
+      - Whether the judge violated my constitutional right to due process of law.: Whether the judge violated my constitutional right to due process of law.
+      - Other: Other
+    none of the above: False  
+  - Other: other_legal_issues
+    show if: legal_issues["Other"]
+help:
+  label: |
+    Examples
+  content: |
+    * For example, if the Housing Court judge's order is unreasonable in light of the facts that that the judge heard at the hearing or trial, the issue of law would be whether the judge's order was an abuse of discretion.
+    * For example, if you thought the judge mistakenly did not allow you to present a piece of evidence at the hearing or trial, the issue of law would be whether the judge improperly excluded evidence at the hearing or trial. 
 ---
 id: relief_sought
 question: |
