@@ -1,7 +1,8 @@
 ---
 include:
   - docassemble.MAVirtualCourt:basic-questions.yml
-  - docassemble.AffidavitofIndigencyMAVC:affidavit_body.yml  
+  - docassemble.AffidavitofIndigencyMAVC:affidavit_body.yml
+  - NOA.yml
 ---
 metadata:
   title: Appeal or Stay Your Eviction
@@ -45,7 +46,7 @@ code: |
   date_housing_court_denied_motion_to_stay
   housing_court_denying_order_text
   if no_notice_of_appeal_filed:
-    explain_notice_of_appeal
+    noa_variables
   if not is_first_document:
     appeals_court_docket_number
   else:
@@ -83,14 +84,9 @@ question: |
 subquestion: |
   If a trial court judge has ordered you to be evicted, use this form to appeal the trial court judge's order and ask the court to prevent your eviction. 
   
-  Before using this form, you must:
-  
-    1. Ask for a stay in the Housing Court, and 
+  Before using this form, you must ask for a stay in the Housing Court.
     
-    2. Have filed: 
-    
-      - Notice of Appeal 
-      - Waiver of Appeal Bond
+  If you have not already done so, you can use this form to download a Notice of Appeal and file a Waiver of Appeal Bond. 
   
   To use this form, you will need relevant Housing Court documents including:
   
@@ -262,28 +258,20 @@ id: date notice of appeal filed
 question: |  
   When did you file a Notice of Appeal in the **Housing Court**?
 subquestion: |
-  Before using this form, you must first file a Notice of Appeal in the Housing Court. 
+  Before asking for a Motion to Stay, you must first file a Notice of Appeal in the Housing Court. 
+  
+  If you have not filed a Notice of Appeal in the Housing Court, you will be directed to do so if you select "I did not file a Notice of Appeal."
   
   There is no standard form for the Notice of Appeal. Below is a sample.
   
   [${Notice.show(width='33em')}](${Notice.url_for()})
 fields:
-  - I did not file a notice of appeal: no_notice_of_appeal_filed
+  - I did not file a Notice of Appeal: no_notice_of_appeal_filed
     datatype: yesno
   - Date filed: date_notice_of_appeal_filed
     datatype: date
     hide if: no_notice_of_appeal_filed
 --- 
-id: explain notice of appeal
-question: | 
-  You need to file a Notice of Appeal
-subquestion: | 
-  Failure to file a Notice of Appeal in the Housing Court may result in your Motion to Stay being denied.
-  
-  For more information on what you need to file a Notice of Appeal, view the [Housing Appeal Guide](https://www.mass.gov/guides/housing-appeals-guide#-automatic-stay-pending-appeal-).
-
-continue button field: explain_notice_of_appeal
----
 objects:
   - Notice: DAStaticFile.using(filename='Notice_of_Appeal.png', alt_text='Notice of Appeal')  
 ---
@@ -311,7 +299,8 @@ fields:
 ---
 id: legal issues raised
 question: |
-  What legal mistake(s) did the **Housing Court** judge make about the legal issue(s) in your case?
+  What mistake(s) did the **Housing Court** judge make about the legal issue(s) in your case?
+  
 fields:
   - no label: legal_issues
     input type: area 
@@ -471,6 +460,8 @@ fields:
 code: |
   if is_first_document and is_indigent:
     final_form_to_file = [general_cover_sheet, combined_motion, affidavitofindigency_attachment]
+  elif is_first_document and is_indigent:
+    final_form_to_file = [general_cover_sheet, combined_motion, affidavitofindigency_attachment, Notice_of_Appeal]
   else:
     final_form_to_file = [general_cover_sheet, combined_motion ]
 ---
