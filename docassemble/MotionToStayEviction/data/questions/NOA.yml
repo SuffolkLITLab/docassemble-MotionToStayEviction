@@ -1,0 +1,200 @@
+---
+include:
+  - docassemble.MAVirtualCourt:basic-questions.yml
+---
+metadata:
+  title: Notice of Appeal
+---
+code: |
+  interview_short_title = "Ask for a Notice of Appeal"
+---
+id: interview order
+# mandatory: True
+code: |
+  user_role = "defendant"
+  noa_intro
+  users[0].name.first
+  users[0].address.address
+  users[0].mobile_number
+  users.there_is_another = False
+  users.gathered = True
+  plaintiff_name
+  
+    # Copy plaintiff name into the "Other Parties" list
+  other_parties.auto_gather=False
+  other_parties[0].name.first = plaintiff_name
+  other_parties.gathered=True
+  
+  defendant_name
+  housing_court
+  housing_court_docket_number
+  housing_court_judgment_date
+  noa_method_of_service
+  noa_service_date
+  noa_preview_screen
+  basic_questions_signature_flow
+  users[0].signature
+  noa_download
+  noa_variables = True
+---
+objects:
+  - users: PeopleList.using(there_are_any=True)
+---
+id: noa intro
+question: | 
+  You need to file a Notice of Appeal
+subquestion: | 
+  Failure to file a Notice of Appeal in the Housing Court may result in your Motion to Stay being denied.
+  
+  This short online form will help you fill out a Notice of Appeal.
+  
+    For more information on what you need to file a Notice of Appeal, view the [Housing Appeal Guide](https://www.mass.gov/guides/housing-appeals-guide#-automatic-stay-pending-appeal-).
+continue button field: noa_intro
+---
+id: user address
+question: |
+  What is your address?
+subquestion: |
+  List the address where you want the court to mail papers to you.
+fields:
+  - Email address: users[0].email    
+    datatype: email
+    required: False
+  - Street address: users[0].address.address
+    address autocomplete: True
+  - Unit: users[0].address.unit
+    required: False
+  - City: users[0].address.city
+  - State: users[0].address.state
+    code: states_list()
+  - Zip: users[0].address.zip 
+---
+id: contact information
+question: |
+  Contact information
+subquestion: |
+  Provide at least one other way for the court to reach you. 
+fields:
+  - Mobile number: users[0].mobile_number
+    required: False
+  - Other phone number: users[0].phone_number
+    required: False
+validation code: |
+  if (not showifdef('users[0].phone_number') and 
+      (not showifdef('users[0].mobile_number'))):
+    validation_error(word("You need to provide at least one other contact method."))
+---
+id: plaintiff
+question: |
+  Who is the **{plaintiff}** in your Housing Court case? 
+subquestion: |
+  If there is more than one plaintiff, you may enter more than one name.
+fields:
+  - Plaintiff(s): plaintiff_name
+    input type: area 
+    rows: 6
+terms:
+  plaintiff: |
+    This could be your landlord or the current owner of the property, such as a foreclosing bank or purchaser. 
+--- 
+id: defendant
+question: |
+  Who is the **defendant** in your Housing Court case?
+subquestion: |
+  If you are a defendant, please be sure to include yourself.
+  
+  If there are defendants other than you, you may enter more than one name.
+fields:
+  - Defendant(s): defendant_name
+    input type: area 
+    rows: 6
+---
+id: housing court division 
+question: | 
+  Select the **Housing Court** department and division where your case was heard.
+fields:
+  - no label: housing_court
+    datatype: object
+    choices: macourts.filter_courts(["Housing Court"])
+--- 
+id: housing court docket number 
+question: |
+  What is the **Housing Court** docket number for your case?
+fields:
+  - Docket number: housing_court_docket_number
+---
+id: date of housing court judgment
+question: |
+  When did the **Housing Court** enter judgment against you?
+fields:
+  - Date: housing_court_judgment_date
+    datatype: date  
+--- 
+id: method of service
+question: |
+  How will you deliver the required copies of your Notice of Appeal to the plaintiffs' attorney(s)?
+subquestion: |  
+  You are required to provide a copy of your Notice of Appeal to the plaintiffs' attorney(s).  
+field: noa_method_of_service
+dropdown:
+  - Efile and serve (efilema.com): efile and serve (efilema.com)
+  - Email: email
+  - Mail: mail
+  - Hand delivery: hand delivery
+---
+id: service date
+question: |
+  When will you deliver copies of your Notice of Appeal to the plaintiffs' attorney(s)?
+subquestion: |
+  You are required to provide a copy of your Notice of Appeal to the plaintiffs' attorney(s).
+fields:
+  - Date: noa_service_date
+    datatype: date  
+---
+id: review before signature
+need: form_to_sign
+continue button field: noa_preview_screen
+question: |
+  Nearly finished
+subquestion: |
+  You are almost done! Please click on the form below. It will open in a new window so you can review it and make sure it is correct.
+  
+  Do not forget to come back to this page to move to the final step of signing. 
+  
+   ${ form_to_sign }
+
+progress: 95
+attachment code: motion_attachment["preview"]
+---
+id: download
+progress: 100
+event: noa_download
+question: |
+  Notice of Appeal Download Screen
+subquestion: |
+  You can download your Notice of Appeal here.
+  
+  You are required to provide a copy of your Notice of Appeal to the plaintiffs' attorney(s).
+  
+  You must submit a copy of your Notice of Appeal to ${   housing_court }.
+  
+  Below is a preview of your form.
+  
+  ${ final_form_to_file }
+attachment code: Notice_of_Appeal
+---
+code: |
+ form_to_sign = pdf_concatenate(preview_doc)
+---
+attachment:
+  docx template file: Notice_of_Appeal.docx
+  variable name: preview_doc
+---
+code: |
+  final_form_to_file = pdf_concatenate(Notice_of_Appeal)
+---
+attachment:
+  - name: Notice of Appeal
+    variable name: Notice_of_Appeal
+    filename: Notice_of_Appeal
+    docx template file: Notice_of_Appeal.docx
