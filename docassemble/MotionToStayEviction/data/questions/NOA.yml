@@ -12,7 +12,7 @@ id: interview order
 # mandatory: True
 code: |
   user_role = "defendant"
-  noa_intro
+  # noa_intro
   users[0].name.first
   users[0].address.address
   users[0].mobile_number
@@ -31,10 +31,10 @@ code: |
   housing_court_judgment_date
   noa_method_of_service
   noa_service_date
-  noa_preview_screen
-  basic_questions_signature_flow
-  users[0].signature
-  noa_download
+  # noa_preview_screen
+  # basic_questions_signature_flow
+  # users[0].signature
+  # noa_download
   noa_variables = True
 ---
 objects:
@@ -161,10 +161,10 @@ subquestion: |
   
   Do not forget to come back to this page to move to the final step of signing. 
   
-   ${ form_to_sign }
+   ${ Notice_of_Appeal["preview"] }
 
 progress: 95
-attachment code: motion_attachment["preview"]
+attachment code: Notice_of_Appeal["preview"]
 ---
 id: download
 progress: 100
@@ -181,20 +181,23 @@ subquestion: |
   Below is a preview of your form.
   
   ${ final_form_to_file }
-attachment code: Notice_of_Appeal
+attachment code: Notice_of_Appeal['final']
+#---
+#code: |
+# form_to_sign = pdf_concatenate(preview_doc)
+#---
+#attachment:
+#  docx template file: Notice_of_Appeal.docx
+#  variable name: preview_doc
+#---
+#code: |
+#  final_form_to_file = pdf_concatenate(Notice_of_Appeal)
 ---
-code: |
- form_to_sign = pdf_concatenate(preview_doc)
----
-attachment:
-  docx template file: Notice_of_Appeal.docx
-  variable name: preview_doc
----
-code: |
-  final_form_to_file = pdf_concatenate(Notice_of_Appeal)
+objects:
+  - Notice_of_Appeal: DADict
 ---
 attachment:
   - name: Notice of Appeal
-    variable name: Notice_of_Appeal
+    variable name: Notice_of_Appeal[i]
     filename: Notice_of_Appeal
     docx template file: Notice_of_Appeal.docx
