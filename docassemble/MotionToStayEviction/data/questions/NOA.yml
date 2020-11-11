@@ -11,6 +11,7 @@ code: |
 id: interview order
 # mandatory: True
 code: |
+  noa_intro
   user_role = "defendant"
   # noa_intro
   users[0].name.first

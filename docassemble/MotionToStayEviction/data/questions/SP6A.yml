@@ -81,13 +81,15 @@ code: |
 ---
 id: noa confirmation
 question: |
-  Here is what your Notice of Appeal looks like
+  Here is what your Notice of Appeal looks like.
 subquestion: |
   ${ Notice_of_Appeal['preview'] }
   
-  You'll have a chance to add your signature to this document at the end
+  You will have a chance to add your signature to this document at the end
   of this interview.
-continue button field:   noa_confirmation
+  
+  Failure to file a Notice of Appeal in the Housing Court may result in your Motion to Stay being denied.
+continue button field: noa_confirmation
 --- 
 id: info screen
 question: |
@@ -537,7 +539,7 @@ subquestion: |
   delivered until you complete the delivery process below.**
   
   % if no_notice_of_appeal_filed:
-  You have two documents to deliver: 
+  **You have two documents to deliver:** 
   
   1. The [:file-download: Notice of Appeal]( ${ Notice_of_Appeal['final'].pdf.url_for()} ),
   which needs to be delivered to the ${ housing_court }. You need to deliver
@@ -562,8 +564,6 @@ subquestion: |
   % endif
   
   ${ form_to_file_no_cover }  
-  
-  ${action_button_html(url_action('review_all_sections'), icon='edit', label=word("Make changes"))}
   
   % if not defined('email_success') or not email_success:
     ${ action_button_html( url_action('form_delivery_complete'), id_tag="submitToCourt", label="Submit to " + str(courts[0].name), icon=send_icon, size="md", color="primary")}
