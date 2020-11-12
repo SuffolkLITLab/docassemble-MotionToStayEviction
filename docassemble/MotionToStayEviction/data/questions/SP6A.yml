@@ -65,7 +65,7 @@ code: |
   method_of_service
   parties_to_be_served
   service_date
-  if has_evidence:
+  if has_evidence and has_evidence_ready_to_upload:
     review_exhibits
   if is_first_document:
     indigency_intro
@@ -500,7 +500,7 @@ code: |
 ---
 code: |
   form_to_sign_temp = []
-  if has_evidence:
+  if has_evidence and has_evidence_ready_to_upload:
     form_to_sign_temp = [motion_attachment["preview"], exhibits]
   else:
     form_to_sign_temp = [motion_attachment["preview"]]
@@ -623,7 +623,7 @@ continue button label: Send to court
 ---
 code: |
   combined_motion_temp = []
-  if has_evidence:
+  if has_evidence and has_evidence_ready_to_upload:
     combined_motion_temp = [motion_attachment["final"], exhibits]
   else:
     combined_motion_temp = [motion_attachment["final"]]
