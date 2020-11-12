@@ -592,7 +592,9 @@ continue button field: ready_to_email
 continue button label: Send to court
 ---
 code: |
-  exhibits_with_numbers = pdf_concatenate(exhibits) # pdf_concatenate(exhibits,filename="exhibits.pdf").bates_number(prefix="EX-")
+  # exhibits_with_numbers = pdf_concatenate(exhibits) 
+  exhibits_with_numbers = pdf_concatenate(exhibits,filename="exhibits.pdf")
+  exhibits_with_numbers.bates_number(prefix="EX-")
   if has_evidence:
     combined_motion = pdf_concatenate(motion_attachment["final"], exhibits_with_numbers, filename="motion_to_stay_eviction.pdf")
   else:
