@@ -65,6 +65,9 @@ code: |
   service_date
   if has_evidence:
     review_exhibits
+    for exhibit in exhibits:
+      # Trigger the background OCR process for each upload
+      exhibit.ocr_task.ready()
   if is_first_document:
     indigency_intro
     fees['Appeal cost'].waive = True
@@ -76,6 +79,10 @@ code: |
   basic_questions_signature_flow
   users[0].signature
   download
+---
+code: |
+  # Find text anywhere on the page to OCR
+  exhibits[i].ocr_task = exhibits[i].make_ocr_pdf_in_background(psm=1)
 --- 
 id: info screen
 question: |
@@ -585,8 +592,9 @@ continue button field: ready_to_email
 continue button label: Send to court
 ---
 code: |
+  exhibits_with_numbers = pdf_concatenate(exhibits) # pdf_concatenate(exhibits,filename="exhibits.pdf").bates_number(prefix="EX-")
   if has_evidence:
-    combined_motion = pdf_concatenate(motion_attachment["final"], exhibits, filename="motion_to_stay_eviction.pdf")
+    combined_motion = pdf_concatenate(motion_attachment["final"], exhibits_with_numbers, filename="motion_to_stay_eviction.pdf")
   else:
     combined_motion = motion_attachment["final"]
 ---
