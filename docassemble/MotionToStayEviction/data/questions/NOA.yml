@@ -43,13 +43,13 @@ objects:
 ---
 id: noa intro
 question: | 
-  You need to file a Notice of Appeal
+  You need to file a Notice of Appeal in the Housing Court.
 subquestion: | 
-  Failure to file a Notice of Appeal in the Housing Court may result in your Motion to Stay being denied.
+  **Failure to file a Notice of Appeal in the Housing Court may result in your Motion to Stay being denied.**
   
   This short online form will help you fill out a Notice of Appeal.
   
-    For more information on what you need to file a Notice of Appeal, view the [Housing Appeal Guide](https://www.mass.gov/guides/housing-appeals-guide#-automatic-stay-pending-appeal-).
+  For more information on what you need to file a Notice of Appeal, view the [Housing Appeal Guide](https://www.mass.gov/guides/housing-appeals-guide#-automatic-stay-pending-appeal-).
 continue button field: noa_intro
 ---
 id: user address

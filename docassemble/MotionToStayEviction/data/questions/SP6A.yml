@@ -85,19 +85,18 @@ question: |
 subquestion: |
   ${ Notice_of_Appeal['preview'] }
   
-  You will have a chance to add your signature to this document at the end
-  of this interview.
+  You will have a chance to add your signature to this document and download it at the end of this interview.
   
-  Failure to file a Notice of Appeal in the Housing Court may result in your Motion to Stay being denied.
+  Failure to file a Notice of Appeal in the ${ housing_court } may result in your Motion to Stay being denied.
 continue button field: noa_confirmation
 --- 
 id: info screen
 question: |
   Motion to Stay Eviction
 subquestion: |
-  If a trial court judge has ordered you to be evicted, use this form to appeal the trial court judge's order and ask the court to prevent your eviction. 
+  If a trial court judge has ordered you to be evicted, use this form to appeal the trial court judge's order and ask the appeals court to prevent your eviction. 
   
-  Before using this form, you must ask for a stay in the Housing Court.
+  Before using this form, you must ask for a Stay in the Housing Court.
     
   If you have not already done so, you can use this form to download a Notice of Appeal and file a Waiver of Appeal Bond. 
   
@@ -111,7 +110,7 @@ subquestion: |
     
     * the judgment
     
-    * filings related to your motion to stay in the Housing Court.
+    * filings related to your motion to stay in the Housing Court
   
   This form cannot be directly emailed to the Supreme Judicial Court. For more information, contact the Supreme Judicial Court Clerk's office: (617) 557-1020.
   
@@ -271,13 +270,13 @@ id: date notice of appeal filed
 question: |  
   When did you file a Notice of Appeal in the **Housing Court**?
 subquestion: |
-  Before asking for a Motion to Stay, you must first file a Notice of Appeal in the Housing Court. 
-  
-  If you have not filed a Notice of Appeal in the Housing Court, you will be directed to do so if you select "I did not file a Notice of Appeal."
+  **Before asking for a Motion to Stay, you must first file a Notice of Appeal in the ${ housing_court }.**
   
   There is no standard form for the Notice of Appeal. Below is a sample.
   
   [${Notice.show(width='33em')}](${Notice.url_for()})
+  
+    If you have not filed a Notice of Appeal in the ${ housing_court }, you will be directed to do so if you select "I did not file a Notice of Appeal."
 fields:
   - I did not file a Notice of Appeal: no_notice_of_appeal_filed
     datatype: yesno
@@ -292,12 +291,10 @@ id: date housing court denied motion to stay
 question: |  
   When did the **Housing Court** judge deny your Motion to Stay?
 subquestion: |
-  Before using this form, you must first ask for a stay in the Housing Court.
+  Before using this form, you must first ask for a Stay in the ${ housing_court }.
   
-  For more information, call the Trial Court’s Emergency HelpLine:
-    833-91-COURT (833-912-6878)
-    Monday-Friday
-    8:30am - 4:30pm
+  For more information, call the Trial Court’s Emergency HelpLine: 833-91-COURT (833-912-6878) open Monday - Friday from 8:30 am - 4:30 pm. 
+    
 fields:
   - Date: date_housing_court_denied_motion_to_stay
     datatype: date  
@@ -424,7 +421,7 @@ id: likelihood of success
 question: |
   Why is your appeal likely to succeed?  
 subquestion: |
-  In order to grant your request for a stay, your motion must show that your appeal is likely to succeed.
+  In order to grant your request for a Stay, your motion must show that your appeal is likely to succeed.
 fields:
   - no label: likelihood_of_success
     input type: area 
@@ -479,7 +476,7 @@ id: argument summary
 question: |
   Summarize your argument
 subquestion: |
-  Most motions to stay are decided without holding a hearing.  
+  Most Motions to Stay are decided without holding a hearing.  
   
   It is important that you include in your Motion to Stay anything that you want the court to know about your case.
 fields:
@@ -517,7 +514,7 @@ question: |
 subquestion: |
   You are almost done! Please click on the form below. It will open in a new window so you can review it and make sure it is correct.
   
-  Don't forget to come back to this page to click to the final step of signing and sending the form to the court. 
+  Do not forget to come back to this page to click to the final step of signing and sending the form to the court. 
   
    ${ form_to_sign }
 
@@ -542,18 +539,18 @@ subquestion: |
   **You have two documents to deliver:** 
   
   1. The [:file-download: Notice of Appeal]( ${ Notice_of_Appeal['final'].pdf.url_for()} ),
-  which needs to be delivered to the ${ housing_court }. You need to deliver
+  which needs to be delivered to the **${ housing_court }**. You need to deliver
   this on your own. Call the ${ housing_court } at ${ housing_court.phone }
   to find out how.
-  2. Your Appeal which needs to be delivered to ${ courts[0] }. You can deliver the appeal by following the steps below.
+  2. Your Appeal, which needs to be delivered to ${ courts[0] }. You can deliver the appeal by following the steps below.
   
   Follow these steps to deliver the Appeal to the ${ courts[0] }:
   % endif
   
-  1. Click the preview image below to open the form in a new window. Correct any errors using the "Make changes" button below.
+  1. Click the preview image below to open the form in a new window.
   1. Download and save or print a copy of this form for your 
   records.
-  1. Click the "Submit to ${courts[0]}" button to send it to the court. 
+  1. Click "Submit to ${courts[0]}" to send it to the court. 
   1. You will have a chance to add instructions to the clerk and see the cover page before final delivery.
   % else:
   If you do not hear from the court in 1 business day, call the   Appeals Court Clerk's Office: 617-921-4443 
