@@ -573,8 +573,13 @@ subquestion: |
     Your email has already been delivered to ${courts[0]}
 
   % for file in final_form_to_file:
-
-  [:file-download: ${ file.info.get("filename") }](${file.url_for()})
+  % if hasattr(file, 'info'):
+  * [:file-download: ${ file.info.get("filename") }](${file.url_for()})
+  % elif hasattr(file, 'file_info'):
+  * [:file-download: ${ file.file_info.get("filename") }](${file.url_for()})
+  % else:
+  * [:file-download: ${ str(file) }](${file.url_for()})
+  % endif
   % endfor 
   % endif
 progress: 100
@@ -598,9 +603,15 @@ subquestion: |
   Here is what the clerk at ${courts} will get:
 
   % for file in final_form_to_file:
-  ${ file }  
-  [:file-download: ${ file.info.get("filename") }](${file.url_for()})  
-  % endfor 
+  
+  % if hasattr(file, 'info'):
+  * [:file-download: ${ file.info.get("filename") }](${file.url_for()})
+  % elif hasattr(file, 'file_info'):
+  * [:file-download: ${ file.file_info.get("filename") }](${file.url_for()})
+  % else:
+  * [:file-download: ${ str(file) }](${file.url_for()})
+  % endif
+  % endfor
   
   % if found_email:
   We will deliver it securely. Please allow up to 15 minutes for the email to
