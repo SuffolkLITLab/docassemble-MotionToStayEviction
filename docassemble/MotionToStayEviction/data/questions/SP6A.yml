@@ -1,14 +1,12 @@
 ---
 include:
   - docassemble.MAVirtualCourt:basic-questions.yml
+  - docassemble.MassAppealsCourt:appeals-basic-questions.yml
   - docassemble.AffidavitofIndigencyMAVC:affidavit_body.yml
   - NOA.yml
 ---
 metadata:
   title: Appeal or Stay Your Eviction
----
-code: |
-  courts[0] = macourts.matching_appeals_court("")
 ---
 code: |
   bcc_failsafe = "cc@example.com"
@@ -126,39 +124,6 @@ continue button field: info_screen
 ---
 objects:
   - users: PeopleList.using(there_are_any=True)
----
-id: user address
-question: |
-  What is your address?
-subquestion: |
-  List the address where you want the court to mail papers to you.
-fields:
-  - Email address: users[0].email    
-    datatype: email
-    required: False
-  - Street address: users[0].address.address
-    address autocomplete: True
-  - Unit: users[0].address.unit
-    required: False
-  - City: users[0].address.city
-  - State: users[0].address.state
-    code: states_list()
-  - Zip: users[0].address.zip 
----
-id: contact information
-question: |
-  Contact information
-subquestion: |
-  Provide at least one other way for the court to reach you. 
-fields:
-  - Mobile number: users[0].mobile_number
-    required: False
-  - Other phone number: users[0].phone_number
-    required: False
-validation code: |
-  if (not showifdef('users[0].phone_number') and 
-      (not showifdef('users[0].mobile_number'))):
-    validation_error(word("You need to provide at least one other contact method."))
 ---
 id: housing court division 
 question: | 
@@ -588,52 +553,6 @@ subquestion: |
 progress: 100
 section: download
 attachment code: motion_attachment["final"]
----
-need:
-  - comments_to_clerk
-  - package_version_number
-id: ready to email
-question: |
-  Final Review With Cover Page
-subquestion: |
-  
-  Below is your ${comma_and_list(download_titles)} document with the 
-  cover page that we will deliver to ${courts[0]}.
-  
-  Click "Back" if you need to make any changes.  
-  Click "Send to court" to deliver it.
-  
-  Here is what the clerk at ${courts} will get:
-
-  % for file in final_form_to_file:
-  
-  % if hasattr(file, 'info'):
-  * [:file-download: ${ file.info.get("filename") }](${file.url_for()})
-  % elif hasattr(file, 'file_info'):
-  * [:file-download: ${ file.file_info.get("filename") }](${file.url_for()})
-  % else:
-  * [:file-download: ${ str(file) }](${file.url_for()})
-  % endif
-  % endfor
-  
-  % if found_email:
-  We will deliver it securely. Please allow up to 15 minutes for the email to
-  arrive.
-  % else:
-  There was a problem delivering this to the ${courts[0]}. We couldn't
-  locate the contact information for this court.
-  % endif
- 
-  Press below to deliver the form.
-fields:
-  - Send me a copy: should_cc_user
-    datatype: yesno
-  - Email address: cc_email
-    datatype: email
-    show if: should_cc_user
-    default: ${users[0].email if defined('users[0].email') else ''}
-continue button field: ready_to_email
-continue button label: Send to court
 ---
 code: |
   # exhibits_with_numbers = pdf_concatenate(exhibits) 
