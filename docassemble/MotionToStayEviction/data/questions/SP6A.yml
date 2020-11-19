@@ -683,15 +683,18 @@ fields:
   - Are you ready to take a photo or upload them now?: has_evidence_ready_to_upload
     datatype: yesnoradio
     show if: has_evidence
-  - note: |
-      Okay. You may want to call the court to ask the best way to get your
-      documents to the judge.
+  - I state that filing a complete record appendix is impracticable.: no_record_statement
+    datatype: yesno
+    show if: 
+      variable: has_evidence      
+      is: False
+  - I state that filing a complete record appendix is impracticable.: no_record_statement
+    datatype: yesno
     show if: 
       variable: has_evidence_ready_to_upload      
       is: False
   - note: |
-      Take a picture of each document you want to upload, or get the files ready to
-      upload on your computer or phone.
+      Take a picture of each document you want to upload, or get the files ready to upload on your computer or phone.
       
       When you're ready, use the upload area below.
     show if: has_evidence_ready_to_upload
