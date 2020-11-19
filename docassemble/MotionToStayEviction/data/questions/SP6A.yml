@@ -65,7 +65,7 @@ code: |
   method_of_service
   parties_to_be_served
   service_date
-  if has_evidence and has_evidence_ready_to_upload:
+  if has_evidence:
     review_exhibits
     for exhibit in exhibits:
       # Trigger the background OCR process for each upload
@@ -504,7 +504,7 @@ code: |
 ---
 code: |
   form_to_sign_temp = []
-  if has_evidence and has_evidence_ready_to_upload:
+  if has_evidence:
     form_to_sign_temp = [motion_attachment["preview"], exhibits]
   else:
     form_to_sign_temp = [motion_attachment["preview"]]
@@ -526,7 +526,6 @@ subquestion: |
    ${ form_to_sign }
 
 progress: 95
-attachment code: motion_attachment["preview"]
 ---
 id: download form
 event: download
@@ -638,9 +637,9 @@ continue button label: Send to court
 ---
 code: |
   # exhibits_with_numbers = pdf_concatenate(exhibits) 
-  exhibits_with_numbers = pdf_concatenate(exhibits,filename="exhibits.pdf")
-  exhibits_with_numbers.bates_number(prefix="EX-")
   if has_evidence:
+    exhibits_with_numbers = pdf_concatenate(exhibits,filename="exhibits.pdf")
+    exhibits_with_numbers.bates_number(prefix="EX-")
     combined_motion = pdf_concatenate(motion_attachment["final"], exhibits_with_numbers, filename="motion_to_stay_eviction.pdf")
   else:
     combined_motion_temp = [motion_attachment["final"]]
@@ -680,27 +679,14 @@ subquestion: |
 fields:
   - Do you have any documents to share with the judge?: has_evidence
     datatype: yesnoradio
-  - Are you ready to take a photo or upload them now?: has_evidence_ready_to_upload
-    datatype: yesnoradio
-    show if: has_evidence
   - I state that filing a complete record appendix is impracticable.: no_record_statement
     datatype: yesno
     show if: 
       variable: has_evidence      
       is: False
-  - I state that filing a complete record appendix is impracticable.: no_record_statement
-    datatype: yesno
-    show if: 
-      variable: has_evidence_ready_to_upload      
-      is: False
-  - note: |
-      Take a picture of each document you want to upload, or get the files ready to upload on your computer or phone.
-      
-      When you're ready, use the upload area below.
-    show if: has_evidence_ready_to_upload
   - Tap "browse" and choose all of the photos you want to upload at once. You can edit or add additional documents on the next screen.: exhibits
     datatype: files
-    show if: has_evidence_ready_to_upload
+    show if: has_evidence
     accept: |
       "image/*, image/png,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,.pdf"
 ---
