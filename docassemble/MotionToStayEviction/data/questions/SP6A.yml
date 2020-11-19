@@ -84,7 +84,7 @@ id: noa confirmation
 question: |
   Here is what your Notice of Appeal looks like.
 subquestion: |
-  ${ Notice_of_Appeal['preview'] }
+  ${ pdf_concatenate(Notice_of_Appeal['preview']) }
   
   You will have a chance to add your signature to this document and download it at the end of this interview.
   
