@@ -70,8 +70,8 @@ code: |
       exhibit.ocr_task.ready()
   if is_first_document:
     indigency_intro
-    fees['Appeal cost'].waive = True
-    fees['Appeal cost'].amount = 315.00
+    fees['Filing fee'].waive = True
+    fees['Filing fee'].amount = 300.00
     ask_affidavit_questions
     if not is_indigent:
       doesnt_qualify_interstitial
@@ -459,8 +459,6 @@ fields:
 code: |
   if is_first_document and is_indigent:
     final_form_to_file = [general_cover_sheet, combined_motion, affidavitofindigency_attachment]
-  elif is_first_document and is_indigent:
-    final_form_to_file = [general_cover_sheet, combined_motion, affidavitofindigency_attachment]
   else:
     final_form_to_file = [general_cover_sheet, combined_motion ]
 ---
@@ -559,7 +557,7 @@ code: |
   if has_evidence:
     exhibits_with_numbers = pdf_concatenate(exhibits,filename="exhibits.pdf")
     exhibits_with_numbers.bates_number(prefix="EX-")
-    combined_motion = pdf_concatenate(motion_attachment["final"], exhibits_with_numbers, filename="motion_to_stay_eviction.pdf")
+    combined_motion_temp = pdf_concatenate(motion_attachment["final"], exhibits_with_numbers, filename="motion_to_stay_eviction.pdf")
   else:
     combined_motion_temp = [motion_attachment["final"]]
   #if no_notice_of_appeal_filed:
