@@ -29,7 +29,8 @@ code: |
   defendant_name
   housing_court
   housing_court_docket_number
-  housing_court_judgment_date
+  judgment_appealing
+  judgment_date
   noa_method_of_service
   noa_service_date
   # noa_preview_screen
@@ -51,39 +52,6 @@ subquestion: |
   
   For more information on what you need to file a Notice of Appeal, view the [Housing Appeal Guide](https://www.mass.gov/guides/housing-appeals-guide#-automatic-stay-pending-appeal-).
 continue button field: noa_intro
----
-id: user address
-question: |
-  What is your address?
-subquestion: |
-  List the address where you want the court to mail papers to you.
-fields:
-  - Email address: users[0].email    
-    datatype: email
-    required: False
-  - Street address: users[0].address.address
-    address autocomplete: True
-  - Unit: users[0].address.unit
-    required: False
-  - City: users[0].address.city
-  - State: users[0].address.state
-    code: states_list()
-  - Zip: users[0].address.zip 
----
-id: contact information
-question: |
-  Contact information
-subquestion: |
-  Provide at least one other way for the court to reach you. 
-fields:
-  - Mobile number: users[0].mobile_number
-    required: False
-  - Other phone number: users[0].phone_number
-    required: False
-validation code: |
-  if (not showifdef('users[0].phone_number') and 
-      (not showifdef('users[0].mobile_number'))):
-    validation_error(word("You need to provide at least one other contact method."))
 ---
 id: plaintiff
 question: |
@@ -124,11 +92,25 @@ question: |
 fields:
   - Docket number: housing_court_docket_number
 ---
-id: date of housing court judgment
+id: type of judgment
 question: |
-  When did the **Housing Court** enter judgment against you?
+  What judgement are you appealing?
 fields:
-  - Date: housing_court_judgment_date
+  - no label: judgment_appealing
+    input type: radio
+    choices:
+      - A Rule 60(b) motion to reconsider: A Rule 60(b) motion to reconsider
+      - A motion to stay execution: A motion to stay execution
+      - Other: Other
+  - Other: other_judgment_appealing
+    js show if: |
+      val("judgment_appealing") == "Other"
+---
+id: date of judgment
+question: |
+  When did the court enter judgment against you?
+fields:
+  - Date: judgment_date
     datatype: date  
 --- 
 id: method of service

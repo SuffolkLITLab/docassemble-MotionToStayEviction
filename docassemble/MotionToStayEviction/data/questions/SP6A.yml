@@ -1,9 +1,9 @@
 ---
 include:
   - docassemble.MAVirtualCourt:basic-questions.yml
-  - docassemble.MassAppealsCourt:appeals-basic-questions.yml
   - docassemble.AffidavitofIndigencyMAVC:affidavit_body.yml
   - NOA.yml
+  - docassemble.MassAppealsCourt:appeals-basic-questions.yml
 ---
 metadata:
   title: Appeal or Stay Your Eviction
