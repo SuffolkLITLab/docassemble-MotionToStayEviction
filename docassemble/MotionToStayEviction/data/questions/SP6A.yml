@@ -603,7 +603,7 @@ fields:
     show if: 
       variable: has_evidence      
       is: False
-  - Tap "browse" and choose all of the photos you want to upload at once. You can edit or add additional documents on the next screen.: exhibits
+  - Tap "browse" and choose all of the documents you want to upload at once. You can edit or add additional documents on the next screen.: exhibits
     datatype: files
     show if: has_evidence
     accept: |
