@@ -71,7 +71,7 @@ code: |
   if is_first_document:
     indigency_intro
     fees['Filing fee'].waive = True
-    fees['Filing fee'].amount = 300.00
+    fees['Filing fee'].amount = 315.00
     ask_affidavit_questions
     if not is_indigent:
       doesnt_qualify_interstitial
@@ -169,7 +169,7 @@ question: |
 subquestion: |
   The next questions will be used to find out if you
   qualify for a fee waiver. The fee to file a Motion to Stay
-  is $300.00.
+  is $315.00.
 ---
 id: plaintiff
 question: |
