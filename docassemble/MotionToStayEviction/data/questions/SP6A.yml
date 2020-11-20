@@ -246,7 +246,7 @@ subquestion: |
   
   There is no standard form for the Notice of Appeal. Below is a sample.
   
-  [${Notice.show(width='33em')}](${Notice.url_for()})
+  [${Notice.show(width='28em')}](${Notice.url_for()})
   
     If you have not filed a Notice of Appeal in the ${ housing_court }, you will be directed to do so if you select "I did not file a Notice of Appeal."
 fields:
@@ -323,7 +323,7 @@ subquestion: |
   
   If the plaintiff does not have an attorney, you are required to serve a copy on the self-represented plaintiff.  
   
-  You should not provide a copy of your affidavit of indigency, if any, to anyone except the Appeals Court.  
+  You should not provide a copy of your Affidavit of Indigency, if any, to anyone except the Appeals Court.  
 field: method_of_service
 dropdown:
   - Efile and serve (efilema.com): efile and serve (efilema.com)

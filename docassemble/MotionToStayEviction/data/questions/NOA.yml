@@ -94,7 +94,7 @@ fields:
 ---
 id: type of judgment
 question: |
-  What judgement are you appealing?
+  What judgment are you appealing?
 fields:
   - no label: judgment_appealing
     input type: radio
