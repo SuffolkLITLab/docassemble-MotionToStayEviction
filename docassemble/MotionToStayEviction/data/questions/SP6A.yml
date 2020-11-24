@@ -104,7 +104,7 @@ continue button field: noa_confirmation
 code: |
   # Find text anywhere on the page to OCR
   # if exhibits[i].
-  exhibits[i] = pdf_concatenate(exhibits[i], filename=exhibits[i].filename + '.pdf')
+  # exhibits[i] = pdf_concatenate(exhibits[i], filename=exhibits[i].filename + '.pdf')
   exhibits[i].ocr_task = exhibits[i].make_ocr_pdf_in_background(psm=1)
 --- 
 id: info screen
