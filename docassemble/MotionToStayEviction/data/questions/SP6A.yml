@@ -86,22 +86,9 @@ code: |
   users[0].signature
   download
 ---
-# TODO: make file size error message translatable. To try:
-# code: |
-#  str_var = str( template_var )
-#---
-#template: template_var
-#content: |
-#  Some content
-#---
 code: |
-  max_mb_per_file = 0.3
-  #file_size_error_message = str(file_size_error_message_template)
+  max_mb_per_file = 15
   file_size_vars = True
----
-#template: file_size_error_message_template
-#content: |
-#  The size of all the files together needs to be less than ${ max_mb_per_file } mb
 ---
 id: noa confirmation
 question: |
