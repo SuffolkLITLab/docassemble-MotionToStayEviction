@@ -67,7 +67,7 @@ code: |
   method_of_service
   parties_to_be_served
   service_date
-  max_mb_per_file = 0.3
+  max_mb_per_file
   if has_evidence:
     review_exhibits
     for exhibit in exhibits:
@@ -84,6 +84,13 @@ code: |
   basic_questions_signature_flow
   users[0].signature
   download
+---
+code: |
+  max_mb_per_file = 0.3
+---
+template: file_size_error_message
+content: |
+  The size of all the files together needs to be less than ${ max_mb_per_file } mb
 ---
 id: noa confirmation
 question: |
