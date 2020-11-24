@@ -8,6 +8,10 @@ include:
 metadata:
   title: Appeal or Stay Your Eviction
 ---
+features:
+  javascript:
+    - limit_upload_size.js
+---
 code: |
   bcc_failsafe = "cc@example.com"
 ---
@@ -63,6 +67,8 @@ code: |
   method_of_service
   parties_to_be_served
   service_date
+  # WARNING: file size error is not currently translatable
+  file_size_vars
   if has_evidence:
     review_exhibits
     for exhibit in exhibits:
@@ -79,6 +85,10 @@ code: |
   basic_questions_signature_flow
   users[0].signature
   download
+---
+code: |
+  max_mb_per_file = 15
+  file_size_vars = True
 ---
 id: noa confirmation
 question: |
