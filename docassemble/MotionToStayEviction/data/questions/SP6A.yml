@@ -618,6 +618,9 @@ fields:
     show if: has_evidence
     accept: |
       "image/*, image/png,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,.pdf"
+validation code: |
+  if exhibits.size_in_bytes() > (15 * 1024 * 1024):
+    validation_error("Please upload a file smaller than 15 MB.")
 ---
 table: exhibits.table
 rows: exhibits
