@@ -8,6 +8,10 @@ include:
 metadata:
   title: Appeal or Stay Your Eviction
 ---
+features:
+  javascript:
+    - limit_upload_size.js
+---
 code: |
   bcc_failsafe = "cc@example.com"
 ---
@@ -63,6 +67,8 @@ code: |
   method_of_service
   parties_to_be_served
   service_date
+  max_mb_per_file = 0.01
+  #set_max_filesize_mb( 0.01 )
   if has_evidence:
     review_exhibits
     for exhibit in exhibits:
