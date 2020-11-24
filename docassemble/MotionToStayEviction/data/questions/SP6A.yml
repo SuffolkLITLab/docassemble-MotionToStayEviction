@@ -67,7 +67,7 @@ code: |
   method_of_service
   parties_to_be_served
   service_date
-  max_mb_per_file = 0.01
+  max_mb_per_file = 0.3
   if has_evidence:
     review_exhibits
     for exhibit in exhibits:
