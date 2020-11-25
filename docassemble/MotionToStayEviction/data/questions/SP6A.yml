@@ -21,7 +21,7 @@ code: |
 id: interview order
 mandatory: True
 code: |
-  has_evidence
+  # has_evidence
   user_role = "defendant"
   appeals_basic_questions_intro_screen
   info_screen
