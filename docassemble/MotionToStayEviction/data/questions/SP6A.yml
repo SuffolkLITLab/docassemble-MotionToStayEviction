@@ -21,6 +21,7 @@ code: |
 id: interview order
 mandatory: True
 code: |
+  # has_evidence
   user_role = "defendant"
   appeals_basic_questions_intro_screen
   info_screen
@@ -70,6 +71,8 @@ code: |
   # WARNING: file size error is not currently translatable
   file_size_vars
   if has_evidence:
+    # Permit linking out to the uploaded files if they exceed attachment limit
+    # exhibits.set_attributes(private=False)
     review_exhibits
     for exhibit in exhibits:
       # Trigger the background OCR process for each upload
@@ -89,6 +92,12 @@ code: |
 code: |
   max_mb_per_file = 15
   file_size_vars = True
+---
+code: |
+  try:
+    exhibits_total_size = sum(exhibit.size_in_bytes() for exhibit in exhibits)
+  except:
+    exhibits_total_size = 15 * 1024 * 1024
 ---
 id: noa confirmation
 question: |
@@ -569,7 +578,11 @@ code: |
   if has_evidence:
     exhibits_with_numbers = pdf_concatenate(exhibits,filename="exhibits.pdf")
     exhibits_with_numbers.bates_number(prefix="EX-")
-    combined_motion_temp = pdf_concatenate(motion_attachment["final"], exhibits_with_numbers, filename="motion_to_stay_eviction.pdf")
+    exhibits_with_numbers.set_attributes(private=False)
+    if exhibits_total_size < 10 * 1024 * 1024:
+      combined_motion_temp = pdf_concatenate(motion_attachment["final"], exhibits_with_numbers, filename="motion_to_stay_eviction.pdf")
+    else:
+      combined_motion_temp = [motion_attachment["final"]]
   else:
     combined_motion_temp = [motion_attachment["final"]]
   #if no_notice_of_appeal_filed:
@@ -616,10 +629,12 @@ fields:
   - Tap "browse" and choose all of the documents you want to upload at once. You can edit or add additional documents on the next screen.: exhibits
     datatype: files
     show if: has_evidence
+    maximum image size: 1024
+    image upload type: jpeg    
     accept: |
       "image/*, image/png,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,.pdf"
 validation code: |
-  if exhibits.size_in_bytes() > (15 * 1024 * 1024):
+  if sum(exhibit.size_in_bytes() for exhibit in exhibits) > (15 * 1024 * 1024):
     validation_error("Please upload a file smaller than 15 MB.")
 ---
 table: exhibits.table
@@ -627,6 +642,7 @@ rows: exhibits
 allow reordering: True
 columns:
   - File name: showifdef(row_item.attr_name('filename'))
+  # - Size: row_item.size_in_bytes() / 1024 / 1024
   - Thumbnail: row_item.show(width="100px")  
 delete buttons: True
 ---
@@ -659,4 +675,35 @@ subquestion: |
   ${ exhibits.table }
   
   ${exhibits.add_action() }
-continue button field: review_exhibits  
+continue button field: review_exhibits 
+---
+---
+id: email to court
+template: email_to_court_template
+subject: |
+  MassAccess submission from ${users} intended for ${courts[0]}
+content: |
+  % if exhibits_total_size > 10 * 1024 * 1024:
+  **The user provided an attachment that is too large to email.**
+  [Link to exhibits](${ exhibits_with_numbers.url_for(external=True) } )
+  % endif
+  
+  At ${current_datetime().format_datetime()},
+  ${users} submitted the attached ${package_title} form(s).
+
+  &nbsp;        | &nbsp;
+  --------------|-----------
+  Date of email | ${current_datetime().format_datetime()}
+  Pages | ${num_package_pages }  
+  Preferred language | ${ user_preferred_language if user_needs_interpreter else 'English' }
+  Mobile phone | ${showifdef('users[0].mobile_number')}
+  Other phone | ${showifdef('users[0].phone_number')}
+  Email | ${showifdef('users[0].email')}
+  Contact details/other | ${showifdef('users[0].other_contact_method')}
+  
+  Comments for clerk: 
+  
+  ${ showifdef('comments_to_clerk')}
+  
+  Please contact ${users} in the next business day to
+  confirm that you received this message.
