@@ -18,6 +18,9 @@ code: |
 code: |
   interview_short_title = "Ask the Appeals Court to Stop Your Eviction"
 ---
+objects:
+  - prepped_exhibits: DAFile.using(filename='exhibits.pdf')
+---
 id: interview order
 mandatory: True
 code: |
@@ -55,6 +58,11 @@ code: |
     appeals_court_docket_number
   else:
     explain_need_affidavit
+  # WARNING: file size error is not currently translatable
+  file_size_vars
+  if has_evidence:
+    review_exhibits
+    ocr_task.ready()  
   procedural_history
   statement_of_facts
   procedural_history
@@ -68,15 +76,6 @@ code: |
   method_of_service
   parties_to_be_served
   service_date
-  # WARNING: file size error is not currently translatable
-  file_size_vars
-  if has_evidence:
-    # Permit linking out to the uploaded files if they exceed attachment limit
-    # exhibits.set_attributes(private=False)
-    review_exhibits
-    for exhibit in exhibits:
-      # Trigger the background OCR process for each upload
-      exhibit.ocr_task.ready()
   if is_first_document:
     indigency_intro
     fees['Filing fee'].waive = True
@@ -92,12 +91,12 @@ code: |
 code: |
   max_mb_per_file = 15
   file_size_vars = True
----
-code: |
-  try:
-    exhibits_total_size = sum(exhibit.size_in_bytes() for exhibit in exhibits)
-  except:
-    exhibits_total_size = 15 * 1024 * 1024
+#---
+#code: |
+#  try:
+#    exhibits_total_size = sum(exhibit.size_in_bytes() for exhibit in exhibits)
+#  except:
+#    exhibits_total_size = 15 * 1024 * 1024
 ---
 id: noa confirmation
 question: |
@@ -110,11 +109,16 @@ subquestion: |
   Failure to file a Notice of Appeal in the ${ housing_court } may result in your Motion to Stay being denied.
 continue button field: noa_confirmation
 ---
+need: prepped_exhibits
 code: |
-  # Find text anywhere on the page to OCR
-  # if exhibits[i].
-  # exhibits[i] = pdf_concatenate(exhibits[i], filename=exhibits[i].filename + '.pdf')
-  exhibits[i].ocr_task = exhibits[i].make_ocr_pdf_in_background(psm=1)
+  ocr_task = background_action('process_exhibits')
+---
+event: process_exhibits
+code: |
+  prepped_exhibits.initialize(filename="exhibits.pdf")
+  prepped_exhibits.make_ocr_pdf(exhibits, psm=1)
+  prepped_exhibits.bates_number(prefix='EX-')
+  background_response()
 --- 
 id: info screen
 question: |
@@ -574,13 +578,12 @@ section: download
 attachment code: motion_attachment["final"]
 ---
 code: |
-  # exhibits_with_numbers = pdf_concatenate(exhibits) 
   if has_evidence:
-    exhibits_with_numbers = pdf_concatenate(exhibits,filename="exhibits.pdf")
-    exhibits_with_numbers.bates_number(prefix="EX-")
-    exhibits_with_numbers.set_attributes(private=False)
-    if exhibits_total_size < 10 * 1024 * 1024:
-      combined_motion_temp = pdf_concatenate(motion_attachment["final"], exhibits_with_numbers, filename="motion_to_stay_eviction.pdf")
+    if not ocr_task.ready():
+      waiting_screen
+    prepped_exhibits.set_attributes(private=False)
+    if prepped_exhibits.size_in_bytes() < 10 * 1024 * 1024:
+      combined_motion_temp = pdf_concatenate(motion_attachment["final"], prepped_exhibits, filename="motion_to_stay_eviction.pdf")
     else:
       combined_motion_temp = [motion_attachment["final"]]
   else:
@@ -588,6 +591,11 @@ code: |
   #if no_notice_of_appeal_filed:
   #  combined_motion_temp.append(Notice_of_Appeal['final'])
   combined_motion = pdf_concatenate(combined_motion_temp, filename="motion_to_stay_eviction.pdf")
+---
+event: waiting_screen
+reload: True
+question: |
+  <i class="fas fa-cog fa-spin"></i> Please wait while we process your documents . . . <i class="fas fa-cog fa-spin"></i>
 ---
 objects:
   - motion_attachment: DADict
@@ -683,9 +691,9 @@ template: email_to_court_template
 subject: |
   MassAccess submission from ${users} intended for ${courts[0]}
 content: |
-  % if exhibits_total_size > 10 * 1024 * 1024:
+  % if has_evidence and prepped_exhibits.size_in_bytes() < 10 * 1024 * 1024:
   **The user provided an attachment that is too large to email.**
-  [Link to exhibits](${ exhibits_with_numbers.url_for(external=True) } )
+  [Link to exhibits](${ prepped_exhibits.url_for(external=True) } )
   % endif
   
   At ${current_datetime().format_datetime()},

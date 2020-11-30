@@ -53,7 +53,7 @@ setup(name='docassemble.MotionToStayEviction',
       url='https://docassemble.org',
       packages=find_packages(),
       namespace_packages=['docassemble'],
-      install_requires=['docassemble.MAVirtualCourt', 'docassemble.MassAppealsCourt'],
+      install_requires=['docassemble.MAVirtualCourt>=1.0.8', 'docassemble.MassAppealsCourt'],
       zip_safe=False,
       package_data=find_package_data(where='docassemble/MotionToStayEviction/', package='docassemble.MotionToStayEviction'),
      )
