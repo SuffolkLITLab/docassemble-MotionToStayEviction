@@ -649,7 +649,7 @@ fields:
     accept: |
       "image/*, image/png,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,.pdf"
 validation code: |
-  if sum(exhibit.size_in_bytes() for exhibit in exhibits) > (15 * 1024 * 1024):
+  if has_evidence and sum(exhibit.size_in_bytes() for exhibit in exhibits) > (15 * 1024 * 1024):
     validation_error("Please upload a file smaller than 15 MB.")
 ---
 table: exhibits.table
