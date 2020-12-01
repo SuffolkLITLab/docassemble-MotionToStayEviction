@@ -497,10 +497,12 @@ code: |
 ---
 code: |
   form_to_sign_temp = []
-  if has_evidence:
-    form_to_sign_temp = [motion_attachment["preview"], exhibits]
-  else:
-    form_to_sign_temp = [motion_attachment["preview"]]
+  #if has_evidence:
+  #  form_to_sign_temp = [motion_attachment["preview"], exhibits]
+  #else:
+  #  form_to_sign_temp = [motion_attachment["preview"]]
+  # Dont need to show them the exhibits again--it can be slow w/ big addendum
+  form_to_sign_temp = [motion_attachment["preview"]]
   if no_notice_of_appeal_filed:
     form_to_sign_temp.append(Notice_of_Appeal['preview'])
 
