@@ -696,7 +696,7 @@ template: email_to_court_template
 subject: |
   MassAccess submission from ${users} intended for ${courts[0]}
 content: |
-  % if has_evidence and prepped_exhibits.size_in_bytes() < 10 * 1024 * 1024:
+  % if has_evidence and prepped_exhibits.size_in_bytes() > 10 * 1024 * 1024:
   **The user provided an attachment that is too large to email.**
   [Link to exhibits](${ prepped_exhibits.url_for(external=True) } )
   % endif
