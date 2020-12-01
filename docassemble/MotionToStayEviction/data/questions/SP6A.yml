@@ -62,7 +62,7 @@ code: |
   file_size_vars
   if has_evidence:
     review_exhibits
-    ocr_task.ready()  
+    ocr_task
   procedural_history
   statement_of_facts
   procedural_history
@@ -118,6 +118,11 @@ code: |
   prepped_exhibits.initialize(filename="exhibits.pdf")
   prepped_exhibits.make_ocr_pdf(exhibits, psm=1)
   prepped_exhibits.bates_number(prefix='EX-')
+  background_response_action('save_results',results=prepped_exhibits)
+---
+event: save_results
+code: |
+  prepped_exhibits = action_argument('results')
   background_response()
 --- 
 id: info screen
