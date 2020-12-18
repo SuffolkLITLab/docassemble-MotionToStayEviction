@@ -588,11 +588,17 @@ code: |
   if has_evidence:
     if not ocr_task.ready():
       waiting_screen
-    prepped_exhibits.set_attributes(private=False)
-    if prepped_exhibits.size_in_bytes() < 10 * 1024 * 1024:
-      combined_motion_temp = pdf_concatenate(motion_attachment["final"], prepped_exhibits, filename="motion_to_stay_eviction.pdf")
-    else:
-      combined_motion_temp = [motion_attachment["final"]]
+    if not prepped_exhibits.ok:
+      try:
+        combined_motion_temp = pdf_concatenate(motion_attachment['final'], exhibits, filename="motion_to_stay_eviction.pdf")
+      except:
+        combined_motion_temp = motion_attachment['final']
+    else:      
+      prepped_exhibits.set_attributes(private=False)
+      if prepped_exhibits.size_in_bytes() < 10 * 1024 * 1024:
+        combined_motion_temp = pdf_concatenate(motion_attachment["final"], prepped_exhibits, filename="motion_to_stay_eviction.pdf")
+      else:
+        combined_motion_temp = [motion_attachment["final"]]
   else:
     combined_motion_temp = [motion_attachment["final"]]
   #if no_notice_of_appeal_filed:
@@ -698,7 +704,7 @@ template: email_to_court_template
 subject: |
   MassAccess submission from ${users} intended for ${courts[0]}
 content: |
-  % if has_evidence and prepped_exhibits.size_in_bytes() > 10 * 1024 * 1024:
+  % if has_evidence and prepped_exhibits.ok and prepped_exhibits.size_in_bytes() > 10 * 1024 * 1024:
   **The user provided an attachment that is too large to email.**
   [Link to exhibits](${ prepped_exhibits.url_for(external=True) } )
   % endif
