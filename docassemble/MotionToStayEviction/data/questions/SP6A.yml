@@ -563,10 +563,24 @@ subquestion: |
   
   ${ form_to_file_no_cover }  
   
-  % if not defined('email_success') or not email_success:
+  % if not defined('email_success'):
     ${ action_button_html( url_action('form_delivery_complete'), id_tag="submitToCourt", label="Submit to " + str(courts[0].name), icon=send_icon, size="md", color="primary")}
     
   Or download/email below:
+  % elif not email_success:
+  Email delivery has failed. Call the clerk and try delivering
+  the files below a different way.
+  
+  % for file in final_form_to_file:
+  % if hasattr(file, 'info'):
+  * [:file-download: ${ file.info.get("filename") }](${file.url_for()})
+  % elif hasattr(file, 'file_info'):
+  * [:file-download: ${ file.file_info.get("filename") }](${file.url_for()})
+  % else:
+  * [:file-download: ${ str(file) }](${file.url_for()})
+  % endif
+  % endfor 
+
   % else:
     Your email has already been delivered to ${courts[0]}
 
