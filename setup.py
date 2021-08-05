@@ -43,7 +43,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 setup(name='docassemble.MotionToStayEviction',
-      version='0.0.14.1',
+      version='0.0.14.2',
       description=('A docassemble extension.'),
       long_description='# docassemble.MotionToStayEviction\r\n\r\nA docassemble extension.\r\n\r\n## Author\r\n\r\nMia Bonardi, mbonardi@su.suffolk.edu\r\n\r\n',
       long_description_content_type='text/markdown',
@@ -53,7 +53,7 @@ setup(name='docassemble.MotionToStayEviction',
       url='https://docassemble.org',
       packages=find_packages(),
       namespace_packages=['docassemble'],
-      install_requires=['docassemble.MAVirtualCourt>=1.0.20', 'docassemble.MassAppealsCourt'],
+      install_requires=['docassemble.MAVirtualCourt>=1.0.22', 'docassemble.MassAppealsCourt'],
       zip_safe=False,
       package_data=find_package_data(where='docassemble/MotionToStayEviction/', package='docassemble.MotionToStayEviction'),
      )
