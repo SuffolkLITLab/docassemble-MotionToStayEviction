@@ -1,7 +1,8 @@
 ---
 include:
-  - docassemble.MAVirtualCourt:basic-questions.yml
-  - docassemble.AffidavitofIndigencyMAVC:affidavit_body.yml
+  - docassemble.AssemblyLine:assembly_line.yml 
+  - docassemble.ALAffidavitOfIndigency:affidavit_body.yml
+  - docassemble.ALMassachusetts:al_massachusetts.yml
   - NOA.yml
   - old_mavc_appeals_basic_questions.yml
   - docassemble.ALToolbox:collapse_template.yml
@@ -159,7 +160,7 @@ id: noa confirmation
 question: |
   Here is what your Notice of Appeal looks like.
 subquestion: |
-  ${ pdf_concatenate(Notice_of_Appeal['preview']) }
+  ${ notice_of_appeal.as_pdf(key='preview') }
   
   You will have a chance to add your signature to this document and download it at the end of this interview.
   
@@ -218,7 +219,7 @@ question: |
 fields:
   - no label: housing_court
     datatype: object
-    choices: macourts.filter_courts(["Housing Court"])
+    choices: all_courts.filter_courts(["Housing Court"])
 --- 
 id: housing court docket number 
 question: |
@@ -318,6 +319,7 @@ question: |
 fields:
   - Date: housing_court_judgment_date
     datatype: date  
+    max: ${ today() }
 ---
 id: name of housing court judge
 question: |
@@ -341,6 +343,7 @@ fields:
     datatype: yesno
   - Date filed: date_notice_of_appeal_filed
     datatype: date
+    max: ${ today() }
     hide if: no_notice_of_appeal_filed
 --- 
 objects:
@@ -357,6 +360,7 @@ subquestion: |
 fields:
   - Date: date_housing_court_denied_motion_to_stay
     datatype: date  
+    max: ${ today() }
 ---
 id: housing court judge order text
 question: |
@@ -436,6 +440,7 @@ subquestion: |
 fields:
   - Date: service_date
     datatype: date  
+    min: ${ today() }
 ---
 id: procedural history
 question: |
@@ -554,14 +559,11 @@ code: |
 ---
 code: |
   form_to_sign_temp = []
-  #if has_evidence:
-  #  form_to_sign_temp = [motion_attachment["preview"], exhibits]
-  #else:
-  #  form_to_sign_temp = [motion_attachment["preview"]]
+
   # Dont need to show them the exhibits again--it can be slow w/ big addendum
   form_to_sign_temp = [motion_attachment["preview"]]
   if no_notice_of_appeal_filed:
-    form_to_sign_temp.append(Notice_of_Appeal['preview'])
+    form_to_sign_temp.append(notice_of_appeal['preview'])
 
   form_to_sign = pdf_concatenate(form_to_sign_temp, filename="motion_to_stay_eviction.pdf")
 ---
@@ -596,19 +598,19 @@ subquestion: |
   % if no_notice_of_appeal_filed:
   **You have two documents to deliver:** 
   
-  1. The [:file-download: Notice of Appeal]( ${ Notice_of_Appeal['final'].pdf.url_for()} ),
+  1. The [:file-download: Notice of Appeal]( ${ notice_of_appeal['final'].pdf.url_for()} ),
   which needs to be delivered to the **${ housing_court }**. You need to deliver
   this on your own. Call the ${ housing_court } at ${ housing_court.phone }
   to find out how.
-  2. Your Appeal, which needs to be delivered to ${ courts[0] }. You can deliver the appeal by following the steps below.
+  2. Your Appeal, which needs to be delivered to ${ appeals_court }. You can deliver the appeal by following the steps below.
   
-  Follow these steps to deliver the Appeal to the ${ courts[0] }:
+  Follow these steps to deliver the Appeal to the ${ appeals_court }:
   % endif
   
   1. Click the preview image below to open the form in a new window.
   1. Download and save or print a copy of this form for your 
   records.
-  1. Click "Submit to ${courts[0]}" to send it to the court. 
+  1. Click "Submit to ${ appeals_court }" to send it to the court. 
   1. You will have a chance to add instructions to the clerk and see the cover page before final delivery.
   % else:
   If you do not hear from the court in 1 business day, call the   Appeals Court Clerk's Office: 617-921-4443 
@@ -621,7 +623,7 @@ subquestion: |
   ${ form_to_file_no_cover }  
   
   % if not defined('email_success'):
-    ${ action_button_html( url_action('form_delivery_complete'), id_tag="submitToCourt", label="Submit to " + str(courts[0].name), icon=send_icon, size="md", color="primary")}
+    ${ action_button_html( url_action('form_delivery_complete'), id_tag="submitToCourt", label="Submit to " + str(appeals_court.name), icon=send_icon, size="md", color="primary")}
     
   Or download/email below:
   % elif not email_success:
@@ -639,7 +641,7 @@ subquestion: |
   % endfor 
 
   % else:
-    Your email has already been delivered to ${courts[0]}
+    Your email has already been delivered to ${ appeals_court }
 
   % for file in final_form_to_file:
   % if hasattr(file, 'info'):
@@ -672,8 +674,6 @@ code: |
         combined_motion_temp = [motion_attachment["final"]]
   else:
     combined_motion_temp = [motion_attachment["final"]]
-  #if no_notice_of_appeal_filed:
-  #  combined_motion_temp.append(Notice_of_Appeal['final'])
   combined_motion = pdf_concatenate(combined_motion_temp, filename="motion_to_stay_eviction.pdf")
 ---
 event: waiting_screen
@@ -682,7 +682,7 @@ question: |
   <i class="fas fa-cog fa-spin"></i> Please wait while we process your documents . . . <i class="fas fa-cog fa-spin"></i>
 ---
 objects:
-  - motion_attachment: DADict
+  - motion_attachment: ALDocument.using(filename="Motion-to-Stay-Eviction", title="Motion to Stay Eviction")
 ---
 attachment:
   - name: Motion to Stay Eviction
@@ -773,7 +773,7 @@ continue button field: review_exhibits
 id: email to court
 template: email_to_court_template
 subject: |
-  MassAccess submission from ${users} intended for ${courts[0]}
+  MassAccess submission from ${ users } intended for ${ appeals_court }
 content: |
   % if has_evidence and prepped_exhibits.ok and prepped_exhibits.size_in_bytes() > 10 * 1024 * 1024:
   **The user provided an attachment that is too large to email.**

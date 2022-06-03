@@ -1,6 +1,7 @@
 ---
 include:
-  - docassemble.MAVirtualCourt:basic-questions.yml
+  - docassemble.AssemblyLine:assembly_line.yml
+  - docassemble.ALMassachusetts:al_massachusetts.yml
 ---
 metadata:
   title: Notice of Appeal
@@ -13,7 +14,6 @@ id: interview order
 code: |
   noa_intro
   user_role = "defendant"
-  # noa_intro
   users[0].name.first
   users[0].address.address
   users[0].mobile_number
@@ -21,7 +21,7 @@ code: |
   users.gathered = True
   plaintiff_name
   
-    # Copy plaintiff name into the "Other Parties" list
+  # Copy plaintiff name into the "Other Parties" list
   other_parties.auto_gather=False
   other_parties[0].name.first = plaintiff_name
   other_parties.gathered=True
@@ -33,14 +33,10 @@ code: |
   judgment_date
   noa_method_of_service
   noa_service_date
-  # noa_preview_screen
-  # basic_questions_signature_flow
-  # users[0].signature
-  # noa_download
   noa_variables = True
 ---
 objects:
-  - users: PeopleList.using(there_are_any=True)
+  - users: ALIndividualList.using(there_are_any=True)
 ---
 id: noa intro
 question: | 
@@ -84,7 +80,7 @@ question: |
 fields:
   - no label: housing_court
     datatype: object
-    choices: macourts.filter_courts(["Housing Court"])
+    choices: all_courts.filter_courts(["Housing Court"])
 --- 
 id: housing court docket number 
 question: |
@@ -144,10 +140,10 @@ subquestion: |
   
   Do not forget to come back to this page to move to the final step of signing. 
   
-   ${ Notice_of_Appeal["preview"] }
+   ${ notice_of_appeal["preview"] }
 
 progress: 95
-attachment code: Notice_of_Appeal["preview"]
+attachment code: notice_of_appeal["preview"]
 ---
 id: download
 progress: 100
@@ -164,23 +160,13 @@ subquestion: |
   Below is a preview of your form.
   
   ${ final_form_to_file }
-attachment code: Notice_of_Appeal['final']
-#---
-#code: |
-# form_to_sign = pdf_concatenate(preview_doc)
-#---
-#attachment:
-#  docx template file: Notice_of_Appeal.docx
-#  variable name: preview_doc
-#---
-#code: |
-#  final_form_to_file = pdf_concatenate(Notice_of_Appeal)
+attachment code: notice_of_appeal['final']
 ---
 objects:
-  - Notice_of_Appeal: DADict
+  - notice_of_appeal: ALDocument.using(filename="Notice-of-Appeal", title="Notice of Appeal", enabled=True)
 ---
 attachment:
   - name: Notice of Appeal
-    variable name: Notice_of_Appeal[i]
+    variable name: notice_of_appeal[i]
     filename: Notice_of_Appeal
     docx template file: Notice_of_Appeal.docx
