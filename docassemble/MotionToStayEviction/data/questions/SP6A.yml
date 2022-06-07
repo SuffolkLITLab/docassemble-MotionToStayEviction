@@ -2,10 +2,9 @@
 include:
   - docassemble.AssemblyLine:assembly_line.yml 
   - docassemble.ALAffidavitOfIndigency:affidavit_body.yml
-  - docassemble.ALMassachusetts:al_massachusetts.yml
+  - docassemble.MassAccess:massaccess.yml
+  - docassemble.MassAppealsCourt:appeals-basic-questions.yml
   - NOA.yml
-  - old_mavc_appeals_basic_questions.yml
-  - docassemble.ALToolbox:collapse_template.yml
 ---
 metadata:
   title: Appeal or Stay Your Eviction
@@ -21,7 +20,7 @@ code: |
   interview_short_title = "Ask the Appeals Court to Stop Your Eviction"
 ---
 objects:
-  - prepped_exhibits: DAFile.using(filename='exhibits.pdf')
+  - exhibits: ALExhibitDocument.using(title="Exhibits", filename='exhibits', bates_prefix="EX-", include_exhibit_cover_page=True, include_table_of_contents=True, add_page_numbers=True, auto_ocr=True)
 ---
 id: interview order
 mandatory: True
@@ -64,7 +63,6 @@ code: |
   file_size_vars
   if has_evidence:
     review_exhibits
-    ocr_task
   procedural_history
   statement_of_facts
   procedural_history
@@ -85,66 +83,11 @@ code: |
     ask_affidavit_questions
     if not is_indigent:
       doesnt_qualify_interstitial
-  get_pronouns # Make sure this is defined before template is rendered
+  users[0].pronouns
   preview_screen
   basic_questions_signature_flow
   users[0].signature
   download
----
-imports:
-  - random
----
-id: users's name
-question: |
-  What is your name?
-fields:
-  - First Name: users[0].name.first
-  - Middle Name: users[0].name.middle
-    required: False
-  - Last Name: users[0].name.last
-  - Suffix: users[0].name.suffix
-    code: |
-      name_suffix()
-    required: False
-  # Hardcoding pronouns here although they're implemented more neatly
-  # in current AssemblyLine
-  - What are your pronouns? (optional): users[0].pronouns
-    datatype: checkboxes
-    choices:
-      - She/her/hers: she/her/hers
-      - He/him/his: he/him/his
-      - They/them/theirs: they/them/theirs
-      - Ze/zir/zirs: ze/zir/zirs
-      - Something else: self-described
-    none of the above: Prefer not to say
-    required: False
-    help: |
-      A pronoun is a word that can be used in place of your name. For example: he, she, or they.
-      Learn more at [pronouns.org](https://pronouns.org/).
-  - note: |
-      ${ collapse_template(explain_why_pronouns) }
-  - Self-described pronouns: users[0].pronouns_self_described
-    show if: users[0].pronouns["self-described"]
----
-template: explain_why_pronouns
-subject: |
-  How will you use my pronouns?
-content: |
-  The pronouns that you write here will be added to the bottom
-  of your motion to the Appeals Court.
-
-  Sharing your pronouns is optional. If you share your pronouns,
-  it may help the judge use the right words when they mention you
-  in court or in their written decision.
----
-code: |
-  def get_pronouns(person):
-    if person.pronouns.all_false():
-        return {"Prefer not to say"}
-    pronouns = set(person.pronouns.true_values()) - {'self-described'}
-    if person.pronouns.get("self-described"):
-        pronouns = pronouns.union(person.pronouns_self_described.splitlines())
-    return pronouns
 ---
 code: |
   max_mb_per_file = 15
@@ -167,22 +110,6 @@ subquestion: |
   Failure to file a Notice of Appeal in the ${ housing_court } may result in your Motion to Stay being denied.
 continue button field: noa_confirmation
 ---
-need: prepped_exhibits
-code: |
-  ocr_task = background_action('process_exhibits')
----
-event: process_exhibits
-code: |
-  prepped_exhibits.initialize(filename="exhibits.pdf")
-  prepped_exhibits.make_ocr_pdf(exhibits, psm=1)
-  prepped_exhibits.bates_number(prefix='EX-')
-  background_response_action('save_results',results=prepped_exhibits)
----
-event: save_results
-code: |
-  prepped_exhibits = action_argument('results')
-  background_response()
---- 
 id: info screen
 question: |
   Motion to Stay Eviction
@@ -196,13 +123,9 @@ subquestion: |
   To use this form, you will need relevant Housing Court documents including:
   
     * the Housing Court's docket
-    
     * the complaint
-    
     * your answer
-    
     * the judgment
-    
     * filings related to your motion to stay in the Housing Court
   
   This form cannot be directly emailed to the Supreme Judicial Court. For more information, contact the Supreme Judicial Court Clerk's office: (617) 557-1020.
@@ -211,7 +134,7 @@ subquestion: |
 continue button field: info_screen
 ---
 objects:
-  - users: PeopleList.using(there_are_any=True)
+  - users: ALPeopleList.using(there_are_any=True)
 ---
 id: housing court division 
 question: | 
@@ -453,11 +376,8 @@ subquestion: |
   It is important to describe whether the judgment was:
   
     * entered against you after a default, 
-     
     * on an order for summary judgment, 
-     
     * after a trial, **or**
-     
     * pursuant to an agreement for judgment.  
 fields:
   - no label: procedural_history
@@ -549,26 +469,12 @@ fields:
     rows: 6
 ---
 code: |
-  if is_first_document and is_indigent:
-    final_form_to_file = [general_cover_sheet, combined_motion, affidavitofindigency_attachment]
-  else:
-    final_form_to_file = [general_cover_sheet, combined_motion ]
----
-code: |
-  form_to_file_no_cover = combined_motion
----
-code: |
-  form_to_sign_temp = []
-
-  # Dont need to show them the exhibits again--it can be slow w/ big addendum
-  form_to_sign_temp = [motion_attachment["preview"]]
-  if no_notice_of_appeal_filed:
-    form_to_sign_temp.append(notice_of_appeal['preview'])
-
-  form_to_sign = pdf_concatenate(form_to_sign_temp, filename="motion_to_stay_eviction.pdf")
+  motion_to_stay_bundle.enabled = True
+  general_cover_sheet.enabled = True
+  notice_of_appeal.enabled = not no_notice_of_appeal_filed
+  affidavitofindigency_attachment.enabled = is_first_document and is_indigent
 ---
 id: review before signature
-need: form_to_sign
 continue button field: preview_screen
 question: |
   Nearly finished
@@ -577,7 +483,7 @@ subquestion: |
   
   Do not forget to come back to this page to click to the final step of signing and sending the form to the court. 
   
-   ${ form_to_sign }
+   ${ al_user_bundle.as_pdf(key="preview") }
 
 progress: 95
 ---
@@ -620,61 +526,30 @@ subquestion: |
   8:30am - 4:30pm
   % endif
   
-  ${ form_to_file_no_cover }  
+  ${ al_user_bundle.download_html_list() } 
   
-  % if not defined('email_success'):
-    ${ action_button_html( url_action('form_delivery_complete'), id_tag="submitToCourt", label="Submit to " + str(appeals_court.name), icon=send_icon, size="md", color="primary")}
-    
-  Or download/email below:
-  % elif not email_success:
-  Email delivery has failed. Call the clerk and try delivering
+comment: |
+  % if ready_to_efile and not (defined('efile') and efile):
+  Click the "E-File" button below to e-file your form at ${ trial_court }.
+  ${ action_button_html(url_ask([{'recompute': ['efile']}]), label='E-file', icon='file-export') }
+  % elif ready_to_efile and (defined('efile') and efile):
+  Your filing has already been delivered to ${ appeals_court }.
+  % elif ready_to_efile and (defined('efile') and not efile):
+  E-filing was not successful. Call the clerk and try delivering
   the files below a different way.
-  
-  % for file in final_form_to_file:
-  % if hasattr(file, 'info'):
-  * [:file-download: ${ file.info.get("filename") }](${file.url_for()})
-  % elif hasattr(file, 'file_info'):
-  * [:file-download: ${ file.file_info.get("filename") }](${file.url_for()})
-  % else:
-  * [:file-download: ${ str(file) }](${file.url_for()})
+  % elif not ready_to_efile:
+  We are not able to e-file this form. Please call the clerk and try delivering the files
+  below a different way.
   % endif
-  % endfor 
 
-  % else:
-    Your email has already been delivered to ${ appeals_court }
-
-  % for file in final_form_to_file:
-  % if hasattr(file, 'info'):
-  * [:file-download: ${ file.info.get("filename") }](${file.url_for()})
-  % elif hasattr(file, 'file_info'):
-  * [:file-download: ${ file.file_info.get("filename") }](${file.url_for()})
-  % else:
-  * [:file-download: ${ str(file) }](${file.url_for()})
-  % endif
-  % endfor 
-  % endif
 progress: 100
 section: download
 attachment code: motion_attachment["final"]
 ---
 code: |
   if has_evidence:
-    if not ocr_task.ready():
+    if not exhibits.ocr_ready():
       waiting_screen
-    if not prepped_exhibits.ok:
-      try:
-        combined_motion_temp = pdf_concatenate(motion_attachment['final'], exhibits, filename="motion_to_stay_eviction.pdf")
-      except:
-        combined_motion_temp = motion_attachment['final']
-    else:      
-      prepped_exhibits.set_attributes(private=False)
-      if prepped_exhibits.size_in_bytes() < 10 * 1024 * 1024:
-        combined_motion_temp = pdf_concatenate(motion_attachment["final"], prepped_exhibits, filename="motion_to_stay_eviction.pdf")
-      else:
-        combined_motion_temp = [motion_attachment["final"]]
-  else:
-    combined_motion_temp = [motion_attachment["final"]]
-  combined_motion = pdf_concatenate(combined_motion_temp, filename="motion_to_stay_eviction.pdf")
 ---
 event: waiting_screen
 reload: True
@@ -682,7 +557,7 @@ question: |
   <i class="fas fa-cog fa-spin"></i> Please wait while we process your documents . . . <i class="fas fa-cog fa-spin"></i>
 ---
 objects:
-  - motion_attachment: ALDocument.using(filename="Motion-to-Stay-Eviction", title="Motion to Stay Eviction")
+  - motion_attachment: ALDocument.using(enabled=True, has_addendum=False, title="Display Name of Form", filename="")
 ---
 attachment:
   - name: Motion to Stay Eviction
@@ -700,13 +575,9 @@ subquestion: |
   Examples include: 
   
     * the Housing Court's docket 
-    
     * the complaint
-    
     * your answer
-    
     * the judgment
-    
     * filings related to your motion to stay in the Housing Court.
     
   If you entered into an agreement for judgment, include a copy of the agreement for judgment.
@@ -756,6 +627,16 @@ validation code: |
     # instead of showing a nested DAFileList's instanceName
     exhibits[i].instanceName = temp_name
 ---
+objects:
+  - al_court_bundle: ALDocumentBundle.using(elements=[general_cover_sheet, motion_to_stay_bundle, affidavitofindigency_attachment], filename="", title="")
+  - al_user_bundle: ALDocumentBundle.using(elements=[general_cover_sheet, motion_to_stay_bundle, affidavitofidigency_attachment], filename="", title="")
+---
+objects:
+  - motion_to_stay_bundle: ALDocumentBundle.using(elements=[motion_attachment, exhibits], title="Motion To Stay (Eviction)", filename="motion_to_stay_eviction")
+---
+code: |
+  exhibits.enabled = exhibits.exhibits.has_exhibits
+---
 id: review exhibits
 question: |
   Review your exhibits
@@ -769,15 +650,14 @@ subquestion: |
   ${exhibits.add_action() }
 continue button field: review_exhibits 
 ---
----
 id: email to court
 template: email_to_court_template
 subject: |
   MassAccess submission from ${ users } intended for ${ appeals_court }
 content: |
-  % if has_evidence and prepped_exhibits.ok and prepped_exhibits.size_in_bytes() > 10 * 1024 * 1024:
+  % if has_evidence and exhibits.as_pdf('final').size_in_bytes() > 10 * 1024 * 1024:
   **The user provided an attachment that is too large to email.**
-  [Link to exhibits](${ prepped_exhibits.url_for(external=True) } )
+  [Link to exhibits](${ exhibits.as_pdf('final').url_for(external=True) } )
   % endif
   
   At ${current_datetime().format_datetime()},
@@ -786,7 +666,7 @@ content: |
   &nbsp;        | &nbsp;
   --------------|-----------
   Date of email | ${current_datetime().format_datetime()}
-  Pages | ${num_package_pages }  
+  Pages | ${ al_court_bundle.as_pdf('final').num_pages() }  
   Preferred language | ${ user_preferred_language if user_needs_interpreter else 'English' }
   Mobile phone | ${showifdef('users[0].mobile_number')}
   Other phone | ${showifdef('users[0].phone_number')}
@@ -799,3 +679,8 @@ content: |
   
   Please contact ${users} in the next business day to
   confirm that you received this message.
+---
+attachment:
+  variable name: general_cover_sheet
+  filename: ${al_court_bundle.title}
+  docx template file: general_cover_sheet.docx

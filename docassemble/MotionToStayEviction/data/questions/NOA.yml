@@ -1,7 +1,7 @@
 ---
 include:
   - docassemble.AssemblyLine:assembly_line.yml
-  - docassemble.ALMassachusetts:al_massachusetts.yml
+  - docassemble.MassAccess:massaccess.yml
 ---
 metadata:
   title: Notice of Appeal
@@ -36,7 +36,7 @@ code: |
   noa_variables = True
 ---
 objects:
-  - users: ALIndividualList.using(there_are_any=True)
+  - users: ALPeopleList.using(there_are_any=True)
 ---
 id: noa intro
 question: | 
@@ -131,7 +131,6 @@ fields:
     datatype: date  
 ---
 id: review before signature
-need: form_to_sign
 continue button field: noa_preview_screen
 question: |
   Nearly finished
@@ -140,7 +139,7 @@ subquestion: |
   
   Do not forget to come back to this page to move to the final step of signing. 
   
-   ${ notice_of_appeal["preview"] }
+   ${ notice_of_appeal.as_pdf(key="preview") }
 
 progress: 95
 attachment code: notice_of_appeal["preview"]
@@ -155,11 +154,11 @@ subquestion: |
   
   You are required to provide a copy of your Notice of Appeal to the plaintiffs' attorney(s).
   
-  You must submit a copy of your Notice of Appeal to ${   housing_court }.
+  You must submit a copy of your Notice of Appeal to ${ housing_court }.
   
   Below is a preview of your form.
   
-  ${ final_form_to_file }
+  ${ notice_of_appeal.as_pdf(key='final') }
 attachment code: notice_of_appeal['final']
 ---
 objects:
