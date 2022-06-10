@@ -1,0 +1,27 @@
+---
+include:
+  - docassemble.EFSPIntegration:codes_helper.yml
+---
+generic object: ALDocumentBundle
+code: |
+  x.filing_type
+  x.filing_description
+  x.reference_number
+  x.tyler_filing_type
+  x.document_type
+  x.motion_type
+  x.filing_component
+  x.filing_parties
+  x.filing_action
+  x.has_courtesy_copies
+  x.optional_services.clear()
+  x.optional_services.gathered = True
+  x.as_pdf()
+  x.completed = True
+---
+generic object: DAObject
+code: |
+  x.filing_description = f'The completed Motion to Stay Eviction for {users[0].name}'
+  x.reference_number = None
+  x.filing_parties = ['users[0]']
+  x.filing_action = 'efile'
