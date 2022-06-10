@@ -2,8 +2,12 @@
 include:
   - docassemble.AssemblyLine:assembly_line.yml 
   - docassemble.ALAffidavitOfIndigency:affidavit_body.yml
+  - docassemble.EFSPIntegration:efiling_integration.yml
+  - docassemble.EFSPIntegration:login_qs.yml
+  - docassemble.EFSPIntegration:case_search.yml
   - docassemble.MassAccess:massaccess.yml
   - docassemble.MassAppealsCourt:appeals-basic-questions.yml
+  - efiling.yml
   - NOA.yml
 ---
 metadata:
@@ -17,6 +21,12 @@ code: |
   bcc_failsafe = "cc@example.com"
 ---
 code: |
+  jurisdiction_id = 'massachusetts'
+---
+code: |
+  proxy_conn = ProxyConnection(credentials_code_block='tyler_login', default_jurisdiction=jurisdiction_id)
+---
+code: |
   interview_short_title = "Ask the Appeals Court to Stop Your Eviction"
 ---
 objects:
@@ -27,8 +37,11 @@ mandatory: True
 code: |
   # has_evidence
   user_role = "defendant"
+  court_id = 'appeals:acsj'
   appeals_basic_questions_intro_screen
   info_screen
+  if can_check_efile:
+    tyler_login
   users[0].name.first
   users[0].address.address
   users[0].mobile_number
@@ -520,9 +533,17 @@ subquestion: |
   % else:
   If you do not hear from the court in 1 business day, call the   Appeals Court Clerk's Office: 617-921-4443 
   
-  The Appeals Court Clerk's Office is open:  
+  The Appeals Court Clerk's Office is open: 
   Monday - Friday  
   8:30am - 4:30pm
+  % endif
+
+  % if ready_to_efile and not (defined('efile') and efile):
+  
+  Click the "E-File" button below to e-file your form.
+  
+  ${ action_button_html(url_ask([{'recompute': ['efile']}]), label='E-File', icon='file-export')}
+  
   % endif
   
   ${ al_user_bundle.download_html_list() } 
