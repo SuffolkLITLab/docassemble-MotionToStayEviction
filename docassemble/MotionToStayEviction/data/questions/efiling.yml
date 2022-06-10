@@ -25,3 +25,6 @@ code: |
   x.reference_number = None
   x.filing_parties = ['users[0]']
   x.filing_action = 'efile'
+---
+code: |
+  motion_to_stay_bundle.filing_type = '6137' # Stay of Judgement MRAP 6(a)

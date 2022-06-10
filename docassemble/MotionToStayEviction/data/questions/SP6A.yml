@@ -29,15 +29,31 @@ code: |
 code: |
   interview_short_title = "Ask the Appeals Court to Stop Your Eviction"
 ---
+code: |
+  # E-filing hard codes
+  court_id = 'appeals:acsj'
+  tyler_case_category = '6113' # appeals civil
+  tyler_case_type = '6125' # Motion MRAP 6(a) stay
+---
+code: |
+  users[i].name.first
+  if i == 0:
+    users[i].email
+  users[i].party_type = '575' # defendant appellant
+  users[i].completed = True
+---
+code: |
+  other_parties[i].name.first
+  other_parties[i].party_type = '585'
+  other_parties[i].completed = True
+---
 objects:
   - exhibits: ALExhibitDocument.using(title="Exhibits", filename='exhibits', bates_prefix="EX-", include_exhibit_cover_page=True, include_table_of_contents=True, add_page_numbers=True, auto_ocr=True)
 ---
 id: interview order
 mandatory: True
 code: |
-  # has_evidence
   user_role = "defendant"
-  court_id = 'appeals:acsj'
   appeals_basic_questions_intro_screen
   info_screen
   if can_check_efile:
@@ -45,6 +61,7 @@ code: |
   users[0].name.first
   users[0].address.address
   users[0].mobile_number
+  users[0].completed
   user_needs_interpreter
   users.there_is_another = False
   users.gathered = True
@@ -54,6 +71,7 @@ code: |
   other_parties.auto_gather=False
   other_parties[0].name.first = plaintiff_name
   other_parties.gathered=True
+  other_parties[0].completed
   
   defendant_name
   if forty_eight_hour_notice:
@@ -74,6 +92,7 @@ code: |
     explain_need_affidavit
   # WARNING: file size error is not currently translatable
   file_size_vars
+  has_evidence = exhibits.exhibits.has_exhibits
   if has_evidence:
     review_exhibits
   procedural_history
@@ -89,6 +108,7 @@ code: |
   method_of_service
   parties_to_be_served
   service_date
+  motion_to_stay_bundle.completed
   if is_first_document:
     indigency_intro
     fees['Filing fee'].waive = True
@@ -96,6 +116,8 @@ code: |
     ask_affidavit_questions
     if not is_indigent:
       doesnt_qualify_interstitial
+    else:
+      affidavitofindigency_attachment.completed
   preview_screen
   basic_questions_signature_flow
   users[0].signature
@@ -577,7 +599,7 @@ question: |
   <i class="fas fa-cog fa-spin"></i> Please wait while we process your documents . . . <i class="fas fa-cog fa-spin"></i>
 ---
 objects:
-  - motion_attachment: ALDocument.using(enabled=True, has_addendum=False, title="Display Name of Form", filename="")
+  - motion_attachment: ALDocument.using(enabled=True, has_addendum=False, title="Display Name of Form", filename="motion-to-stay-eviction")
 ---
 attachment:
   - name: Motion to Stay Eviction
@@ -585,9 +607,7 @@ attachment:
     filename: Motion_To_Stay_Eviction
     docx template file: Motion_To_Stay_Eviction.docx
 ---
-objects:
-  - exhibits: DAFileList.using(auto_gather=False, gathered=True)
----
+generic object: ALExhibitList
 id: record appendix
 question: |
   You are required to submit copies of relevant Housing Court documents. 
@@ -602,23 +622,32 @@ subquestion: |
     
   If you entered into an agreement for judgment, include a copy of the agreement for judgment.
 fields:
-  - Do you have any documents to share with the judge?: has_evidence
+  - Do you have any documents to share with the judge?: x.has_exhibits 
     datatype: yesnoradio
   - I state that filing a complete record appendix is impracticable.: no_record_statement
     datatype: yesno
     show if: 
-      variable: has_evidence      
+      variable: x.has_exhibits
       is: False
-  - Tap "browse" and choose all of the documents you want to upload at once. You can edit or add additional documents on the next screen.: exhibits
+  - First document title: x[0].title
+    maxlength: 60
+    show if: x.has_exhibits
+  - Tap "browse" and choose all of the documents you want to upload at once. You can edit or add additional documents on the next screen.: x[0].pages 
     datatype: files
-    show if: has_evidence
+    show if: x.has_exhibits
     maximum image size: 1024
     image upload type: jpeg    
     accept: |
       "image/*, image/png,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,.pdf"
 validation code: |
-  if has_evidence and sum(exhibit.size_in_bytes() for exhibit in exhibits) > (15 * 1024 * 1024):
-    validation_error("Please upload a file smaller than 15 MB.")
+  if x.has_exhibits:
+    if sum(exhibit.size_in_bytes() for exhibit in x[0].pages) > (15 * 1024 * 1024):
+      validation_error("Upload a file smaller than 15 MB.")
+    try:
+      pdf_concatenate(x[0].pages)
+    except:
+      validation_error("Unable to convert this file. Please upload a new one.", field="x[0].pages")
+    x[0].pages.reset_gathered()  # docassemble sets this attribute but we want to force gathering additional pages
 ---
 table: exhibits.table
 rows: exhibits
@@ -649,10 +678,13 @@ validation code: |
 ---
 objects:
   - al_court_bundle: ALDocumentBundle.using(elements=[general_cover_sheet, motion_to_stay_bundle, affidavitofindigency_attachment], filename="", title="")
-  - al_user_bundle: ALDocumentBundle.using(elements=[general_cover_sheet, motion_to_stay_bundle, affidavitofidigency_attachment], filename="", title="")
+  - al_user_bundle: ALDocumentBundle.using(elements=[general_cover_sheet, motion_to_stay_bundle, affidavitofindigency_attachment], filename="", title="")
 ---
 objects:
   - motion_to_stay_bundle: ALDocumentBundle.using(elements=[motion_attachment, exhibits], title="Motion To Stay (Eviction)", filename="motion_to_stay_eviction")
+---
+objects:
+  - general_cover_sheet: ALDocument.using(enabled=True, title="Cover Sheet", filename="cover-sheet")
 ---
 code: |
   exhibits.enabled = exhibits.exhibits.has_exhibits
@@ -701,6 +733,6 @@ content: |
   confirm that you received this message.
 ---
 attachment:
-  variable name: general_cover_sheet
-  filename: ${al_court_bundle.title}
+  variable name: general_cover_sheet[i]
+  filename: cover-sheet.docx
   docx template file: general_cover_sheet.docx
