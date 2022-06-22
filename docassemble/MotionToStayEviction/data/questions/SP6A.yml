@@ -108,7 +108,8 @@ code: |
   method_of_service
   parties_to_be_served
   service_date
-  motion_to_stay_bundle.completed
+  if can_check_efile:
+    motion_to_stay_bundle.completed
   if is_first_document:
     indigency_intro
     fees['Filing fee'].waive = True
@@ -116,7 +117,7 @@ code: |
     ask_affidavit_questions
     if not is_indigent:
       doesnt_qualify_interstitial
-    else:
+    elif can_check_efile:
       affidavitofindigency_attachment.completed
   users[0].pronouns
   preview_screen
@@ -522,6 +523,49 @@ subquestion: |
 
 progress: 95
 ---
+if: |
+  not ready_to_efile
+id: download form
+event: download
+decoration: file-download
+question: |
+  Download Form
+subquestion: |
+  Thank you ${users[0]}. Your form is ready to download. 
+  
+  % if no_notice_of_appeal_filed:
+  **You have two documents to download:** 
+  
+  1. The [:file-download: Notice of Appeal]( ${ notice_of_appeal['final'].pdf.url_for()} ),
+  which needs to be delivered to the **${ housing_court }**. You need to deliver
+  this on your own. Call the ${ housing_court } at ${ housing_court.phone }
+  to find out how.
+  2. Your Appeal, which needs to be delivered to ${ appeals_court }. You can deliver it to the Appeals Court in
+  person or through e-filing.
+  % if not user_wants_efile:
+  You indicated that you didn't want to e-file this document in this interview. You will have to restart this process if you
+  wish to e-file it.
+  % endif
+
+  % endif
+  
+  1. Click the preview image below to open the form in a new window.
+  1. Download and save or print a copy of this form for your 
+  records.
+  
+  The Appeals Court Clerk's Office number is 617-921-4443 
+  
+  The Appeals Court Clerk's Office is open: 
+  Monday - Friday  
+  8:30am - 4:30pm
+
+  ${ al_user_bundle.download_html() } 
+  
+progress: 100
+section: download
+---
+if:
+  ready_to_efile
 id: download form
 event: download
 decoration: file-download
@@ -561,7 +605,7 @@ subquestion: |
   8:30am - 4:30pm
   % endif
 
-  % if ready_to_efile and not (defined('efile') and efile):
+  % if not (defined('efile') and efile):
   
   Click the "E-File" button below to e-file your form.
   
@@ -569,7 +613,7 @@ subquestion: |
   
   % endif
   
-  ${ al_user_bundle.download_html_list() } 
+  ${ al_user_bundle.download_html() } 
   
 comment: |
   % if ready_to_efile and not (defined('efile') and efile):
@@ -584,10 +628,8 @@ comment: |
   We are not able to e-file this form. Please call the clerk and try delivering the files
   below a different way.
   % endif
-
 progress: 100
 section: download
-attachment code: motion_attachment["final"]
 ---
 code: |
   if has_evidence:
@@ -678,8 +720,8 @@ validation code: |
     exhibits[i].instanceName = temp_name
 ---
 objects:
-  - al_court_bundle: ALDocumentBundle.using(elements=[general_cover_sheet, motion_to_stay_bundle, affidavitofindigency_attachment], filename="", title="")
-  - al_user_bundle: ALDocumentBundle.using(elements=[general_cover_sheet, motion_to_stay_bundle, affidavitofindigency_attachment], filename="", title="")
+  - al_court_bundle: ALDocumentBundle.using(elements=[general_cover_sheet, motion_to_stay_bundle, affidavitofindigency_attachment], filename="motion_to_stay_eviction", title="Court bundle")
+  - al_user_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, affidavitofindigency_attachment], filename="motion_to_stay_eviction", title="User bundle")
 ---
 objects:
   - motion_to_stay_bundle: ALDocumentBundle.using(elements=[motion_attachment, exhibits], title="Motion To Stay (Eviction)", filename="motion_to_stay_eviction")
