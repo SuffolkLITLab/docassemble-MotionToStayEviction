@@ -9,6 +9,7 @@ include:
   - docassemble.MassAppealsCourt:appeals-basic-questions.yml
   - efiling.yml
   - NOA.yml
+  - docassemble.MassAppealsCourt:efiling.yml
 ---
 metadata:
   title: Appeal or Stay Your Eviction
@@ -29,23 +30,47 @@ code: |
 code: |
   interview_short_title = "Ask the Appeals Court to Stop Your Eviction"
 ---
+objects:
+  - lower_court_case: DAObject
+---
+objects:
+  - housing_case_search: EFCaseSearch
+  - appeals_case_search: EFCaseSearch
+---
+#code: |
+#  housing_case_search.court_id = housing_case_search.trial_court # court_from_docket_number(lower_court_case.docket_number)
+#---
+id: housing trial court
+question: |
+  Which court was your housing case in?
+fields:
+  - Court Location: housing_case_search.court_id
+    datatype: dropdown
+    code: |
+      [opt for opt in trial_court_options if 'Appeals' not in opt[1] and 'Supreme Judicial Court' not in opt[1]]
+---
+only sets: efile_setup
+# Override, don't bother getting the court id before this
 code: |
-  # E-filing hard codes
-  court_id = 'appeals:acsj'
-  tyler_case_category = '6113' # appeals civil
-  tyler_case_type = '6125' # Motion MRAP 6(a) stay
+  efile_setup = 'appeals' in available_efile_courts
+---
+id: user-wants-efile
+question: |
+  Do you want to efile this document directly with the court?
+subquestion: |
+  You are able to electronically-file (e-file) this document with the Appeals Court!
+
+  This means you don't have to print out the document. The court
+  will communicate with you through your email or phone.
+
+  You will have to provide your email to e-file this document. If you don't wish to provide that,
+  you can choose not to efile.
+fields:
+  - Do you want to efile?: user_wants_efile
+    datatype: yesnoradio
 ---
 code: |
-  users[i].name.first
-  if i == 0:
-    users[i].email
-  users[i].party_type = '575' # defendant appellant
-  users[i].completed = True
----
-code: |
-  other_parties[i].name.first
-  other_parties[i].party_type = '585'
-  other_parties[i].completed = True
+  appeals_case_search.court_id = all_courts.courts_from_docket_number(appeals_court_docket_number)[0].tyler_code
 ---
 objects:
   - exhibits: ALExhibitDocument.using(title="Exhibits", filename='exhibits', bates_prefix="EX-", include_exhibit_cover_page=True, include_table_of_contents=True, add_page_numbers=True, auto_ocr=True)
@@ -58,36 +83,68 @@ code: |
   info_screen
   if can_check_efile:
     tyler_login
+
+  # TODO(brycew):
+  # lookup appeals court case
+  if forty_eight_hour_notice:
+    eviction_date
+    eviction_time
+
+  user_ask_role
+  # TODO(brycew):
+  # * lookup housing court case
+  # * add LowerCourt info in EFSP and finalize var names
+  # * reorder questions
+  if can_check_efile:
+    tyler_case_category
+    tyler_case_type
+    if not is_initial_filing:
+      appeals_case_search.do_what_choice = 'docket_lookup'
+      appeals_case_search.case_was_found
+      lower_court_case.docket_number = appeals_case_search.found_case.docket_id
+      target_case = appeals_case_search
+      add_existing_users
+    
+    if is_initial_filing:
+      housing_case_search.do_what_choice
+      housing_case_search.case_was_found
+      lower_court_case.docket_number = housing_case_search.found_case.docket_id
+      target_case = housing_case_search
+      add_new_existing_users
+  else:
+    housing_court
+    lower_court_case.docket_number
+    lower_court_case.judge
+  lower_court_case.judgment_date
+  date_housing_court_denied_motion_to_stay
+  housing_court_denying_order_text
+
   users[0].name.first
   users[0].address.address
   users[0].mobile_number
-  users[0].completed
+  users[0].complete
   user_needs_interpreter
   users.there_is_another = False
   users.gathered = True
   plaintiff_name
-  
+
   # Copy plaintiff name into the "Other Parties" list
   other_parties.auto_gather=False
   other_parties[0].name.first = plaintiff_name
   other_parties.gathered=True
-  other_parties[0].completed
+  other_parties[0].complete
   
   defendant_name
-  if forty_eight_hour_notice:
-    eviction_date
-    eviction_time
-  housing_court
-  housing_court_docket_number
-  housing_court_judgment_date
-  housing_court_judge
-  date_housing_court_denied_motion_to_stay
-  housing_court_denying_order_text
+
+  if is_initial_filing:
+    if can_check_efile:
+      lower_court_case.title = housing_case_search.found_case.title
+    else:
+      lower_court_case.title = f"{plaintiff_name} vs {defendant_name}"
+
   if no_notice_of_appeal_filed:
     noa_variables
     noa_confirmation
-  if not is_first_document:
-    appeals_court_docket_number
   else:
     explain_need_affidavit
   # WARNING: file size error is not currently translatable
@@ -110,7 +167,12 @@ code: |
   service_date
   if can_check_efile:
     motion_to_stay_bundle.completed
-  if is_first_document:
+    lead_contact = users[0]
+    trial_court = housing_court
+    # TODO(brycew): hack until Tyler responsd
+    trial_court.name = '490'
+    tyler_payment_id = get_config('efile proxy', {}).get('global waivers', {}).get('massachusetts', '')
+  if is_initial_filing:
     indigency_intro
     fees['Filing fee'].waive = True
     fees['Filing fee'].amount = 315.00
@@ -125,14 +187,52 @@ code: |
   download
 ---
 code: |
+  add_existing_users
+  users.gathered = True
+  other_parties.gathered = True
+  for user in users:
+    user.is_new = True
+    del user.tyler_id
+    del user.party_type
+  other_parties.gathered = True
+  for other_party in other_parties:
+    other_party.is_new = True
+    del other_party.tyler_id
+    del other_party.party_type
+  add_new_existing_users = True
+---
+code: |
+  if is_initial_filing:
+    all_party_type_options, all_party_type_map = \
+      choices_and_map(proxy_conn.get_party_types(housing_case_search.court_id, None).data)
+  else:
+    all_party_type_options, all_party_type_map = \
+      choices_and_map(proxy_conn.get_party_types(appeals_case_search.court_id, None).data)
+---
+code: |
+  if is_initial_filing:
+    target_case = housing_case_search
+  else:
+    target_case = appeals_case_search
+---
+code: |
+  def is_housing_plaintiff_party(p):
+    # TODO(brycew)
+    return 'defendant' in p.party_type_name.lower() 
+
+  def is_housing_defendant_party(p):
+    return 'plaintiff' in p.party_type_name.lower()
+    
+  if user_ask_role == 'plaintiff':
+    is_user_party = is_housing_plaintiff_party
+    is_other_party = is_housing_defendant_party
+  else:
+    is_user_party = is_housing_defendant_party
+    is_other_party = is_housing_plaintiff_party
+---
+code: |
   max_mb_per_file = 15
   file_size_vars = True
-#---
-#code: |
-#  try:
-#    exhibits_total_size = sum(exhibit.size_in_bytes() for exhibit in exhibits)
-#  except:
-#    exhibits_total_size = 15 * 1024 * 1024
 ---
 id: noa confirmation
 question: |
@@ -144,6 +244,16 @@ subquestion: |
   
   Failure to file a Notice of Appeal in the ${ housing_court } may result in your Motion to Stay being denied.
 continue button field: noa_confirmation
+---
+generic object: DAObject
+question: |
+  Would you like to send anyone a copy of your ${ x.title } by email?
+fields:
+  - I would like to send someone a copy: x.has_courtesy_copies
+    datatype: yesnoradio
+  - What emails do you want to send to? (one per line): x.courtesy_copies_raw
+    datatype: area
+    show if: x.has_courtesy_copies
 ---
 id: info screen
 question: |
@@ -183,17 +293,17 @@ id: housing court docket number
 question: |
   What is the **Housing Court** docket number for your case?
 fields:
-  - Docket number: housing_court_docket_number
+  - Docket number: lower_court_case.docket_number
 --- 
 id: appeals court docket number 
 question: |
   Is this Motion to Stay the first document you are filing in the **Appeals Court**?
 fields:
-  - no label: is_first_document
+  - no label: is_initial_filing
     datatype: yesnoradio
   - What is the **Appeals Court** docket number for your case?: appeals_court_docket_number
     show if:
-      variable: is_first_document
+      variable: is_initial_filing
       is: False
 ---
 id: explain_need_affidavit
@@ -228,6 +338,14 @@ terms:
   plaintiff: |
     This could be your landlord or the current owner of the property, such as a foreclosing bank or purchaser. 
 --- 
+code: |
+  if user_ask_role == 'plaintiff':
+    plaintiff_name = users.full_names()
+    defendant_name = other_parties.full_names()
+  else:
+    plaintiff_name = other_parties.full_names()
+    defendant_name = users.full_names()
+---
 id: defendant
 question: |
   Who is the **defendant** in your Housing Court case?
@@ -275,7 +393,7 @@ id: date of housing court judgment
 question: |
   When did the **Housing Court** enter judgment against you?
 fields:
-  - Date: housing_court_judgment_date
+  - Date: lower_court_case.judgment_date
     datatype: date  
     max: ${ today() }
 ---
@@ -283,7 +401,7 @@ id: name of housing court judge
 question: |
   What is the name of the **Housing Court** judge who entered judgment against you?
 fields:
-  - Name: housing_court_judge
+  - Name: lower_court_case.judge
 ---
 id: date notice of appeal filed
 question: |  
@@ -505,9 +623,11 @@ fields:
 ---
 code: |
   motion_to_stay_bundle.enabled = True
-  general_cover_sheet.enabled = True
+  general_cover_sheet.enabled = not can_check_efile
   notice_of_appeal.enabled = not no_notice_of_appeal_filed
-  affidavitofindigency_attachment.enabled = is_first_document and is_indigent
+---
+code: |
+  affidavitofindigency_attachment.enabled = is_initial_filing and is_indigent
 ---
 id: review before signature
 continue button field: preview_screen
@@ -608,7 +728,7 @@ subquestion: |
   
   Click the "E-File" button below to e-file your form.
   
-  ${ action_button_html(url_ask([{'recompute': ['efile']}]), label='E-File', icon='file-export')}
+  ${ action_button_html(url_ask([{'recompute': ['efile']}]), label='E-File', id_tag='efile-button', icon='file-export', size='md')}
   
   % endif
   
@@ -617,7 +737,7 @@ subquestion: |
 comment: |
   % if ready_to_efile and not (defined('efile') and efile):
   Click the "E-File" button below to e-file your form at ${ trial_court }.
-  ${ action_button_html(url_ask([{'recompute': ['efile']}]), label='E-file', icon='file-export') }
+  ${ action_button_html(url_ask([{'recompute': ['efile']}]), label='E-file', icon='file-export', id_tag='efile', size='md') }
   % elif ready_to_efile and (defined('efile') and efile):
   Your filing has already been delivered to ${ appeals_court }.
   % elif ready_to_efile and (defined('efile') and not efile):
@@ -719,14 +839,17 @@ validation code: |
     exhibits[i].instanceName = temp_name
 ---
 objects:
-  - al_court_bundle: ALDocumentBundle.using(elements=[general_cover_sheet, motion_to_stay_bundle, affidavitofindigency_attachment], filename="motion_to_stay_eviction", title="Court bundle")
+  - al_court_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, affidavitofindigency_attachment], filename="motion_to_stay_eviction", title="Court bundle")
   - al_user_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, affidavitofindigency_attachment], filename="motion_to_stay_eviction", title="User bundle")
 ---
 objects:
   - motion_to_stay_bundle: ALDocumentBundle.using(elements=[motion_attachment, exhibits], title="Motion To Stay (Eviction)", filename="motion_to_stay_eviction")
 ---
 objects:
-  - general_cover_sheet: ALDocument.using(enabled=True, title="Cover Sheet", filename="cover-sheet")
+  - general_cover_sheet: ALDocument.using(title="Cover Sheet", filename="cover-sheet")
+---
+code: |
+  general_cover_sheet.enabled = not can_check_efile
 ---
 code: |
   exhibits.enabled = exhibits.exhibits.has_exhibits
