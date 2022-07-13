@@ -4,20 +4,7 @@ include:
 ---
 generic object: ALDocumentBundle
 code: |
-  x.filing_type
-  x.filing_description
-  x.reference_number
-  x.tyler_filing_type
-  x.document_type
-  x.motion_type
-  x.filing_component
-  x.filing_parties
-  x.filing_action
-  x.has_courtesy_copies
-  x.optional_services.clear()
-  x.optional_services.gathered = True
-  x.as_pdf()
-  x.completed = True
+  x.optional_services.there_are_any = False
 ---
 generic object: DAObject
 code: |
@@ -27,4 +14,59 @@ code: |
   x.filing_action = 'efile'
 ---
 code: |
-  motion_to_stay_bundle.filing_type = '6137' # Stay of Judgement MRAP 6(a)
+  motion_to_stay_bundle.filtered_filing_options, motion_to_stay_bundle.filing_type = \
+      filter_codes(filing_type_options,
+          ['Motion to stay a judgment MRAP 6(a)', 'MRAP 6(a)'], '6553')
+  if motion_to_stay_bundle.filing_type is None:
+    motion_to_stay_bundle.filing_type = motion_to_stay_bundle.user_chosen_filing_type
+---
+code: |
+  affidavitofindigency_attachment.filtered_filing_options, affidavitofindigency_attachment.filing_type = \
+      filter_codes(filing_type_options,
+          ['Indigency Affidavit'], '8411')
+  if affidavitofindigency_attachment.filing_type is None:
+    affidavitofindigency_attachment.filing_type = affidavitofindigency_attachment.user_chosen_filing_type
+---
+code: |
+  tyler_case_category_filters = ['Appeals Court Single Justice - Civil', 'Civil']
+  tyler_case_category_default = '8151'
+  tyler_case_type_filters = ['Motion for stay of judgment MRAP 6(a)', 'MRAP 6(a)']
+  tyler_case_type_default = '8157'
+---
+code: |
+  if not is_initial_filing and 'P' in appeals_court_docket_number:
+    court_id = 'appeals:acp'
+  else:
+    court_id = 'appeals:acsj'
+---
+code: |
+  users[i].party_type_options, users[i].party_type = filter_codes(party_type_options,
+      ['Defendant/Appellant', 'Defendant/Petitioner'], '1729')
+  if users[i].party_type is None:
+    users[i].party_type = users[i].user_chosen_party_type
+---
+code: |
+  other_parties[i].party_type_options, other_parties[i].party_type = filter_codes(party_type_options,
+      ['Plaintiff/Appellee', 'Plaintiff/Respondent'], '1736')
+  if other_parties[i].party_type is None:
+    other_parties[i].party_type = other_parties[i].user_chosen_party_type
+---
+generic object: DAObject
+id: user chosen filing_type
+question: |
+  What is the filing type of this filing?
+subquestion: |
+  We found a few filing codes that could be used to file your fee waiver. Choose the one that you think best fits your case.
+fields:
+  - Filing type: x.user_chosen_filing_type
+    datatype: dropdown
+    code: |
+      x.filtered_filing_options
+---
+# TODO(brycew): eventually add back attorney ids
+generic object: ALIndividual
+code: |
+  if hasattr(x, 'existing_attorney_ids'):
+    x.attorney_ids = x.existing_attorney_ids
+  else:
+    x.attorney_ids = []
