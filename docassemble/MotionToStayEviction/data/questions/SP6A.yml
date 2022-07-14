@@ -96,8 +96,8 @@ code: |
   # * add LowerCourt info in EFSP and finalize var names
   # * reorder questions
   if can_check_efile:
-    tyler_case_category
-    tyler_case_type
+    efile_case_category
+    efile_case_type
     if not is_initial_filing:
       appeals_case_search.do_what_choice = 'docket_lookup'
       appeals_case_search.case_was_found

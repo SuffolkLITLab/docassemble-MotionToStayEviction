@@ -28,10 +28,10 @@ code: |
     affidavitofindigency_attachment.filing_type = affidavitofindigency_attachment.user_chosen_filing_type
 ---
 code: |
-  tyler_case_category_filters = ['Appeals Court Single Justice - Civil', 'Civil']
-  tyler_case_category_default = '8151'
-  tyler_case_type_filters = ['Motion for stay of judgment MRAP 6(a)', 'MRAP 6(a)']
-  tyler_case_type_default = '8157'
+  efile_case_category_filters = ['Appeals Court Single Justice - Civil', 'Civil']
+  efile_case_category_default = '8151'
+  efile_case_type_filters = ['Motion for stay of judgment MRAP 6(a)', 'MRAP 6(a)']
+  efile_case_type_default = '8157'
 ---
 code: |
   if not is_initial_filing and 'P' in appeals_court_docket_number:
