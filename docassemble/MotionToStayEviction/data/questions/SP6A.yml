@@ -86,11 +86,6 @@ code: |
 
   # TODO(brycew):
   # lookup appeals court case
-  if forty_eight_hour_notice:
-    eviction_date
-    eviction_time
-
-  user_ask_role
   # TODO(brycew):
   # * lookup housing court case
   # * add LowerCourt info in EFSP and finalize var names
@@ -101,20 +96,26 @@ code: |
     if not is_initial_filing:
       appeals_case_search.do_what_choice = 'docket_lookup'
       appeals_case_search.case_was_found
-      lower_court_case.docket_number = appeals_case_search.found_case.docket_id
+      lower_court_case.docket_number = appeals_case_search.found_case.docket_number
       target_case = appeals_case_search
       add_existing_users
     
     if is_initial_filing:
       housing_case_search.do_what_choice
       housing_case_search.case_was_found
-      lower_court_case.docket_number = housing_case_search.found_case.docket_id
+      lower_court_case.docket_number = housing_case_search.found_case.docket_number
       target_case = housing_case_search
       add_new_existing_users
   else:
     housing_court
     lower_court_case.docket_number
     lower_court_case.judge
+
+  if forty_eight_hour_notice:
+    eviction_date
+    eviction_time
+
+  user_ask_role
   lower_court_case.judgment_date
   date_housing_court_denied_motion_to_stay
   housing_court_denying_order_text
@@ -170,7 +171,7 @@ code: |
     lead_contact = users[0]
     trial_court = housing_court
     # TODO(brycew): hack until Tyler responsd
-    trial_court.name = '490'
+    trial_court.court_id = trial_court.tyler_code if hasattr(trial_court, 'tyler_code') and trial_court.tyler_code else ''
     tyler_payment_id = get_config('efile proxy', {}).get('global waivers', {}).get('massachusetts', '')
   if is_initial_filing:
     indigency_intro
@@ -288,8 +289,15 @@ question: |
 fields:
   - no label: housing_court
     datatype: object
-    choices: all_courts.filter_courts(["Housing Court"])
+    choices: valid_housing_courts
 --- 
+code: |
+  valid_housing_courts = all_courts.filter_courts(["Housing Court"])
+  if can_check_efile and defined('housing_case_search.found_case'):
+    valid_housing_courts = [court for court in valid_housing_courts if court.tyler_code == housing_case_search.found_case.court_id]
+    if len(valid_housing_courts) == 1:
+      housing_court = valid_housing_courts[0]
+---
 id: housing court docket number 
 question: |
   What is the **Housing Court** docket number for your case?
@@ -383,7 +391,7 @@ subquestion: |
   This answer is 48 hours from when you received the {48-Hour Notice}.
 fields:   
   - Date: eviction_date
-    datatype: date 
+    datatype: date
   - Time: eviction_time
     datatype: time
 terms:
