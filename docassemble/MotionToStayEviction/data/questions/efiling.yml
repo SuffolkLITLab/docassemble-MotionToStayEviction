@@ -70,3 +70,12 @@ code: |
     x.attorney_ids = x.existing_attorney_ids
   else:
     x.attorney_ids = []
+---
+id: you-will-not-be-able-to-efile
+question: |
+  You will *not* be able to efile this document
+subquestion: |
+  Unfortunately, you won't be able to efile this document at the Appeals Court.
+
+  However, you are still be able to continue and download a completed form.
+continue button field: show_no_efile
