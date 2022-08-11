@@ -28,9 +28,9 @@ code: |
   
   defendant_name
   housing_court
-  housing_court_docket_number
-  judgment_appealing
-  judgment_date
+  lower_court_case.docket_number
+  lower_court_case.judgment_appealing
+  lower_court_case.judgment_date
   noa_method_of_service
   noa_service_date
   noa_variables = True
@@ -86,13 +86,17 @@ id: housing court docket number
 question: |
   What is the **Housing Court** docket number for your case?
 fields:
-  - Docket number: housing_court_docket_number
+  - Docket number: lower_court_case.docket_number
+---
+code: |
+  if housing_case_search.case_was_found:
+    housing_court_docket_number = housing_case_search.found_case.docket_number
 ---
 id: type of judgment
 question: |
   What judgment are you appealing?
 fields:
-  - no label: judgment_appealing
+  - no label: lower_court_case.judgment_appealing
     input type: radio
     choices:
       - A Rule 60(b) motion to reconsider: A Rule 60(b) motion to reconsider
@@ -100,14 +104,14 @@ fields:
       - Other: Other
   - Other: other_judgment_appealing
     js show if: |
-      val("judgment_appealing") == "Other"
+      val("lower_court_case.judgment_appealing") == "Other"
 ---
 id: date of judgment
 question: |
-  When did the court enter judgment against you?
+  When did the **Housing Court** enter judgment against you?
 fields:
-  - Date: judgment_date
-    datatype: date  
+  - Date: lower_court_case.judgment_date
+    datatype: date
 --- 
 id: method of service
 question: |
@@ -128,7 +132,8 @@ subquestion: |
   You are required to provide a copy of your Notice of Appeal to the plaintiffs' attorney(s).
 fields:
   - Date: noa_service_date
-    datatype: date  
+    datatype: date
+    min: ${today()}
 ---
 id: review before signature
 continue button field: noa_preview_screen

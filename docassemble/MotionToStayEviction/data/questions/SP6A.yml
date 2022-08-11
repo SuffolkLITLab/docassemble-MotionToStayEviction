@@ -14,10 +14,6 @@ include:
 metadata:
   title: Appeal or Stay Your Eviction
 ---
-features:
-  javascript:
-    - limit_upload_size.js
----
 code: |
   bcc_failsafe = "cc@example.com"
 ---
@@ -47,33 +43,18 @@ fields:
   - Court Location: housing_case_search.court_id
     datatype: dropdown
     code: |
-      [opt for opt in trial_court_options if 'Appeals' not in opt[1] and 'Supreme Judicial Court' not in opt[1]]
+      [opt for opt in trial_court_options if 'Housing' in opt[1] and opt[0] != 'hc']
 ---
 only sets: efile_setup
 # Override, don't bother getting the court id before this
 code: |
   efile_setup = 'appeals' in available_efile_courts
 ---
-id: user-wants-efile
-question: |
-  Do you want to efile this document directly with the court?
-subquestion: |
-  You are able to electronically-file (e-file) this document with the Appeals Court!
-
-  This means you don't have to print out the document. The court
-  will communicate with you through your email or phone.
-
-  You will have to provide your email to e-file this document. If you don't wish to provide that,
-  you can choose not to efile.
-fields:
-  - Do you want to efile?: user_wants_efile
-    datatype: yesnoradio
----
 code: |
   appeals_case_search.court_id = all_courts.courts_from_docket_number(appeals_court_docket_number)[0].tyler_code
 ---
 objects:
-  - exhibits: ALExhibitDocument.using(title="Exhibits", filename='exhibits', bates_prefix="EX-", include_exhibit_cover_page=True, include_table_of_contents=True, add_page_numbers=True, auto_ocr=True)
+  - exhibit_doc: ALExhibitDocument.using(title="Exhibits", filename='exhibits', bates_prefix="EX-", include_exhibit_cover_page=True, include_table_of_contents=True, add_page_numbers=True, auto_ocr=True)
 ---
 id: interview order
 mandatory: True
@@ -150,7 +131,7 @@ code: |
     explain_need_affidavit
   # WARNING: file size error is not currently translatable
   file_size_vars
-  has_evidence = exhibits.exhibits.has_exhibits
+  has_evidence = exhibit_doc.exhibits.has_exhibits
   if has_evidence:
     review_exhibits
   procedural_history
@@ -182,6 +163,8 @@ code: |
       doesnt_qualify_interstitial
     elif can_check_efile:
       affidavitofindigency_attachment.completed
+  if can_check_efile:
+    ready_to_efile
   users[0].pronouns
   preview_screen
   basic_questions_signature_flow
@@ -245,6 +228,10 @@ subquestion: |
   You will have a chance to add your signature to this document and download it at the end of this interview.
   
   Failure to file a Notice of Appeal in the ${ housing_court } may result in your Motion to Stay being denied.
+
+  % if can_check_efile:
+  **Note**: the Notice of Appeal with **not** be e-filed for you. You must file it yourself.
+  % endif
 continue button field: noa_confirmation
 ---
 generic object: DAObject
@@ -403,7 +390,7 @@ question: |
   When did the **Housing Court** enter judgment against you?
 fields:
   - Date: lower_court_case.judgment_date
-    datatype: date  
+    datatype: date
     max: ${ today() }
 ---
 id: name of housing court judge
@@ -601,6 +588,9 @@ question: |
   Does your Motion to Stay have an effect on the **{public interest}**?
 subquestion:  |
   Your motion must show that the stay does not harm the public interest.
+
+  ${ collapse_template(public_interest_explainer)}
+
 fields:
   - no label: public_interest_harm_yesno
     datatype: yesnoradio
@@ -610,6 +600,11 @@ fields:
     show if: public_interest_harm_yesno
 terms:
   public interest: |
+    ${ public_interest_explainer }
+---
+template: public_interest_explainer
+subject: What is the "public interest"?
+content: |
     The public interest is most often implicated:
     
     * in cases involving a federal subsidy ("section 9 voucher") 
@@ -683,11 +678,13 @@ subquestion: |
   
   The Appeals Court Clerk's Office number is 617-921-4443 
   
-  The Appeals Court Clerk's Office is open: 
-  Monday - Friday  
+  The Appeals Court Clerk's Office is open:
+
+  Monday - Friday
+
   8:30am - 4:30pm
 
-  ${ al_user_bundle.download_html() } 
+  ${ al_user_bundle.download_list_html() }
   
 progress: 100
 section: download
@@ -728,8 +725,10 @@ subquestion: |
   % else:
   If you do not hear from the court in 1 business day, call the   Appeals Court Clerk's Office: 617-921-4443 
   
-  The Appeals Court Clerk's Office is open: 
-  Monday - Friday  
+  The Appeals Court Clerk's Office is open:
+
+  Monday - Friday
+
   8:30am - 4:30pm
   % endif
 
@@ -741,7 +740,7 @@ subquestion: |
   
   % endif
   
-  ${ al_user_bundle.download_html() } 
+  ${ al_user_bundle.download_list_html() }
   
 comment: |
   % if ready_to_efile and not (defined('efile') and efile):
@@ -761,7 +760,7 @@ section: download
 ---
 code: |
   if has_evidence:
-    if not exhibits.ocr_ready():
+    if not exhibit_doc.ocr_ready():
       waiting_screen
 ---
 event: waiting_screen
@@ -781,9 +780,9 @@ attachment:
 generic object: ALExhibitList
 id: record appendix
 question: |
-  You are required to submit copies of relevant Housing Court documents. 
-subquestion: |  
-  Examples include: 
+  You are required to submit copies of relevant Housing Court documents.
+subquestion: |
+  Examples include:
   
     * the Housing Court's docket 
     * the complaint
@@ -793,7 +792,7 @@ subquestion: |
     
   If you entered into an agreement for judgment, include a copy of the agreement for judgment.
 fields:
-  - Do you have any documents to share with the judge?: x.has_exhibits 
+  - Do you have any documents to share with the judge?: x.has_exhibits
     datatype: yesnoradio
   - I state that filing a complete record appendix is impracticable.: no_record_statement
     datatype: yesno
@@ -807,7 +806,7 @@ fields:
     datatype: files
     show if: x.has_exhibits
     maximum image size: 1024
-    image upload type: jpeg    
+    image upload type: jpeg
     accept: |
       "image/*, image/png,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,.pdf"
 validation code: |
@@ -820,39 +819,39 @@ validation code: |
       validation_error("Unable to convert this file. Please upload a new one.", field="x[0].pages")
     x[0].pages.reset_gathered()  # docassemble sets this attribute but we want to force gathering additional pages
 ---
-table: exhibits.table
-rows: exhibits
+table: exhibit_doc.exhibits.table
+rows: exhibit_doc.exhibits
 allow reordering: True
 columns:
-  - File name: showifdef(row_item.attr_name('filename'))
+  - File name: showifdef(row_item.as_pdf().attr_name('filename'))
   # - Size: row_item.size_in_bytes() / 1024 / 1024
-  - Thumbnail: row_item.show(width="100px")  
+  - Thumbnail: row_item.as_pdf().show(width="100px")
 delete buttons: True
 ---
 id: add additional document
 question: |
-  Exhibit document ${i+1}  
+  Exhibit document ${i+1}
 fields:
-  - no label: exhibits[i]
+  - no label: exhibit_doc.exhibits[i]
     datatype: file
     accept: |
       "image/*, image/png,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,.pdf"   
 validation code: |
   # Upload field creates a DAFileList
   # We want it to be a plain DAFile instead
-  if isinstance(exhibits[i], DAFileList):
-    temp_name = exhibits[i].instanceName
-    exhibits[i] = next(iter(exhibits[i]))
+  if isinstance(exhibit_doc.exhibits[i], DAFileList):
+    temp_name = exhibit_doc.exhibits[i].instanceName
+    exhibit_doc.exhibits[i] = next(iter(exhibit_doc.exhibits[i]))
     # Make sure the "instanceName" shows the correct position in the list,
     # instead of showing a nested DAFileList's instanceName
-    exhibits[i].instanceName = temp_name
+    exhibit_doc.exhibits[i].instanceName = temp_name
 ---
 objects:
   - al_court_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, affidavitofindigency_attachment], filename="motion_to_stay_eviction", title="Court bundle")
-  - al_user_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, affidavitofindigency_attachment], filename="motion_to_stay_eviction", title="User bundle")
+  - al_user_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, notice_of_appeal, affidavitofindigency_attachment], filename="motion_to_stay_eviction", title="User bundle")
 ---
 objects:
-  - motion_to_stay_bundle: ALDocumentBundle.using(elements=[motion_attachment, exhibits], title="Motion To Stay (Eviction)", filename="motion_to_stay_eviction")
+  - motion_to_stay_bundle: ALDocumentBundle.using(elements=[motion_attachment, exhibit_doc], title="Motion To Stay (Eviction)", filename="motion_to_stay_eviction")
 ---
 objects:
   - general_cover_sheet: ALDocument.using(title="Cover Sheet", filename="cover-sheet")
@@ -861,7 +860,7 @@ code: |
   general_cover_sheet.enabled = not can_check_efile
 ---
 code: |
-  exhibits.enabled = exhibits.exhibits.has_exhibits
+  exhibit_doc.enabled = exhibit_doc.exhibits.has_exhibits
 ---
 id: review exhibits
 question: |
@@ -871,9 +870,9 @@ subquestion: |
   to move an exhibit up or down in the list. Click "delete" or "add another"
   to change which exhibits you send to the court.
   
-  ${ exhibits.table }
+  ${ exhibit_doc.exhibits.table }
   
-  ${exhibits.add_action() }
+  ${exhibit_doc.exhibits.add_action() }
 continue button field: review_exhibits 
 ---
 id: email to court
@@ -881,9 +880,9 @@ template: email_to_court_template
 subject: |
   MassAccess submission from ${ users } intended for ${ appeals_court }
 content: |
-  % if has_evidence and exhibits.as_pdf('final').size_in_bytes() > 10 * 1024 * 1024:
+  % if has_evidence and exhibit_doc.as_pdf('final').size_in_bytes() > 10 * 1024 * 1024:
   **The user provided an attachment that is too large to email.**
-  [Link to exhibits](${ exhibits.as_pdf('final').url_for(external=True) } )
+  [Link to exhibits](${ exhibit_doc.as_pdf('final').url_for(external=True) } )
   % endif
   
   At ${current_datetime().format_datetime()},
