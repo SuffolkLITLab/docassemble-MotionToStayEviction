@@ -133,6 +133,7 @@ code: |
   file_size_vars
   has_evidence = exhibit_doc.exhibits.has_exhibits
   if has_evidence:
+    exhibit_doc.exhibits.gather()
     review_exhibits
   procedural_history
   statement_of_facts
@@ -873,7 +874,7 @@ subquestion: |
   ${ exhibit_doc.exhibits.table }
   
   ${exhibit_doc.exhibits.add_action() }
-continue button field: review_exhibits 
+continue button field: review_exhibits
 ---
 id: email to court
 template: email_to_court_template
