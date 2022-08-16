@@ -26,6 +26,12 @@ code: |
 code: |
   interview_short_title = "Ask the Appeals Court to Stop Your Eviction"
 ---
+code: |
+  logged_out_interview = 'docassemble.MassAccess:efile-account-interview.yml'
+---
+code: |
+  admin_interview = "docassemble.EFSPIntegration:admin_interview.yml"
+---
 objects:
   - lower_court_case: DAObject
 ---
@@ -43,7 +49,7 @@ fields:
   - Court Location: housing_case_search.court_id
     datatype: dropdown
     code: |
-      [opt for opt in trial_court_options if 'Housing' in opt[1] and opt[0] != 'hc']
+      [opt for opt in trial_court_options if ('Housing' in opt[1] or 'Superior' in opt[1]) and opt[0] != 'hc']
 ---
 only sets: efile_setup
 # Override, don't bother getting the court id before this
@@ -87,6 +93,7 @@ code: |
       lower_court_case.docket_number = housing_case_search.found_case.docket_number
       target_case = housing_case_search
       add_new_existing_users
+    lower_court_case.judge
   else:
     housing_court
     lower_court_case.docket_number
@@ -154,7 +161,6 @@ code: |
     trial_court = housing_court
     # TODO(brycew): hack until Tyler responsd
     trial_court.court_id = trial_court.tyler_code if hasattr(trial_court, 'tyler_code') and trial_court.tyler_code else ''
-    tyler_payment_id = get_config('efile proxy', {}).get('global waivers', {}).get('massachusetts', '')
   if is_initial_filing:
     indigency_intro
     fees['Filing fee'].waive = True
@@ -163,8 +169,10 @@ code: |
     if not is_indigent:
       doesnt_qualify_interstitial
     elif can_check_efile:
+      tyler_payment_id = get_config('efile proxy', {}).get('global waivers', {}).get('massachusetts', '')
       affidavitofindigency_attachment.completed
   if can_check_efile:
+    tyler_payment_id
     ready_to_efile
   preview_screen
   basic_questions_signature_flow
@@ -262,7 +270,7 @@ subquestion: |
     * the judgment
     * filings related to your motion to stay in the Housing Court
   
-  This form cannot be directly emailed to the Supreme Judicial Court. For more information, contact the Supreme Judicial Court Clerk's office: (617) 557-1020.
+  This form cannot be directly emailed to the Supreme Judicial Court. For more information, contact the Supreme Judicial Court Clerk's office: [(617) 557-1020](tel:+16175571020).
   
   For more information on what you need to file an appeal, view the [Housing Appeal Guide](https://www.mass.gov/guides/housing-appeals-guide#-automatic-stay-pending-appeal-).
 continue button field: info_screen
@@ -848,7 +856,7 @@ validation code: |
 ---
 objects:
   - al_court_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, affidavitofindigency_attachment], filename="motion_to_stay_eviction", title="Court bundle")
-  - al_user_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, notice_of_appeal, affidavitofindigency_attachment], filename="motion_to_stay_eviction", title="User bundle")
+  - al_user_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, notice_of_appeal, affidavitofindigency_attachment], filename="motion_to_stay_eviction", title="All Your documents")
 ---
 objects:
   - motion_to_stay_bundle: ALDocumentBundle.using(elements=[motion_attachment, exhibit_doc], title="Motion To Stay (Eviction)", filename="motion_to_stay_eviction")
