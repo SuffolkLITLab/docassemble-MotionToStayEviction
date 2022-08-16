@@ -2,6 +2,11 @@
 include:
   - docassemble.EFSPIntegration:codes_helper.yml
 ---
+code: |
+  trial_court_resp = proxy_conn.get_courts(with_names=True)
+  trial_court_options = sorted([(court['code'], court['name']) for court in trial_court_resp.data or []], key=lambda c: c[1])
+  trial_court_map = {court['code']: court['name'] for court in trial_court_resp.data or []}
+---
 generic object: ALDocumentBundle
 code: |
   x.optional_services.there_are_any = False
@@ -101,3 +106,39 @@ content: |
   * the next two numbers, "84", are the housing court "code" and refer to a speific court
   * the next two letters, "CV", are the case-type code
   * the last 6 numbers, "000436", are the case's sequence number
+---
+reconsider:
+  - tyler_payment_account_options
+id: payment account
+question: |
+  Payment Account
+subquestion: |
+  Select an existing account below, or add a payment account
+  using the 
+  [eFileMA site](https://massachusetts.tylerhost.net/ofsweb/){:target="_blank"}
+  
+  Refresh this page when you have finished adding the account.
+fields:
+  - Payment Account: tyler_payment_id
+    datatype: dropdown
+    code: |
+      tyler_payment_account_options
+---
+code: |
+  allowable_card_types = full_court_info.get('allowablecardtypes', [])
+  res = proxy_conn.get_payment_account_list().data
+  if res:
+    tyler_payment_account_options = filter_payment_accounts(res, allowable_card_types)
+  else:
+    tyler_payment_account_options = []
+  if not tyler_payment_account_options:
+    payment_kickout
+---
+event: payment_kickout
+question: |
+  You need to add a payment account
+subquestion: |
+  Add a payment account using the
+  [eFileMA site](https://massachusetts.tylerhost.net/ofsweb/){:target="_blank"}.
+
+  Refresh this page when you have added a new payment account.
