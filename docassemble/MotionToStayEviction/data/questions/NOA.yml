@@ -167,7 +167,7 @@ subquestion: |
 attachment code: notice_of_appeal['final']
 ---
 objects:
-  - notice_of_appeal: ALDocument.using(filename="Notice-of-Appeal", title="Notice of Appeal", enabled=True)
+  - notice_of_appeal: ALDocument.using(filename="Notice-of-Appeal", title="Notice of Appeal")
 ---
 attachment:
   - name: Notice of Appeal
