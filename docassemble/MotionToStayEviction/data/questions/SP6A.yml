@@ -2,6 +2,7 @@
 include:
   - docassemble.AssemblyLine:assembly_line.yml 
   - docassemble.ALAffidavitOfIndigency:affidavit_body.yml
+  - docassemble.AffidavitOfIndigencySupplement:affidavit_of_indigency_supplement_body.yml
   - docassemble.EFSPIntegration:efiling_integration.yml
   - docassemble.EFSPIntegration:login_qs.yml
   - docassemble.EFSPIntegration:case_search.yml
@@ -19,6 +20,9 @@ code: |
 ---
 code: |
   jurisdiction_id = 'massachusetts'
+---
+code: |
+  al_form_type ="appeal"
 ---
 code: |
   proxy_conn = ProxyConnection(credentials_code_block='tyler_login', default_jurisdiction=jurisdiction_id)
@@ -62,9 +66,17 @@ code: |
 objects:
   - exhibit_doc: ALExhibitDocument.using(title="Exhibits", filename='exhibits', bates_prefix="EX-", include_exhibit_cover_page=True, include_table_of_contents=True, add_page_numbers=True, auto_ocr=True)
 ---
+sections:
+  - review_case_info: Case Information
+  - review_stay: Motion to Stay Eviction
+  - review_indigency: Affidavit of Indigency
+  - review_indigency_supplement: Affidavit of Indigency Supplement
+  - review_efile_info: Complete Forms
+---
 id: interview order
 mandatory: True
 code: |
+  nav.set_section('review_case_info')
   user_role = "defendant"
   appeals_basic_questions_intro_screen
   info_screen
@@ -104,7 +116,9 @@ code: |
     eviction_time
 
   user_ask_role
+  nav.set_section('review_stay')
   lower_court_case.judgment_date
+  lower_court_case.judgment_appealing
   date_housing_court_denied_motion_to_stay
   housing_court_denying_order_text
 
@@ -130,7 +144,7 @@ code: |
       lower_court_case.title = housing_case_search.found_case.title
     else:
       lower_court_case.title = f"{plaintiff_name} vs {defendant_name}"
-
+    docket_numbers[0] = "Case being filed"
   if no_notice_of_appeal_filed:
     noa_variables
     noa_confirmation
@@ -155,22 +169,30 @@ code: |
   method_of_service
   parties_to_be_served
   service_date
+  trial_court = housing_court
   if can_check_efile:
     motion_to_stay_bundle.completed
     lead_contact = users[0]
-    trial_court = housing_court
     # TODO(brycew): hack until Tyler responsd
     trial_court.court_id = trial_court.tyler_code if hasattr(trial_court, 'tyler_code') and trial_court.tyler_code else ''
   if is_initial_filing:
+    nav.set_section('review_indigency')
     indigency_intro
     fees['Filing fee'].waive = True
     fees['Filing fee'].amount = 315.00
     ask_affidavit_questions
-    if not is_indigent:
+    if is_indigent:
+      if needs_supplement:
+        indigency_supplement_intro
+        nav.set_section('review_indigency_supplement')
+        interview_order_affidavit_of_indigency_supplement
+      if can_check_efile:
+        nav.set_section('review_efile_info')
+        tyler_payment_id = get_config('efile proxy', {}).get('global waivers', {}).get('massachusetts', '')
+        affidavitofindigency_attachment.completed
+    else:
       doesnt_qualify_interstitial
-    elif can_check_efile:
-      tyler_payment_id = get_config('efile proxy', {}).get('global waivers', {}).get('massachusetts', '')
-      affidavitofindigency_attachment.completed
+  nav.set_section('review_efile_info')
   if can_check_efile:
     tyler_payment_id
     ready_to_efile
@@ -217,7 +239,7 @@ code: |
   def is_housing_defendant_party(p):
     return 'plaintiff' in p.party_type_name.lower()
     
-  if user_ask_role == 'plaintiff':
+  if user_role == 'plaintiff':
     is_user_party = is_housing_plaintiff_party
     is_other_party = is_housing_defendant_party
   else:
@@ -330,6 +352,60 @@ subquestion: |
   qualify for a fee waiver. The fee to file a Motion to Stay
   is $315.00.
 ---
+id: explain affidavit of indigency
+continue button field: indigency_supplement_intro
+question: |
+  Fee waiver supplement questions
+subquestion: |
+  The next questions will ask for more detailed information
+  about your financials, which will fill out the fee waiver
+  supplement application.
+---
+id: qualify on face
+continue button field: qualify_interstitial
+question: |
+  % if needs_supplement:
+  You need to submit a supplemental affidavit to learn if you qualify
+  % else:
+  Based on your answers, it looks like you qualify for a fee waiver
+  % endif
+subquestion: |
+  % if public_assistance_kinds.any_true():
+  Based on the information you gave us so far, you should qualify for a fee
+  waiver. Learn more at [MassLegalHelp.org](https://www.masslegalhelp.org/what-if-the-clerk-does-not-approve-my-affidavit-of-indigency-right-away-).
+  
+  You receive these public benefits: ${public_assistance_kinds.true_values()}
+  % elif household_income_qualifies:
+  Based on the information you gave us so far, you should qualify for a fee
+  waiver. Learn more at [MassLegalHelp.org](https://www.masslegalhelp.org/what-if-the-clerk-does-not-approve-my-affidavit-of-indigency-right-away-).
+  
+  **You earn less than the income limit.**
+
+  You said that your ${income_period(hh_income.period).lower()} income
+  is ${currency(hh_income.amount(period_to_use=hh_income.period))}.
+  
+  The limit for a household of ${nice_number(household_size)} is 125% of
+  the poverty level, or ${currency(household_income_limit/hh_income.period)}.
+  % elif not can_afford:
+  You told us that you can't afford to pay the fees and pay for the necessities
+  of life. A judge will take a closer look at your income and expenses and decide
+  if you qualify for sure.
+  
+  On the next screens, you will complete the supplemental affidavit, and package it.
+  % endif
+  
+  On the next screen, we'll ask you about the specific fees you want waived.
+help: |
+  If you get certain public benefits, or if you earn less than 125% of 
+  the federal poverty level, the law says that you qualify for a fee waiver.
+  If you earn more than that but still cannot afford to pay the costs
+  of going to court, you need to give the court more information. If the 
+  court agrees, they may waive your court costs. It is up to a judge to 
+  decide.
+  
+  * [What if the clerk does not approve my affidavit right away?](https://www.masslegalhelp.org/what-if-the-clerk-does-not-approve-my-affidavit-of-indigency-right-away-)
+  * [What if the clerk denies my affidavit?](https://www.masslegalhelp.org/what-if-the-clerk-denies-my-affidavit-of-indigency-)
+---
 id: plaintiff
 question: |
   Who is the **{plaintiff}** in your Housing Court case? 
@@ -344,7 +420,7 @@ terms:
     This could be your landlord or the current owner of the property, such as a foreclosing bank or purchaser. 
 --- 
 code: |
-  if user_ask_role == 'plaintiff':
+  if user_role == 'plaintiff':
     plaintiff_name = users.full_names()
     defendant_name = other_parties.full_names()
   else:
@@ -635,12 +711,18 @@ fields:
     rows: 6
 ---
 code: |
+  case_name = lower_court_case.title
+---
+code: |
   motion_to_stay_bundle.enabled = True
   general_cover_sheet.enabled = not can_check_efile
-  notice_of_appeal.enabled = not no_notice_of_appeal_filed
+  notice_of_appeal.enabled = no_notice_of_appeal_filed
 ---
 code: |
   affidavitofindigency_attachment.enabled = is_initial_filing and is_indigent
+---
+code: |
+  affidavit_of_indigency_supplement_attachment.enabled = is_initial_filing and is_indigent and needs_supplement
 ---
 id: review before signature
 continue button field: preview_screen
@@ -856,8 +938,8 @@ validation code: |
     exhibit_doc.exhibits[i].instanceName = temp_name
 ---
 objects:
-  - al_court_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, affidavitofindigency_attachment], filename="motion_to_stay_eviction", title="Court bundle")
-  - al_user_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, notice_of_appeal, affidavitofindigency_attachment], filename="motion_to_stay_eviction", title="All Your documents")
+  - al_court_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, affidavitofindigency_attachment, affidavit_of_indigency_supplement_attachment], filename="motion_to_stay_eviction", title="Court bundle")
+  - al_user_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, notice_of_appeal, affidavitofindigency_attachment, affidavit_of_indigency_supplement_attachment], filename="motion_to_stay_eviction", title="All Your documents")
 ---
 objects:
   - motion_to_stay_bundle: ALDocumentBundle.using(elements=[motion_attachment, exhibit_doc], title="Motion To Stay (Eviction)", filename="motion_to_stay_eviction")
