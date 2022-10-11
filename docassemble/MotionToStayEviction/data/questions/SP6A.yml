@@ -115,7 +115,7 @@ code: |
     eviction_date
     eviction_time
 
-  user_ask_role
+  user_role
   nav.set_section('review_stay')
   lower_court_case.judgment_date
   lower_court_case.judgment_appealing
