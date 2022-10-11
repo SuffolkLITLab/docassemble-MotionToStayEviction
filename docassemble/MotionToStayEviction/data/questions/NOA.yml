@@ -120,7 +120,7 @@ subquestion: |
   You are required to provide a copy of your Notice of Appeal to the plaintiffs' attorney(s).  
 field: noa_method_of_service
 dropdown:
-  - Efile and serve (efilema.com): efile and serve (efilema.com)
+  - E-file and serve (efilema.com): efile and serve (efilema.com)
   - Email: email
   - Mail: mail
   - Hand delivery: hand delivery

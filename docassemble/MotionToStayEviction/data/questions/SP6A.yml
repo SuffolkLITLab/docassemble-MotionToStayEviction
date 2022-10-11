@@ -56,7 +56,7 @@ fields:
       [opt for opt in trial_court_options if ('Housing' in opt[1] or 'Superior' in opt[1]) and opt[0] != 'hc']
 ---
 only sets: efile_setup
-# Override, don't bother getting the court id before this
+# Overrides EFSPIntegration, don't bother getting the court id before this
 code: |
   efile_setup = 'appeals' in available_efile_courts
 ---
@@ -574,7 +574,7 @@ subquestion: |
   You should not provide a copy of your Affidavit of Indigency, if any, to anyone except the Appeals Court.  
 field: method_of_service
 dropdown:
-  - Efile and serve (efilema.com): efile and serve (efilema.com)
+  - E-file and serve (efilema.com): efile and serve (efilema.com)
   - Email: email
   - Mail: mail
   - Hand delivery: hand delivery
