@@ -142,3 +142,25 @@ subquestion: |
   [eFileMA site](https://massachusetts.tylerhost.net/ofsweb/){:target="_blank"}.
 
   Refresh this page when you have added a new payment account.
+---
+id: case lookup
+question: |
+  Find your Housing court case
+fields:
+  - How do you want to find your case?: housing_case_search.do_what_choice
+    datatype: radio
+    code: |
+      housing_case_search.get_lookup_choices(False)
+---
+comment: |
+  For the housing case, we want to get the docket number first if they have it,
+  don't need to ask for the court
+code: |
+  housing_case_search.do_what_choice
+  housing_case_search.found_case
+  if housing_case_search.found_case and housing_case_search.do_what_choice == 'docket_lookup':
+    housing_case_search.display_case
+  if housing_case_search.found_case is None and housing_case_search.can_file_non_indexed_case:
+    housing_case_search.non_indexed_docket_number
+  housing_case_search.case_was_found = housing_case_search.found_case is not None
+---

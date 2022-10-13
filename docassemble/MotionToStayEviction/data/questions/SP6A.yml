@@ -1,8 +1,8 @@
 ---
 include:
   - docassemble.AssemblyLine:assembly_line.yml 
-  - docassemble.ALAffidavitOfIndigency:affidavit_body.yml
   - docassemble.AffidavitOfIndigencySupplement:affidavit_of_indigency_supplement_body.yml
+  - docassemble.ALAffidavitOfIndigency:affidavit_body.yml
   - docassemble.EFSPIntegration:efiling_integration.yml
   - docassemble.EFSPIntegration:login_qs.yml
   - docassemble.EFSPIntegration:case_search.yml
@@ -54,6 +54,13 @@ fields:
     datatype: dropdown
     code: |
       [opt for opt in trial_court_options if ('Housing' in opt[1] or 'Superior' in opt[1]) and opt[0] != 'hc']
+---
+code: |
+  if housing_case_search.do_what_choice == 'docket_lookup':
+    found_courts = all_courts.courts_from_docket_number(housing_case_search.docket_number_from_user)
+    housing_case_search.court_id = found_courts[0].tyler_code
+    if housing_case_search.court_id is None:
+      del housing_case_search.court_id
 ---
 only sets: efile_setup
 # Overrides EFSPIntegration, don't bother getting the court id before this
@@ -122,20 +129,11 @@ code: |
   date_housing_court_denied_motion_to_stay
   housing_court_denying_order_text
 
-  users[0].name.first
-  users[0].address.address
-  users[0].mobile_number
-  users[0].complete
+  users.gather(complete_attribute='complete')
   user_needs_interpreter
-  users.there_is_another = False
-  users.gathered = True
-  plaintiff_name
 
   # Copy plaintiff name into the "Other Parties" list
-  other_parties.auto_gather=False
-  other_parties[0].name.first = plaintiff_name
-  other_parties.gathered=True
-  other_parties[0].complete
+  other_parties.gather(complete_attribute='complete')
   
   defendant_name
 
@@ -183,8 +181,8 @@ code: |
     ask_affidavit_questions
     if is_indigent:
       if needs_supplement:
-        indigency_supplement_intro
         nav.set_section('review_indigency_supplement')
+        indigency_supplement_intro
         interview_order_affidavit_of_indigency_supplement
       if can_check_efile:
         nav.set_section('review_efile_info')
@@ -216,6 +214,16 @@ code: |
     del other_party.tyler_id
     del other_party.party_type
   add_new_existing_users = True
+---
+code: |
+  users[0].name.first
+  users[0].address.address
+  users[0].mobile_number
+  users[0].complete
+  if can_check_efile:
+    users[0].party_type
+    users[0].is_new
+  users[0].complete = True
 ---
 code: |
   if is_initial_filing:
@@ -418,14 +426,6 @@ fields:
 terms:
   plaintiff: |
     This could be your landlord or the current owner of the property, such as a foreclosing bank or purchaser. 
---- 
-code: |
-  if user_role == 'plaintiff':
-    plaintiff_name = users.full_names()
-    defendant_name = other_parties.full_names()
-  else:
-    plaintiff_name = other_parties.full_names()
-    defendant_name = users.full_names()
 ---
 id: defendant
 question: |
@@ -438,6 +438,14 @@ fields:
   - Defendant(s): defendant_name
     input type: area 
     rows: 6
+--- 
+code: |
+  if user_role == 'plaintiff':
+    plaintiff_name = users.full_names()
+    defendant_name = other_parties.full_names()
+  else:
+    plaintiff_name = other_parties.full_names()
+    defendant_name = users.full_names()
 ---
 id: 48 hour notice
 question: |
@@ -447,8 +455,10 @@ subquestion: |
   [${eviction_notice.show(width='20em')}](${eviction_notice.url_for()})
   </CENTER>
   
-  A 48-Hour Notice can look like the one above.
-yesno: forty_eight_hour_notice
+  A 48-hour notice can look like the one above.
+fields:
+  - Have you received a 48-hour notice?: forty_eight_hour_notice
+    datatype: yesnoradio
 terms:
   48-hour notice: |
     A notice from the constable or sheriff telling you they will move you out on a certain day and time.
