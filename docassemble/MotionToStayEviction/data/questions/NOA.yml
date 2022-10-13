@@ -14,17 +14,9 @@ id: interview order
 code: |
   noa_intro
   user_role = "defendant"
-  users[0].name.first
-  users[0].address.address
-  users[0].mobile_number
-  users.there_is_another = False
-  users.gathered = True
-  plaintiff_name
-  
-  # Copy plaintiff name into the "Other Parties" list
-  other_parties.auto_gather=False
-  other_parties[0].name.first = plaintiff_name
-  other_parties.gathered=True
+
+  users.gather()
+  other_parties.gather()
   
   defendant_name
   housing_court
