@@ -1,6 +1,6 @@
 ---
 include:
-  - docassemble.EFSPIntegration:codes_helper.yml
+  - docassemble.EFSPIntegration:efiling_integration.yml
 ---
 code: |
   trial_court_resp = proxy_conn.get_courts(with_names=True)
@@ -13,24 +13,70 @@ code: |
 ---
 generic object: DAObject
 code: |
-  x.filing_description = f'The completed Motion to Stay Eviction for {users[0].name}'
+  x.filing_description = ''
   x.reference_number = None
   x.filing_parties = ['users[0]']
   x.filing_action = 'efile'
 ---
+generic object: DAObject
+id: document type
+question: |
+  Document type - ${ x.title }
+subquestion: |
+  If a judge has ordered that this case is sealed, select
+  "Impounded". You should also attach a copy of the judge's order.
+fields:
+  - Document type: x.document_type
+    input type: radio
+    code: |
+      x.document_type_options
+    default: ${ matching_tuple_option('public', x.document_type_options) }
+---
+id: not-in-case-kickout
+event: not_in_case_kickout
+question: |
+  You might have the wrong case
+subquestion: |
+  % if len(target_case.maybe_user_partips) > 0:
+  You said that you weren't ${ comma_and_list(target_case.maybe_user_partips, and_string='or') }. 
+  % else:
+  There aren't any participants in this case that you can be.
+  % endif
+  You need to already be a part of the case to file an appeal.
+
+  Press the **Back** button to go back and select a different case or chose the opposing side.
+---
+need:
+  - users
+  - is_plaintiff_party
+  - is_defendant_party
+  - target_case.found_case
+  - target_case.self_in_case
+only sets: to_add_participants
 code: |
-  motion_to_stay_bundle.filtered_filing_options, motion_to_stay_bundle.filing_type = \
-      filter_codes(filing_type_options,
-          ['Motion to stay a judgment MRAP 6(a)', 'MRAP 6(a)'], '6553')
-  if motion_to_stay_bundle.filing_type is None:
-    motion_to_stay_bundle.filing_type = motion_to_stay_bundle.user_chosen_filing_type
+  users.clear()
+  if target_case.self_in_case not in ['is_self', 'is_filing']:
+    not_in_case_kickout
+  else:
+    target_case.self_partip_choice.is_new = False
+    target_case.self_partip_choice.is_form_filler = target_case.self_in_case == 'is_self'
+    # Change where DA thinks this obj came from, so it says "you", and not "NAME"
+    users.append(target_case.self_partip_choice.copy_deep('users[0]'))
+    if hasattr(users[-1].address, 'address'):
+      users[-1].address.geocode()
+    if is_plaintiff_party(users[0]):
+      user_role = 'plaintiff'
+    elif is_defendant_party(users[0]):
+      user_role = 'defendant'
+    to_add_participants = [p for p in target_case.found_case.participants if p.instanceName != target_case.self_partip_choice.instanceName and not is_unused_party(p)]
 ---
 code: |
-  affidavitofindigency_attachment.filtered_filing_options, affidavitofindigency_attachment.filing_type = \
-      filter_codes(filing_type_options,
-          ['Indigency Affidavit'], '8411')
-  if affidavitofindigency_attachment.filing_type is None:
-    affidavitofindigency_attachment.filing_type = affidavitofindigency_attachment.user_chosen_filing_type
+  motion_to_stay_bundle.filing_type_filters = ['Motion to stay a judgment MRAP 6(a)', 'MRAP 6(a)']
+  motion_to_stay_bundle.filing_type_default = '6553'
+---
+code: |
+  affidavit_of_indigency_bundle.filing_type_filters = ['Indigency Affidavit']
+  affidavit_of_indigency_bundle.filing_type_default = '8411'
 ---
 code: |
   efile_case_category_filters = ['Appeals Court Single Justice - Civil', 'Civil']
@@ -45,16 +91,12 @@ code: |
     court_id = 'appeals:acsj'
 ---
 code: |
-  users[i].party_type_options, users[i].party_type = filter_codes(party_type_options,
-      ['Defendant/Appellant', 'Defendant/Petitioner'], '1729')
-  if users[i].party_type is None:
-    users[i].party_type = users[i].user_chosen_party_type
+  users[i].party_type_filters = ['Defendant/Appellant', 'Defendant/Petitioner']
+  users[i].party_type_default = '1729'
 ---
 code: |
-  other_parties[i].party_type_options, other_parties[i].party_type = filter_codes(party_type_options,
-      ['Plaintiff/Appellee', 'Plaintiff/Respondent'], '1736')
-  if other_parties[i].party_type is None:
-    other_parties[i].party_type = other_parties[i].user_chosen_party_type
+  other_parties[i].party_type_filters = ['Plaintiff/Appellee', 'Plaintiff/Respondent']
+  other_parties[i].party_type_default = '1736'
 ---
 generic object: DAObject
 id: user chosen filing_type
