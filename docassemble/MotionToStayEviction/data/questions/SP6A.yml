@@ -4,7 +4,6 @@ include:
   - docassemble.AffidavitOfIndigencySupplement:affidavit_of_indigency_supplement_body.yml
   - docassemble.ALAffidavitOfIndigency:affidavit_body.yml
   - docassemble.EFSPIntegration:efiling_integration.yml
-  - docassemble.EFSPIntegration:login_qs.yml
   - docassemble.EFSPIntegration:case_search.yml
   - docassemble.MassAccess:massaccess.yml
   - docassemble.MassAppealsCourt:appeals-basic-questions.yml
@@ -123,18 +122,18 @@ code: |
     eviction_time
 
   user_role
+  user_started_case
+  users.gather(complete_attribute='complete')
+  user_needs_interpreter
+  other_parties.gather(complete_attribute='complete')
+
   nav.set_section('review_stay')
   lower_court_case.judgment_date
   lower_court_case.judgment_appealing
   date_housing_court_denied_motion_to_stay
   housing_court_denying_order_text
 
-  users.gather(complete_attribute='complete')
-  user_needs_interpreter
-
   # Copy plaintiff name into the "Other Parties" list
-  other_parties.gather(complete_attribute='complete')
-  
   defendant_name
 
   if is_initial_filing:
@@ -180,14 +179,14 @@ code: |
     fees['Filing fee'].amount = 315.00
     ask_affidavit_questions
     if is_indigent:
-      if needs_supplement:
+      if need_supplement:
         nav.set_section('review_indigency_supplement')
         indigency_supplement_intro
         interview_order_affidavit_of_indigency_supplement
       if can_check_efile:
         nav.set_section('review_efile_info')
         tyler_payment_id = get_config('efile proxy', {}).get('global waivers', {}).get('massachusetts', '')
-        affidavitofindigency_attachment.completed
+        affidavit_of_indigency_bundle.completed
     else:
       doesnt_qualify_interstitial
   nav.set_section('review_efile_info')
@@ -199,19 +198,21 @@ code: |
   users[0].signature
   download
 ---
+only sets: add_new_existing_users
 code: |
   add_existing_users
-  users.gathered = True
-  other_parties.gathered = True
-  for user in users:
+  for user in users.complete_elements():
     user.is_new = True
-    del user.tyler_id
-    del user.party_type
-  other_parties.gathered = True
-  for other_party in other_parties:
+    if hasattr(user, 'tyler_id'):
+      delattr(user, 'tyler_id')
+    if hasattr(user, 'party_type'):
+      delattr(user, 'party_type')
+  users.there_is_another = False
+  for other_party in other_parties.complete_elements():
     other_party.is_new = True
     del other_party.tyler_id
     del other_party.party_type
+  other_parties.there_is_another = False
   add_new_existing_users = True
 ---
 code: |
@@ -238,20 +239,27 @@ code: |
   else:
     target_case = appeals_case_search
 ---
+if: is_initial_filing
 code: |
-  def is_housing_plaintiff_party(p):
-    # TODO(brycew)
-    return 'defendant' in p.party_type_name.lower() 
+  is_defendant_filters = [
+    CodeType('1331'),
+    'defendant',
+  ]
 
-  def is_housing_defendant_party(p):
-    return 'plaintiff' in p.party_type_name.lower()
-    
-  if user_role == 'plaintiff':
-    is_user_party = is_housing_plaintiff_party
-    is_other_party = is_housing_defendant_party
-  else:
-    is_user_party = is_housing_defendant_party
-    is_other_party = is_housing_plaintiff_party
+  is_plaintiff_filters = [
+    CodeType('1332'),
+    'plaintiff',
+  ]
+---
+if: not is_initial_filing
+code: |
+  # TODO(brycew): harder, because it's affected by user_started_case
+  is_defendant_filters = [
+    'appellant'
+  ]
+  is_plaintiff_filters = [
+    'appellee',
+  ]
 ---
 code: |
   max_mb_per_file = 15
@@ -273,6 +281,7 @@ subquestion: |
 continue button field: noa_confirmation
 ---
 generic object: DAObject
+id: filing courtesy copy info
 question: |
   Would you like to send anyone a copy of your ${ x.title } by email?
 fields:
@@ -371,7 +380,7 @@ subquestion: |
 id: qualify on face
 continue button field: qualify_interstitial
 question: |
-  % if needs_supplement:
+  % if need_supplement:
   You need to submit a supplemental affidavit to learn if you qualify
   % else:
   Based on your answers, it looks like you qualify for a fee waiver
@@ -720,18 +729,18 @@ fields:
     rows: 6
 ---
 code: |
-  case_name = lower_court_case.title
----
-code: |
   motion_to_stay_bundle.enabled = True
   general_cover_sheet.enabled = not can_check_efile
   notice_of_appeal.enabled = no_notice_of_appeal_filed
 ---
 code: |
+  affidavit_of_indigency_bundle.enabled = is_initial_filing and is_indigent
+---
+code: |
   affidavitofindigency_attachment.enabled = is_initial_filing and is_indigent
 ---
 code: |
-  affidavit_of_indigency_supplement_attachment.enabled = is_initial_filing and is_indigent and needs_supplement
+  affidavit_of_indigency_supplement_attachment.enabled = is_initial_filing and is_indigent and need_supplement
 ---
 id: review before signature
 continue button field: preview_screen
@@ -947,11 +956,12 @@ validation code: |
     exhibit_doc.exhibits[i].instanceName = temp_name
 ---
 objects:
-  - al_court_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, affidavitofindigency_attachment, affidavit_of_indigency_supplement_attachment], filename="motion_to_stay_eviction", title="Court bundle")
-  - al_user_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, notice_of_appeal, affidavitofindigency_attachment, affidavit_of_indigency_supplement_attachment], filename="motion_to_stay_eviction", title="All Your documents")
+  - al_court_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, affidavit_of_indigency_bundle], filename="motion_to_stay_eviction", title="Court bundle")
+  - al_user_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, notice_of_appeal, affidavit_of_indigency_bundle], filename="motion_to_stay_eviction", title="All Your documents")
 ---
 objects:
   - motion_to_stay_bundle: ALDocumentBundle.using(elements=[motion_attachment, exhibit_doc], title="Motion To Stay (Eviction)", filename="motion_to_stay_eviction")
+  - affidavit_of_indigency_bundle: ALDocumentBundle.using(elements=[affidavitofindigency_attachment, affidavit_of_indigency_supplement_attachment], title="Affidavit of Indigency", filename="affidavit_of_indigency")
 ---
 objects:
   - general_cover_sheet: ALDocument.using(title="Cover Sheet", filename="cover-sheet")
