@@ -13,7 +13,7 @@ id: interview order
 # mandatory: True
 code: |
   noa_intro
-  user_role = "defendant"
+  user_ask_role = "defendant"
 
   users.gather()
   other_parties.gather()
