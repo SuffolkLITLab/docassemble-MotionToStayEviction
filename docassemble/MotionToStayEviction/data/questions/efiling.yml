@@ -1,6 +1,7 @@
 ---
 include:
   - docassemble.EFSPIntegration:efiling_integration.yml
+  - docassemble.EFSPIntegration:toga_payments.yml
 ---
 code: |
   trial_court_resp = proxy_conn.get_courts(with_names=True)
@@ -65,9 +66,9 @@ code: |
     if hasattr(users[-1].address, 'address'):
       users[-1].address.geocode()
     if is_plaintiff_party(users[0]):
-      user_role = 'plaintiff'
+      user_ask_role = 'plaintiff'
     elif is_defendant_party(users[0]):
-      user_role = 'defendant'
+      user_ask_role = 'defendant'
     to_add_participants = [p for p in target_case.found_case.participants if p.instanceName != target_case.self_partip_choice.instanceName and not is_unused_party(p)]
 ---
 code: |
@@ -77,6 +78,9 @@ code: |
 code: |
   affidavit_of_indigency_bundle.filing_type_filters = ['Indigency Affidavit']
   affidavit_of_indigency_bundle.filing_type_default = '8411'
+---
+code: |
+  affidavit_of_indigency_bundle.document_type = "6587" # impounded, all are by default
 ---
 code: |
   efile_case_category_filters = ['Appeals Court Single Justice - Civil', 'Civil']
@@ -117,15 +121,6 @@ code: |
     x.attorney_ids = x.existing_attorney_ids
   else:
     x.attorney_ids = []
----
-id: you-will-not-be-able-to-efile
-question: |
-  You will *not* be able to e-file this document
-subquestion: |
-  Unfortunately, you won't be able to e-file this document at the Appeals Court.
-
-  However, you are still be able to continue and download a completed form.
-continue button field: show_no_efile
 ---
 generic object: EFCaseSearch
 template: x.docket_lookup_choice
@@ -175,7 +170,9 @@ code: |
     tyler_payment_account_options = []
   if not tyler_payment_account_options:
     payment_kickout
+    #new_payment_account
 ---
+id: payment kickout
 event: payment_kickout
 question: |
   You need to add a payment account
@@ -194,6 +191,33 @@ fields:
     code: |
       housing_case_search.get_lookup_choices(False)
 ---
+if: housing_case_search.can_file_non_indexed_case
+id: no cases found from housing search
+question: |
+  No cases found
+subquestion: |
+  % if housing_case_search.cms_connection_issue:
+  The court's case management system isn't online, and the case you are searching for might exist.
+  % endif
+
+  % if housing_case_search.search_went_wrong():
+  Something went wrong with the e-filing system when searching for cases.
+  % endif
+
+  You can either continue to manually enter the information about your case, or hit "${ word('back') }" to 
+  try a new search.
+continue button field: housing_case_search.warn_no_results
+---
+id: ask non-indexed docket number
+generic object: EFCaseSearch
+question: |
+  What is the **Housing Court** docket number for your case?
+subquestion: |
+  ${ collapse_template(housing_case_search.case_number_format_template) }
+
+fields:
+  - Case number: housing_case_search.non_indexed_docket_number
+---
 comment: |
   For the housing case, we want to get the docket number first if they have it,
   don't need to ask for the court
@@ -205,4 +229,12 @@ code: |
   if housing_case_search.found_case is None and housing_case_search.can_file_non_indexed_case:
     housing_case_search.non_indexed_docket_number
   housing_case_search.case_was_found = housing_case_search.found_case is not None
+---
+code: |
+  if housing_case_search.do_what_choice == 'docket_lookup' and housing_case_search.found_case is None and housing_case_search.can_file_non_indexed_case:
+    housing_case_search.non_indexed_docket_number = housing_case_search.docket_number_from_user
+---
+if: not can_check_efile
+code: |
+  users[0].is_form_filler = False
 ---

@@ -7,9 +7,9 @@ include:
   - docassemble.EFSPIntegration:case_search.yml
   - docassemble.MassAccess:massaccess.yml
   - docassemble.MassAppealsCourt:appeals-basic-questions.yml
+  - docassemble.MassAppealsCourt:efiling.yml
   - efiling.yml
   - NOA.yml
-  - docassemble.MassAppealsCourt:efiling.yml
 ---
 metadata:
   title: Appeal or Stay Your Eviction
@@ -83,7 +83,7 @@ id: interview order
 mandatory: True
 code: |
   nav.set_section('review_case_info')
-  user_role = "defendant"
+  user_ask_role = "defendant"
   appeals_basic_questions_intro_screen
   info_screen
   if can_check_efile:
@@ -106,22 +106,27 @@ code: |
       add_existing_users
     
     if is_initial_filing:
+      housing_case_search.can_file_non_indexed_case = True
       housing_case_search.do_what_choice
-      housing_case_search.case_was_found
-      lower_court_case.docket_number = housing_case_search.found_case.docket_number
-      target_case = housing_case_search
-      add_new_existing_users
-    lower_court_case.judge
+      if housing_case_search.case_was_found:
+        needs_all_info = False
+        lower_court_case.docket_number = housing_case_search.found_case.docket_number
+        target_case = housing_case_search
+        add_new_existing_users
+      else:
+        needs_all_info = True
+        housing_court
+        lower_court_case.docket_number = housing_case_search.non_indexed_docket_number
   else:
+    needs_all_info = True
     housing_court
     lower_court_case.docket_number
-    lower_court_case.judge
+  lower_court_case.judge
 
   if forty_eight_hour_notice:
     eviction_date
     eviction_time
 
-  user_role
   user_started_case
   users.gather(complete_attribute='complete')
   user_needs_interpreter
@@ -137,7 +142,7 @@ code: |
   defendant_name
 
   if is_initial_filing:
-    if can_check_efile:
+    if can_check_efile and housing_case_search.case_was_found:
       lower_court_case.title = housing_case_search.found_case.title
     else:
       lower_court_case.title = f"{plaintiff_name} vs {defendant_name}"
@@ -197,6 +202,19 @@ code: |
   basic_questions_signature_flow
   users[0].signature
   download
+---
+id: are-you-using-fee-waiver
+question: |
+  Do you want to submit an affidavit of indigency?
+subquestion: |
+  If you are paying for this motion with an affidivat of indigency, also called a
+  fee waiver, you can fill out and
+  electronically file (e-file) both forms at the same time in this program.
+  This means you don’t have to print out the forms. The court will communicate
+  with you by email. You will have to provide your email to e-file your Appearance and Fee waiver.
+fields:
+  - Do you want to file an affidavit of indigency?: user_wants_efile
+    datatype: yesnoradio
 ---
 only sets: add_new_existing_users
 code: |
@@ -327,7 +345,7 @@ fields:
 --- 
 code: |
   valid_housing_courts = all_courts.filter_courts(["Housing Court"])
-  if can_check_efile and defined('housing_case_search.found_case'):
+  if can_check_efile and housing_case_search.case_was_found:
     valid_housing_courts = [court for court in valid_housing_courts if court.tyler_code == housing_case_search.found_case.court_id]
     if len(valid_housing_courts) == 1:
       housing_court = valid_housing_courts[0]
@@ -338,7 +356,7 @@ question: |
 fields:
   - Docket number: lower_court_case.docket_number
 --- 
-id: appeals court docket number 
+id: appeals court docket number
 question: |
   Is this Motion to Stay the first document you are filing in the **Appeals Court**?
 fields:
@@ -448,7 +466,7 @@ fields:
     rows: 6
 --- 
 code: |
-  if user_role == 'plaintiff':
+  if user_started_case:
     plaintiff_name = users.full_names()
     defendant_name = other_parties.full_names()
   else:
@@ -813,6 +831,10 @@ subquestion: |
   % if not defined('email_success') or not email_success:
   Thank you ${users[0]}. Your form is ready to send to the court. **It is not
   delivered until you complete the delivery process below.**
+
+  You can edit your form before sending it by pressing "Make changes" below.
+
+  ${ action_button_html(url_action('review_case_info'), label=':edit: Make changes', color='success', size="md") }
   
   % if no_notice_of_appeal_filed:
   **You have two documents to deliver:** 
@@ -878,7 +900,7 @@ question: |
   <i class="fas fa-cog fa-spin"></i> Please wait while we process your documents . . . <i class="fas fa-cog fa-spin"></i>
 ---
 objects:
-  - motion_attachment: ALDocument.using(enabled=True, has_addendum=False, title="Display Name of Form", filename="motion-to-stay-eviction")
+  - motion_attachment: ALDocument.using(enabled=True, has_addendum=False, title="Motion to Stay - Eviction", filename="motion-to-stay-eviction")
 ---
 attachment:
   - name: Motion to Stay Eviction
@@ -984,6 +1006,32 @@ subquestion: |
   
   ${exhibit_doc.exhibits.add_action() }
 continue button field: review_exhibits
+---
+id: review screen
+event: review_case_info
+question: |
+  Review screen
+subquestion: |
+  Edit your answer below.
+review:
+  - Edit: users.revisit
+    button: |
+      **Your party: (Edit to change name and address)**
+
+      %  for my_var in users:
+        * ${ my_var.name }
+      % endfor
+  - Edit: other_parties.revisit
+    button: |
+      **The other party: (Edit to change name and address)**
+      
+      % for my_var in other_parties:
+        * ${ my_var.name }
+      % endfor
+  - Edit: users[0].address.address
+    button: |
+      **Your address:**
+      ${ users[0].address.on_on_line() }
 ---
 id: email to court
 template: email_to_court_template
