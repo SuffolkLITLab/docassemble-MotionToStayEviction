@@ -66,9 +66,25 @@ only sets: efile_setup
 code: |
   efile_setup = 'appeals' in available_efile_courts
 ---
-code: |
-  appeals_case_search.court_id = all_courts.courts_from_docket_number(appeals_court_docket_number)[0].tyler_code
+id: housing trial court
+question: |
+  Which Appeals court is your case in?
+fields:
+  - Court Location: appeals_case_search.court_id
+    datatype: dropdown
+    code: |
+      [opt for opt in trial_court_options if 'Appeals' in opt[1]]
 ---
+if: can_check_efile and appeals_case_search.do_what_choice == 'docket_lookup'
+code: |
+  appeals_case_search.court_id = all_courts.courts_from_docket_number(appeals_case_search.docket_number_from_user)[0].tyler_code
+---
+# Uses max_size from Tyler
+if: can_check_efile
+objects:
+  - exhibit_doc: ALExhibitDocument.using(title="Exhibits", filename='exhibits', bates_prefix="EX-", include_exhibit_cover_page=True, include_table_of_contents=True, add_page_numbers=True, auto_ocr=True, maximum_size=max_total_exhibit_size)
+---
+if: not can_check_efile
 objects:
   - exhibit_doc: ALExhibitDocument.using(title="Exhibits", filename='exhibits', bates_prefix="EX-", include_exhibit_cover_page=True, include_table_of_contents=True, add_page_numbers=True, auto_ocr=True)
 ---
@@ -95,16 +111,22 @@ code: |
   # * lookup housing court case
   # * add LowerCourt info in EFSP and finalize var names
   # * reorder questions
+  if can_check_efile and is_initial_filing:
+    if not user_wants_affidavit:
+      can_check_efile = False
+
   if can_check_efile:
-    efile_case_category
-    efile_case_type
     if not is_initial_filing:
-      appeals_case_search.do_what_choice = 'docket_lookup'
+      appeals_case_search.do_what_choice
       appeals_case_search.case_was_found
       lower_court_case.docket_number = appeals_case_search.found_case.docket_number
+      previous_case_id = appeals_case_search.found_case.tracking_id
       target_case = appeals_case_search
-      add_existing_users
-    
+      add_appeals_existing_users
+
+    efile_case_category
+    efile_case_type
+
     if is_initial_filing:
       housing_case_search.can_file_non_indexed_case = True
       housing_case_search.do_what_choice
@@ -141,19 +163,23 @@ code: |
   # Copy plaintiff name into the "Other Parties" list
   defendant_name
 
+  if is_initial_filing and can_check_efile and housing_case_search.case_was_found:
+    lower_court_case.title = housing_case_search.found_case.title
+  elif not is_initial_filing and can_check_efile and appeals_case_search.case_was_found:
+    lower_court_case.title = appeals_case_search.found_case.title
+  else:
+    lower_court_case.title = f"{plaintiff_name} v. {defendant_name}"
+
   if is_initial_filing:
-    if can_check_efile and housing_case_search.case_was_found:
-      lower_court_case.title = housing_case_search.found_case.title
-    else:
-      lower_court_case.title = f"{plaintiff_name} vs {defendant_name}"
     docket_numbers[0] = "Case being filed"
+    explain_need_affidavit
+
   if no_notice_of_appeal_filed:
     noa_variables
     noa_confirmation
-  else:
-    explain_need_affidavit
+
   # WARNING: file size error is not currently translatable
-  file_size_vars
+  max_mb_per_file
   has_evidence = exhibit_doc.exhibits.has_exhibits
   if has_evidence:
     exhibit_doc.exhibits.gather()
@@ -165,7 +191,7 @@ code: |
   plaintiff_harm
   public_interest_harm_yesno
   legal_issues
-  relief_sought 
+  relief_sought
   likelihood_of_success
   argument_summary
   method_of_service
@@ -196,6 +222,7 @@ code: |
       doesnt_qualify_interstitial
   nav.set_section('review_efile_info')
   if can_check_efile:
+    all_required_screens_shown
     tyler_payment_id
     ready_to_efile
   users[0].pronouns
@@ -214,7 +241,7 @@ subquestion: |
   This means you don’t have to print out the forms. The court will communicate
   with you by email. You will have to provide your email to e-file your Appearance and Fee waiver.
 fields:
-  - Do you want to file an affidavit of indigency?: user_wants_efile
+  - Do you want to file an affidavit of indigency?: user_wants_affidavit
     datatype: yesnoradio
 ---
 only sets: add_new_existing_users
@@ -233,6 +260,13 @@ code: |
     del other_party.party_type
   other_parties.there_is_another = False
   add_new_existing_users = True
+---
+only sets: add_appeals_existing_users
+code: |
+  add_existing_users
+  users.there_is_another = False
+  other_parties.there_is_another = False
+  add_appeals_existing_users = True
 ---
 code: |
   users[0].name.first
@@ -258,31 +292,9 @@ code: |
   else:
     target_case = appeals_case_search
 ---
-if: is_initial_filing
-code: |
-  is_defendant_filters = [
-    CodeType('1331'),
-    'defendant',
-  ]
-
-  is_plaintiff_filters = [
-    CodeType('1332'),
-    'plaintiff',
-  ]
----
-if: not is_initial_filing
-code: |
-  # TODO(brycew): harder, because it's affected by user_started_case
-  is_defendant_filters = [
-    'appellant'
-  ]
-  is_plaintiff_filters = [
-    'appellee',
-  ]
----
+if: not can_check_efile
 code: |
   max_mb_per_file = 15
-  file_size_vars = True
 ---
 id: noa confirmation
 question: |
@@ -346,7 +358,7 @@ fields:
 --- 
 code: |
   valid_housing_courts = all_courts.filter_courts(["Housing Court"])
-  if can_check_efile and housing_case_search.case_was_found:
+  if can_check_efile and is_initial_filing and housing_case_search.case_was_found:
     valid_housing_courts = [court for court in valid_housing_courts if court.tyler_code == housing_case_search.found_case.court_id]
     if len(valid_housing_courts) == 1:
       housing_court = valid_housing_courts[0]
@@ -367,6 +379,29 @@ fields:
     show if:
       variable: is_initial_filing
       is: False
+      code: |
+        not can_check_efile
+---
+if: can_check_efile
+code: |
+  appeals_court_docket_number = appeals_case_search.found_case.docket_number
+---
+template: explain_appeals_docket_format_template
+subject: What does my appeals court docket number look like?
+content: |
+  The docket number is a number that the court assigns your case.
+
+  The Appels Court docket number will be similar to this:
+
+  2022-P-0001
+
+  It has 3 parts, each separated by a hyphen ("-").
+
+  * the first 4 numbers ("2022") are the case's filing year
+  * the middle letter ("P" in this case) is either "P" or "J".
+    The Appeals Court hears cases either as a panel ("P") or in
+    a single-justice session ("J").
+  * the last numbers ("0001") are the sequence number
 ---
 id: explain_need_affidavit
 question: |
