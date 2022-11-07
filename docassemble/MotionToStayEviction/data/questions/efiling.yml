@@ -19,6 +19,19 @@ code: |
   x.filing_parties = ['users[0]']
   x.filing_action = 'efile'
 ---
+if: can_check_efile
+only sets:
+  - max_total_exhibit_size
+  - max_mb_per_file
+code: |
+  allowed_sizes = get_max_allowed_sizes(proxy_conn, court_id)
+  if allowed_sizes:
+    max_mb_per_file = allowed_sizes[0] / 1024 / 1024
+    max_total_exhibit_size = allowed_sizes[1]
+  else:
+    max_mb_per_file = 15
+    max_total_exhibit_size = 50 * 1024 * 1024
+---
 generic object: DAObject
 id: document type
 question: |
@@ -89,7 +102,7 @@ code: |
   efile_case_type_default = '8157'
 ---
 code: |
-  if not is_initial_filing and 'P' in appeals_court_docket_number:
+  if not is_initial_filing and 'P' in appeals_case_search.docket_number_from_user:
     court_id = 'appeals:acp'
   else:
     court_id = 'appeals:acsj'
@@ -178,7 +191,11 @@ question: |
   You need to add a payment account
 subquestion: |
   Add a payment account using the
+  % if get_config('efile proxy').get('url') == 'https://efile.suffolklitlab.org':
   [eFileMA site](https://massachusetts.tylerhost.net/ofsweb/){:target="_blank"}.
+  % else:
+  [eFileMA site](https://massachusetts-stage.tylerhost.net/ofsweb/){:target="_blank"}.
+  % endif
 
   Refresh this page when you have added a new payment account.
 ---
@@ -237,4 +254,52 @@ code: |
 if: not can_check_efile
 code: |
   users[0].is_form_filler = False
+---
+if: is_initial_filing
+code: |
+  is_defendant_filters = [
+    CodeType('1331'),
+    'defendant',
+  ]
+
+  is_plaintiff_filters = [
+    CodeType('1332'),
+    'plaintiff',
+  ]
+---
+##################################
+## Appeals case search
+##################################
+---
+code: |
+  appeals_case_search.case_number_format_template = explain_appeals_docket_format_template
+---
+id: case lookup
+question: |
+  Find your Appeals court case
+fields:
+  - How do you want to find your case?: appeals_case_search.do_what_choice
+    datatype: radio
+    code: |
+      appeals_case_search.get_lookup_choices(False)
+---
+## Some of the existing cases have party types like "Defdendant/Pititioner".
+## We need to stop matching "respondent", etc. to get it right.
+if: not is_initial_filing
+code: |
+  # TODO(brycew): harder, because it's affected by user_started_case
+  is_defendant_filters = [
+    CodeType('1729'),
+    CodeType('598'),
+    'defendant',
+    'appellant'
+  ]
+---
+if: not is_initial_filing
+code: |
+  is_plaintiff_filters = [
+    CodeType('1736'),
+    'plaintiff',
+    'appellee',
+  ]
 ---
