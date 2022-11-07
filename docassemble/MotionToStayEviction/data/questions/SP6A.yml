@@ -215,15 +215,17 @@ code: |
         indigency_supplement_intro
         interview_order_affidavit_of_indigency_supplement
       if can_check_efile:
-        nav.set_section('review_efile_info')
-        tyler_payment_id = get_config('efile proxy', {}).get('global waivers', {}).get('massachusetts', '')
         affidavit_of_indigency_bundle.completed
     else:
       doesnt_qualify_interstitial
   nav.set_section('review_efile_info')
   if can_check_efile:
+    if not is_initial_filing or (is_initial_filing and is_indigent):
+      # have gotten permission: can use waiver method for subsequent filings
+      tyler_payment_id = get_config('efile proxy', {}).get('global waivers', {}).get('massachusetts', '')
+    else:
+      tyler_payment_id
     all_required_screens_shown
-    tyler_payment_id
     ready_to_efile
   preview_screen
   basic_questions_signature_flow
@@ -242,6 +244,11 @@ subquestion: |
 fields:
   - Do you want to file an affidavit of indigency?: user_wants_affidavit
     datatype: yesnoradio
+---
+if: can_check_efile and (not is_initial_filing or (is_initial_filing and is_indigent))
+code: |
+  # Skip showing this screen to users, we already out set the payment method to be a waiver
+  review_fees_screen = True
 ---
 only sets: add_new_existing_users
 code: |
