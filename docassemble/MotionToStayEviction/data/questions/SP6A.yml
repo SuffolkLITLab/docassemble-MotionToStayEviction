@@ -203,7 +203,7 @@ code: |
     lead_contact = users[0]
     # TODO(brycew): hack until Tyler responsd
     trial_court.court_id = trial_court.tyler_code if hasattr(trial_court, 'tyler_code') and trial_court.tyler_code else ''
-  if is_initial_filing:
+  if is_initial_filing and user_wants_affidavit:
     nav.set_section('review_indigency')
     indigency_intro
     fees['Filing fee'].waive = True
