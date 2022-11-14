@@ -143,6 +143,10 @@ code: |
     needs_all_info = True
     housing_court
     lower_court_case.docket_number
+  if housing_court in just_bmc_courts:
+    warn_bmc_court
+  if housing_court in just_district_courts:
+    warn_district_court
   lower_court_case.judge
 
   if forty_eight_hour_notice:
@@ -364,13 +368,46 @@ fields:
     choices: valid_housing_courts
 --- 
 code: |
-  valid_housing_courts = all_courts.filter_courts(["Housing Court"])
+  valid_housing_courts = all_courts.filter_courts(["Housing Court", "District Court", "Boston Municipal Court"])
   if can_check_efile and is_initial_filing and housing_case_search.case_was_found:
     valid_housing_courts = [court for court in valid_housing_courts if court.tyler_code == housing_case_search.found_case.court_id]
     if len(valid_housing_courts) == 1:
       housing_court = valid_housing_courts[0]
 ---
-id: housing court docket number 
+code: |
+  just_bmc_courts = all_courts.filter_courts(["Boston Municipal Court"])
+---
+code: |
+  just_district_courts = all_courts.filter_courts(["District Court"])
+---
+id: warn bmc court
+question: |
+  This might not be the right form for you
+subquestion: |
+  You said that you are appealing a case from the Boston Municipal Courts.
+  The Boston Municipal Courts have their own appeals division that you should
+  appeal to before the Appeals Court.
+  
+  For more information, see [the District Court Appellate Division website](https://www.mass.gov/district-court-appellate-division).
+
+  You can continue if you are sure you want to file this Motion with the Appeals Court.
+continue button field: warn_bmc_court
+# TODO: maybe color yellow
+---
+id: warn district court
+question: |
+  This might not be the right form for you
+subquestion: |
+  You said that you are appealing a case from the District Courts.
+  The District Courts have their own appeals division that you should
+  appeal to before the Appeals Court.
+
+  For more information, visit [the District Court Appellate Division website](https://www.mass.gov/district-court-appellate-division).
+
+  You can continue if you are sure you want to file this Motion with the Appeals Court.
+continue button field: warn_district_court
+---
+id: housing court docket number
 question: |
   What is the **Housing Court** docket number for your case?
 fields:
