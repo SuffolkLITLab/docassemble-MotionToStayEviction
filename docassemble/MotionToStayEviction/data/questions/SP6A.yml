@@ -861,22 +861,33 @@ decoration: file-download
 question: |
   Download Form
 subquestion: |
-  Thank you ${users[0]}. Your form is ready to download. 
+  Thank you ${users[0]}. Your form is ready to download.
+
+  You can edit your form before sending it by pressing "Make changes" below.
+
+  ${ action_button_html(url_action('review_case_info'), label=':edit: Make changes', color='success', size="md") }
+  
   
   % if no_notice_of_appeal_filed:
   **You have two documents to download:** 
   
   1. The [:file-download: Notice of Appeal]( ${ notice_of_appeal['final'].pdf.url_for()} ),
   which needs to be delivered to the **${ housing_court }**. You need to deliver
-  this on your own. Call the ${ housing_court } at ${ housing_court.phone }
+  it on your own. Call the ${ housing_court } at ${ housing_court.phone }
   to find out how.
   2. Your Appeal, which needs to be delivered to ${ appeals_court }. You can deliver it to the Appeals Court in
-  person or through e-filing.
-  % if not user_wants_efile:
-  You indicated that you didn't want to e-file this document in this interview. You will have to restart this process if you
-  wish to e-file it.
+  person or by e-filing through [the court's website](https://massachusetts.tylertech.cloud/ofsweb).
+
   % endif
 
+  % if not user_wants_efile:
+  You indicated that you didn't want to e-file the Motion to Stay document in this interview. You will have to restart this process if you
+  wish to e-file it using our website.
+  % else:
+
+  We are not able to e-file the Motion to Stay document. Please call the clerk and try delivering the files below in
+  person or by e-filing through [the court's website](https://massachusetts.tylertech.cloud/ofsweb).
+  
   % endif
   
   1. Click the preview image below to open the form in a new window.
@@ -902,13 +913,13 @@ id: download form
 event: download
 decoration: file-download
 question: |
-  % if not defined('email_success') or not email_success:
+  % if not defined('efile') or not efile:
   Review, Download, and Send Form
   % else:
   Form delivered
   % endif
 subquestion: |
-  % if not defined('email_success') or not email_success:
+  % if not defined('efile') or not efile:
   Thank you ${users[0]}. Your form is ready to send to the court. **It is not
   delivered until you complete the delivery process below.**
 
@@ -920,52 +931,53 @@ subquestion: |
   **You have two documents to deliver:** 
   
   1. The [:file-download: Notice of Appeal]( ${ notice_of_appeal['final'].pdf.url_for()} ),
-  which needs to be delivered to the **${ housing_court }**. You need to deliver
+  which needs to be delivered to the **${ housing_court }**. 
+  **The Notice of Appeal will not be e-filed.** You need to deliver
   this on your own. Call the ${ housing_court } at ${ housing_court.phone }
   to find out how.
   2. Your Appeal, which needs to be delivered to ${ appeals_court }. You can deliver the appeal by following the steps below.
   
   Follow these steps to deliver the Appeal to the ${ appeals_court }:
   % endif
+
+  % elif defined('efile') and efile:
+
+  Your filing has been delivered to ${ appeals_court }.
   
+  If you do not hear from the court in 1 business day, call the Appeals Court Clerk's Office.
+  % elif defined('efile') and not efile:
+
+  E-filing was not successful. Call the clerk and try delivering
+  the files below a different way.
+
+  % endif
+
   1. Click the preview image below to open the form in a new window.
   1. Download and save or print a copy of this form for your 
   records.
-  1. Click "Submit to ${ appeals_court }" to send it to the court. 
+  1. Click the "E-File" button below to send it to the court.
   1. You will have a chance to add instructions to the clerk and see the cover page before final delivery.
-  % else:
-  If you do not hear from the court in 1 business day, call the   Appeals Court Clerk's Office: 617-921-4443 
+
+  If you do not hear from the court in 1 business day, call the Appeals Court Clerk's Office.
+  
+  The Clerk's Office phone number is 617-921-4443.
   
   The Appeals Court Clerk's Office is open:
 
   Monday - Friday
 
   8:30am - 4:30pm
-  % endif
 
   % if not (defined('efile') and efile):
   
   Click the "E-File" button below to e-file your form.
   
   ${ action_button_html(url_ask([{'recompute': ['efile']}]), label='E-File', id_tag='efile-button', icon='file-export', size='md')}
-  
+
   % endif
   
   ${ al_user_bundle.download_list_html() }
   
-comment: |
-  % if ready_to_efile and not (defined('efile') and efile):
-  Click the "E-File" button below to e-file your form at ${ trial_court }.
-  ${ action_button_html(url_ask([{'recompute': ['efile']}]), label='E-file', icon='file-export', id_tag='efile', size='md') }
-  % elif ready_to_efile and (defined('efile') and efile):
-  Your filing has already been delivered to ${ appeals_court }.
-  % elif ready_to_efile and (defined('efile') and not efile):
-  E-filing was not successful. Call the clerk and try delivering
-  the files below a different way.
-  % elif not ready_to_efile:
-  We are not able to e-file this form. Please call the clerk and try delivering the files
-  below a different way.
-  % endif
 progress: 100
 section: download
 ---
