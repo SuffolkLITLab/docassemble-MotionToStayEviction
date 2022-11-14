@@ -199,6 +199,43 @@ subquestion: |
 
   Refresh this page when you have added a new payment account.
 ---
+id: submitted form
+question: |
+  % if efile_resp.response_code == 200:
+  Your forms were submitted!
+  % else:
+  Something went wrong delivering your form
+  % endif
+subquestion: |
+  % if efile_resp.response_code == 200:
+  You should receive a confirmation email within 10-15 minutes, and
+  you should receive an update from the clerk of the ${ trial_court } on your filing 
+  within 48 hours.
+
+  % if no_notice_of_appeal_filed:
+  If you haven't yet, you must click **Back to download screen** to download the
+  Notice of Appeal form, which needs to be delivered to the **${ housing_court }**. 
+  The Notice of Appeal form has not been e-filed. You need to deliver it on your own.
+  % else:
+  We recommend you continue down below to download the form for your own records.
+  Click **Back to download screen** to get a copy of your forms and instructions.
+  % endif
+
+  % endif
+  
+  Here are the forms that you submitted:
+  
+  ${ al_court_bundle.as_pdf() }
+
+  ${ collapse_template(debug_details) }
+
+continue button field: show_resp
+continue button label: Back to download screen
+---
+############
+## Housing case search
+############
+---
 id: case lookup
 question: |
   Find your Housing court case
