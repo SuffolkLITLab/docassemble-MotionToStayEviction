@@ -460,7 +460,7 @@ subquestion: |
 continue button field: explain_need_affidavit
 ---
 # Will always ask if this is true
-if: is_initial and efile_setup
+if: is_initial_filing and efile_setup
 code: |
   explain_need_affidavit = True
 ---
