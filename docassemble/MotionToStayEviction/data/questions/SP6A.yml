@@ -1027,8 +1027,11 @@ subquestion: |
 fields:
   - Do you have any documents to share with the judge?: x.has_exhibits
     datatype: yesnoradio
-  - I state that filing a complete record appendix is impracticable.: no_record_statement
-    datatype: yesno
+  - no label: no_record_statement
+    datatype: checkboxes
+    choices:
+      - I state that filing a complete record appendix is impracticable.: no_record
+    minlength: 1
     show if: 
       variable: x.has_exhibits
       is: False
