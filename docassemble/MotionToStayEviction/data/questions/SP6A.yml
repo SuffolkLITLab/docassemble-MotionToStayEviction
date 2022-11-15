@@ -106,6 +106,8 @@ code: |
 
   if is_initial_filing:
     user_wants_affidavit
+  elif not can_check_efile:
+    appeals_court_docket_number
 
   if can_check_efile:
     tyler_login
@@ -408,18 +410,18 @@ question: |
 fields:
   - Docket number: lower_court_case.docket_number
 --- 
-id: appeals court docket number
+id: is_initial_filing
 question: |
   Is this Motion to Stay the first document you are filing in the **Appeals Court**?
 fields:
   - no label: is_initial_filing
     datatype: yesnoradio
-  - What is the **Appeals Court** docket number for your case?: appeals_court_docket_number
-    show if:
-      variable: is_initial_filing
-      is: False
-      code: |
-        not can_check_efile
+---
+id: appeals court docket number
+question: |
+  What is the **Appeals Court** docket number for your case?
+fields:
+  - no label: appeals_court_docket_number
 ---
 if: can_check_efile
 code: |
