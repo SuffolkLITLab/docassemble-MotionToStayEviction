@@ -900,7 +900,7 @@ subquestion: |
   
   % endif
   
-  1. Click the preview image below to open the form in a new window.
+  1. Click "View" below to open the form in a new window.
   1. Download and save or print a copy of this form for your 
   records.
   
@@ -952,9 +952,15 @@ subquestion: |
 
   % elif defined('efile') and efile:
 
-  Your filing has been delivered to ${ appeals_court }.
-  
+  Your Appeal has been delivered to ${ appeals_court }.
+
   If you do not hear from the court in 1 business day, call the Appeals Court Clerk's Office.
+
+  The [:file-download: Notice of Appeal]( ${ notice_of_appeal['final'].pdf.url_for()} ),
+  still needs to be delivered to the **${ housing_court }**. 
+  **It has not be e-filed.** Call the ${ housing_court } at ${ housing_court.phone }
+  to find out how to deliver this on your own.
+  
   % elif defined('efile') and not efile:
 
   E-filing was not successful. Call the clerk and try delivering
@@ -962,28 +968,19 @@ subquestion: |
 
   % endif
 
-  1. Click the preview image below to open the form in a new window.
-  1. Download and save or print a copy of this form for your 
-  records.
+  1. Download and save or print a copy of the below forms for your records.
   1. Click the "E-File" button below to send it to the court.
-  1. You will have a chance to add instructions to the clerk and see the cover page before final delivery.
 
   If you do not hear from the court in 1 business day, call the Appeals Court Clerk's Office.
   
-  The Clerk's Office phone number is 617-921-4443.
-  
-  The Appeals Court Clerk's Office is open:
+  The Appeals Court Clerk's Office phone number is 617-921-4443. The office is open:
 
   Monday - Friday
 
   8:30am - 4:30pm
 
   % if not (defined('efile') and efile):
-  
-  Click the "E-File" button below to e-file your form.
-  
   ${ action_button_html(url_ask([{'recompute': ['efile']}]), label='E-File', id_tag='efile-button', icon='file-export', size='md')}
-
   % endif
   
   ${ al_user_bundle.download_list_html() }
