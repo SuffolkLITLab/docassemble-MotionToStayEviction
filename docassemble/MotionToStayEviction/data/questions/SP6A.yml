@@ -104,7 +104,9 @@ code: |
   info_screen
   is_initial_filing
 
-  if is_initial_filing:
+  can_check_efile
+
+  if is_initial_filing and efile_setup:
     user_wants_affidavit
   elif not can_check_efile:
     appeals_court_docket_number
@@ -204,7 +206,7 @@ code: |
     lead_contact = users[0]
     # TODO(brycew): hack until Tyler responsd
     trial_court.court_id = trial_court.tyler_code if hasattr(trial_court, 'tyler_code') and trial_court.tyler_code else ''
-  if is_initial_filing and user_wants_affidavit:
+  if is_initial_filing and show_affidavit:
     nav.set_section('review_indigency')
     indigency_intro
     fees['Filing fee'].waive = True
@@ -246,6 +248,9 @@ subquestion: |
 fields:
   - Do you want to file an affidavit of indigency?: user_wants_affidavit
     datatype: yesnoradio
+---
+code: |
+  show_affidavit = is_initial_filing and (not efile_setup or user_wants_affidavit)
 ---
 if: can_check_efile and (not is_initial_filing or (is_initial_filing and is_indigent))
 code: |
@@ -454,15 +459,10 @@ subquestion: |
   We will ask you questions to help you find out a little later.
 continue button field: explain_need_affidavit
 ---
-if: can_check_efile and user_wants_affidavit
+# Will always ask if this is true
+if: is_initial and efile_setup
 code: |
   explain_need_affidavit = True
----
-# NOTE: False vs True doesn't matter, but likely do we 2 conditions for
-# user_wants_affidavit
-if: can_check_efile and not user_wants_affidavit
-code: |
-  explain_need_affidavit = False
 ---
 id: explain affidavit of indigency
 continue button field: indigency_intro
