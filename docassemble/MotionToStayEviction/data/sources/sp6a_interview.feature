@@ -43,7 +43,7 @@ Feature: Get through SP6A interview
       | date_notice_of_appeal_filed | 06/20/2022 | |
       | is_initial_filing | True | |
       | x.has_exhibits | False | exhibit_doc.exhibits.has_exhibits |
-      | no_record_statement | True | |
+      | no_record_statement['no_record'] | True | |
       | procedural_history | A lot of stuff happened | |
       | statement_of_facts | These things are facts | |
       | defendant_harm | These dependents will suffer harm. | |
