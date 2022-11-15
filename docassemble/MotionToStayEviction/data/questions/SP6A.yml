@@ -102,18 +102,13 @@ code: |
   user_ask_role = "defendant"
   appeals_basic_questions_intro_screen
   info_screen
+  is_initial_filing
+
+  if is_initial_filing:
+    user_wants_affidavit
+
   if can_check_efile:
     tyler_login
-
-  # TODO(brycew):
-  # lookup appeals court case
-  # TODO(brycew):
-  # * lookup housing court case
-  # * add LowerCourt info in EFSP and finalize var names
-  # * reorder questions
-  if can_check_efile and is_initial_filing:
-    if not user_wants_affidavit:
-      can_check_efile = False
 
   if can_check_efile:
     if not is_initial_filing:
@@ -245,7 +240,7 @@ subquestion: |
   fee waiver, you can fill out and
   electronically file (e-file) both forms at the same time in this program.
   This means you don’t have to print out the forms. The court will communicate
-  with you by email. You will have to provide your email to e-file your Appearance and Fee waiver.
+  with you by email. You will have to provide your email to e-file your motion to stay and affidavit of indigency.
 fields:
   - Do you want to file an affidavit of indigency?: user_wants_affidavit
     datatype: yesnoradio
@@ -456,6 +451,16 @@ subquestion: |
   
   We will ask you questions to help you find out a little later.
 continue button field: explain_need_affidavit
+---
+if: can_check_efile and user_wants_affidavit
+code: |
+  explain_need_affidavit = True
+---
+# NOTE: False vs True doesn't matter, but likely do we 2 conditions for
+# user_wants_affidavit
+if: can_check_efile and not user_wants_affidavit
+code: |
+  explain_need_affidavit = False
 ---
 id: explain affidavit of indigency
 continue button field: indigency_intro
@@ -839,6 +844,10 @@ code: |
 ---
 code: |
   affidavit_of_indigency_supplement_attachment.enabled = is_initial_filing and is_indigent and need_supplement
+---
+if: can_check_efile and (not is_initial_filing or (is_initial_filing and not user_wants_affidavit))
+code: |
+  is_indigent = False
 ---
 id: review before signature
 continue button field: preview_screen

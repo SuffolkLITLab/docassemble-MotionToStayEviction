@@ -292,6 +292,10 @@ if: not can_check_efile
 code: |
   users[0].is_form_filler = False
 ---
+if: is_initial_filing and not user_wants_affidavit
+code: |
+  can_check_efile = False
+---
 if: is_initial_filing
 code: |
   is_defendant_filters = [
