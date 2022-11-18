@@ -229,6 +229,7 @@ code: |
       tyler_payment_id
     all_required_screens_shown
     ready_to_efile
+  done_ocr
   users[0].pronouns
   preview_screen
   basic_questions_signature_flow
@@ -989,14 +990,20 @@ progress: 100
 section: download
 ---
 code: |
-  if has_evidence:
+  if exhibit_doc.exhibits.has_exhibits:
     if not exhibit_doc.ocr_ready():
       waiting_screen
+  done_ocr = True
 ---
 event: waiting_screen
 reload: True
 question: |
-  <i class="fas fa-cog fa-spin"></i> Please wait while we process your documents . . . <i class="fas fa-cog fa-spin"></i>
+  <i class="fas fa-cog fa-spin"></i> Adding OCR text to your document . . .<i class="fas fa-cog fa-spin"></i>
+subquestion: |
+  The Appeals Court requires documents to have searchable text. Since you uploaded exhibits, we are adding
+  that searchable text with optical character recognition (OCR).
+
+  This process started when you uploaded the exhibits, and should take about 
 ---
 objects:
   - motion_attachment: ALDocument.using(enabled=True, has_addendum=False, title="Motion to Stay - Eviction", filename="motion-to-stay-eviction")
