@@ -183,8 +183,7 @@ code: |
 
   # WARNING: file size error is not currently translatable
   max_mb_per_file
-  has_evidence = exhibit_doc.exhibits.has_exhibits
-  if has_evidence:
+  if exhibit_doc.exhibits.has_exhibits:
     exhibit_doc.exhibits.gather()
     review_exhibits
   procedural_history
@@ -1140,7 +1139,7 @@ template: email_to_court_template
 subject: |
   MassAccess submission from ${ users } intended for ${ appeals_court }
 content: |
-  % if has_evidence and exhibit_doc.as_pdf('final').size_in_bytes() > 10 * 1024 * 1024:
+  % if exhibit_doc.exhibits.has_exhibits and exhibit_doc.as_pdf('final').size_in_bytes() > 10 * 1024 * 1024:
   **The user provided an attachment that is too large to email.**
   [Link to exhibits](${ exhibit_doc.as_pdf('final').url_for(external=True) } )
   % endif
@@ -1157,10 +1156,16 @@ content: |
   Other phone | ${showifdef('users[0].phone_number')}
   Email | ${showifdef('users[0].email')}
   Contact details/other | ${showifdef('users[0].other_contact_method')}
-  
+
+
+
+  % if defined('comments_to_clerk'):
+
   Comments for clerk: 
   
-  ${ showifdef('comments_to_clerk')}
+  ${ comments_to_clerk }
+
+  % endif
   
   Please contact ${users} in the next business day to
   confirm that you received this message.
