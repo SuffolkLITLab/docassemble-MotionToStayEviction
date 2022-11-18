@@ -52,7 +52,7 @@ fields:
   - Court Location: housing_case_search.court_id
     datatype: dropdown
     code: |
-      [opt for opt in trial_court_options if ('Housing' in opt[1] or 'Superior' in opt[1]) and opt[0] != 'hc']
+      [opt for opt in trial_court_options if ('Housing' in opt[1] or 'Superior' in opt[1] or 'BMC' in opt[1] or 'District Court' in opt[1]) and opt[0] != 'hc']
 ---
 code: |
   if housing_case_search.do_what_choice == 'docket_lookup':

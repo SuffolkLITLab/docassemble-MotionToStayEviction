@@ -111,7 +111,7 @@ Feature: Get through SP6A interview
       | x[0].pages | small_pdf.pdf | exhibit_doc.exhibits.has_exhibits |
       | x.document_type | 6586 | motion_to_stay_bundle.document_type |
       | x.has_courtesy_copies | False | motion_to_stay_bundle.has_courtesy_copies |
-      | x.has_courtesy_copies | False | affidavitofindigency_attachment.has_courtesy_copies |
+      | x.has_courtesy_copies | False | affidavit_of_indigency_bundle.has_courtesy_copies |
       | x.document_type | 6586 | affidavitofindigency_attachment.document_type |
       | motion_to_stay_bundle.has_courtesy_copies | False | |
       | procedural_history | A lot of stuff happened | |
@@ -184,7 +184,7 @@ Feature: Get through SP6A interview
       | x[0].pages | small_pdf.pdf | exhibit_doc.exhibits.has_exhibits |
       | x.document_type | 6586 | motion_to_stay_bundle.document_type |
       | x.has_courtesy_copies | False | motion_to_stay_bundle.has_courtesy_copies |
-      | x.has_courtesy_copies | False | affidavitofindigency_attachment.has_courtesy_copies |
+      | x.has_courtesy_copies | False | affidavit_of_indigency_bundle.has_courtesy_copies |
       | x.document_type | 6586 | affidavitofindigency_attachment.document_type |
       | motion_to_stay_bundle.has_courtesy_copies | False | |
       | procedural_history | A lot of stuff happened | |
@@ -197,6 +197,7 @@ Feature: Get through SP6A interview
       | likelihood_of_success | Success is pretty likely. | |
       | argument_summary | Here is the summary of my argument. | |
       | method_of_service | email | |
+      | public_assistance_kinds['None'] | True | |
       | parties_to_be_served | All of them | |
       | service_date | today + 10 | |
       | user_ask_role | defendant | |
@@ -208,8 +209,8 @@ Feature: Get through SP6A interview
       | user_grade_school_completed | 11th grade | |
       | users[0].jobs.target_number | 0 | |
       | users[0].nonemployment.selected_types['royalties'] | True | |
-      | users[0].nonemployment[i].times_per_year | Monthly | users[0].nonemployment['royalties'].value |
-      | users[0].nonemployment[i].value | 1000000 | users[0].nonemployment['royalties'].value |
+      | users[0].nonemployment[i].times_per_year | 12 | users[0].nonemployment[0].value |
+      | users[0].nonemployment[i].value | 1000000 | users[0].nonemployment[0].value |
       | has_special_training | False | |
       | has_disabilities | False | |
       | x.selected_types['rent'] | True | users[0].expenses.selected_types |
@@ -222,13 +223,17 @@ Feature: Get through SP6A interview
       | user_has_debts | False | |
       | fees['Filing fee'].waive | True | |
       | fees['Filing fee'].amount | 315 | |
+      | acknowledge_disclaimers['user_agrees_to_disclaimers'] | True | |
       | signature_choice | this_device | |
       | signature_date | today | |
       | users[0].signature | | user[0].signature |
     Then I tap the "#efile-button" element
     # And I tap to continue
 
-  @sp6a_interview @si4 @efile @slow
+  @sp6a_interview @si5 @efile @slow
   Scenario: sp6a w/e-filing from appeals, to end
     Given I start the interview at "SP6A.yml"
     And the maximum seconds for each Step in this Scenario is 40
+
+  @sp6a_interview @si6 @efile
+  Scenario: sp6a again?
