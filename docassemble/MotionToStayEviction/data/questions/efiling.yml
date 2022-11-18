@@ -344,3 +344,16 @@ code: |
     'appellee',
   ]
 ---
+code: |
+  redundant_disclaimers = [
+    "A certificate of service is included.",
+    "All scanned PDFs are text searchable using optical character recognition (OCR)."
+  ]
+  disclaimers_tmp = proxy_conn.get_disclaimers(court_id).data
+  disclaimers = filter(lambda dis: dis not in redundant_disclaimers, disclaimers_tmp)
+---
+code: |
+  efile
+  sent_email_to_court
+  efile_and_email = True
+---
