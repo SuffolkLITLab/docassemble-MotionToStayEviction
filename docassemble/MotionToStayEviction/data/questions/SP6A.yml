@@ -846,7 +846,7 @@ code: |
 code: |
   affidavit_of_indigency_supplement_attachment.enabled = is_initial_filing and is_indigent and need_supplement
 ---
-if: can_check_efile and (not is_initial_filing or (is_initial_filing and not user_wants_affidavit))
+if: efile_setup and (not is_initial_filing or (is_initial_filing and not user_wants_affidavit))
 code: |
   is_indigent = False
 ---
@@ -980,7 +980,7 @@ subquestion: |
   8:30am - 4:30pm
 
   % if not (defined('efile') and efile):
-  ${ action_button_html(url_ask([{'recompute': ['efile']}]), label='E-File', id_tag='efile-button', icon='file-export', size='md')}
+  ${ action_button_html(url_ask([{'recompute': ['efile_and_email']}]), label='E-File', id_tag='efile-button', icon='file-export', size='md')}
   % endif
   
   ${ al_user_bundle.download_list_html() }

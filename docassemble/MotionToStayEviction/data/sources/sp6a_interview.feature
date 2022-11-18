@@ -16,7 +16,8 @@ Feature: Get through SP6A interview
     And I get to the question id "download form" with this data:
       | var | value | trigger |
       | acknowledged_information_use['I accept the terms of use.'] | True | |
-      | user_wants_efile | False | |
+      | is_initial_filing | True | |
+      | user_wants_affidavit | False | |
       | users[0].name.first | Bob | |
       | users[0].name.last | Ma | |
       | users[0].email | example@example.com | |
@@ -41,7 +42,6 @@ Feature: Get through SP6A interview
       | date_housing_court_denied_motion_to_stay | 06/20/2022 | |
       | housing_court_denying_order_text | Some reason, I'm sure it's very important | |
       | date_notice_of_appeal_filed | 06/20/2022 | |
-      | is_initial_filing | True | |
       | x.has_exhibits | False | exhibit_doc.exhibits.has_exhibits |
       | no_record_statement['no_record'] | True | |
       | procedural_history | A lot of stuff happened | |
@@ -72,7 +72,7 @@ Feature: Get through SP6A interview
       | var | value | trigger |
       | acknowledged_information_use['I accept the terms of use.'] | True | |
       | is_initial_filing | True | |
-      | user_wants_efile | True | |
+      | user_wants_affidavit | True | |
     And I set the variable "my_username" to secret "TYLER_EMAIL"
     And I set the variable "my_password" to secret "TYLER_PASSWORD"
     Then I tap to continue
@@ -128,6 +128,7 @@ Feature: Get through SP6A interview
       | service_date | today + 10 | |
       | user_ask_role | defendant | |
       | public_assistance_kinds['VA Benefits'] | True | |
+      | acknowledge_disclaimers['user_agrees_to_disclaimers'] | True | |
       | fees['Filing fee'].waive | True | |
       | fees['Filing fee'].amount | 315 | |
       | signature_choice | this_device | |
@@ -145,7 +146,7 @@ Feature: Get through SP6A interview
       | var | value | trigger |
       | acknowledged_information_use['I accept the terms of use.'] | True | |
       | is_initial_filing | True | |
-      | user_wants_efile | True | |
+      | user_wants_affidavit | True | |
     And I set the variable "my_username" to secret "TYLER_EMAIL"
     And I set the variable "my_password" to secret "TYLER_PASSWORD"
     Then I tap to continue
