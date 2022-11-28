@@ -1142,18 +1142,32 @@ review:
       **Your address:**
       ${ users[0].address.on_on_line() }
 ---
+code: |
+  email_attachment_too_big = al_court_bundle.as_pdf().size_in_bytes() > 10 * 1024 * 1024
+---
 id: email to court
 template: email_to_court_template
 subject: |
   MassAccess submission from ${ users } intended for ${ appeals_court }
 content: |
-  % if exhibit_doc.exhibits.has_exhibits and exhibit_doc.as_pdf('final').size_in_bytes() > 10 * 1024 * 1024:
-  **The user provided an attachment that is too large to email.**
-  [Link to exhibits](${ exhibit_doc.as_pdf('final').url_for(external=True) } )
+  % if email_attachment_too_big:
+  **The user provided attachments that made the document too large to email.**
+  [Link to submitted motion](${ al_court_bundle.as_pdf('final').url_for(external=True) } )
   % endif
   
   At ${current_datetime().format_datetime()},
   ${users} submitted the attached ${package_title} form(s).
+
+  %if efile_resp.is_ok():
+
+  These forms were e-filed at in the envelope with id ${ envelope_id }.
+
+  % else:
+
+  E-filing was attempted, but failed. All filing information is availabe here,
+  but please contact the Suffolk LIT Lab so we can correct the issue.
+
+  % endif
 
   &nbsp;        | &nbsp;
   --------------|-----------

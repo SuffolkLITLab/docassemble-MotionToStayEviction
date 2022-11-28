@@ -19,6 +19,12 @@ code: |
   x.filing_parties = ['users[0]']
   x.filing_action = 'efile'
 ---
+code: |
+  motion_to_stay_bundle.description = comments_to_clerk
+  motion_to_stay_bundle.reference_number = None
+  motion_to_stay_bundle.filing_parties = ['users[0]']
+  motion_to_stay_bundle.filing_action = 'efile'
+---
 if: can_check_efile
 only sets:
   - max_total_exhibit_size
@@ -353,7 +359,18 @@ code: |
   disclaimers = list(filter(lambda dis: dis.get('code') not in redundant_disclaimers, disclaimers_tmp))
 ---
 code: |
-  efile
   sent_email_to_court
+  efile
   efile_and_email = True
 ---
+if: not email_attachment_too_big
+objects:
+  - al_final_form_to_file: ALDocumentBundle.using(elements=[al_cover_page, al_court_bundle], filename=al_court_bundle.filename, title=al_court_bundle.title)
+---
+# Don't include the exhibits (in al_court_bundle -> motion_to_stay_bundle -> exhibit_doc) if they're too big
+if: email_attachment_too_big
+objects:
+  - al_final_form_to_file: ALDocumentBundle.using(elements=[al_cover_page, motion_attachment, affidavit_of_indigency_bundle], filename=al_court_bundle.filename, title=al_court_bundle.title)
+---
+code: |
+  should_cc_user = False
