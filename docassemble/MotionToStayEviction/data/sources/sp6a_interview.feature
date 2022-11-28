@@ -238,3 +238,4 @@ Feature: Get through SP6A interview
 
   @sp6a_interview @si6 @efile
   Scenario: sp6a again?
+    Given I start the interview at "SP6A.yml"

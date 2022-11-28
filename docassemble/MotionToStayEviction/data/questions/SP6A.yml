@@ -717,9 +717,10 @@ question: |
   When will you deliver copies of your motion, memorandum, and supporting materials to the plaintiffs' attorney(s)?
 subquestion: |
   You are required to provide a copy of this motion, memorandum, and supporting materials to the plaintiffs' attorney(s).
+
 fields:
   - Date: service_date
-    datatype: date  
+    datatype: date
     min: ${ today() }
 ---
 id: procedural history
@@ -957,10 +958,14 @@ subquestion: |
 
   If you do not hear from the court in 1 business day, call the Appeals Court Clerk's Office.
 
+  % if no_notice_of_appeal_filed:
+
   The [:file-download: Notice of Appeal]( ${ notice_of_appeal['final'].pdf.url_for()} ),
   still needs to be delivered to the **${ housing_court }**. 
   **It has not be e-filed.** Call the ${ housing_court } at ${ housing_court.phone }
   to find out how to deliver this on your own.
+
+  % endif
   
   % elif defined('efile') and not efile:
 
@@ -1063,9 +1068,9 @@ table: exhibit_doc.exhibits.table
 rows: exhibit_doc.exhibits
 allow reordering: True
 columns:
-  - File name: showifdef(row_item.as_pdf().attr_name('filename'))
+  - File name: str(", ").join([fn[:18] + ("..." if len(fn[18:]) > 3 else fn[18:]) for fn in [showifdef(p.attr_name('filename')) for p in row_item.pages]])
   # - Size: row_item.size_in_bytes() / 1024 / 1024
-  - Thumbnail: row_item.as_pdf().show(width="100px")
+  - Thumbnail: row_item.pages.show(width="100px")
 delete buttons: True
 ---
 id: add additional document
@@ -1087,7 +1092,7 @@ validation code: |
     exhibit_doc.exhibits[i].instanceName = temp_name
 ---
 objects:
-  - al_court_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, affidavit_of_indigency_bundle], filename="motion_to_stay_eviction", title="Court bundle")
+  - al_court_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, affidavit_of_indigency_bundle], filename="motion_to_stay_eviction", title="Court bundle", enabled=True)
   - al_user_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, notice_of_appeal, affidavit_of_indigency_bundle], filename="motion_to_stay_eviction", title="All Your documents")
 ---
 objects:
