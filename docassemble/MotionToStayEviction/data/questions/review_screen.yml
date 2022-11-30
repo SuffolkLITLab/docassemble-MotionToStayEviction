@@ -120,13 +120,13 @@ review:
   - Edit: |-
       housing_court
     button: |
-      **Select the **Housing Court** department and division where your case was heard.**
+      **Select the Housing Court department and division where your case was heard.**
 
       ${ showifdef('housing_court') }
   - Edit: |-
       lower_court_case.docket_number
     button: |
-      **What is the **Housing Court** docket number for your case?**
+      **What is the Housing Court docket number for your case?**
 
       Docket number: ${ showifdef('lower_court_case.docket_number') }
   - Edit: |-
@@ -140,7 +140,7 @@ review:
   - Edit: |-
       lower_court_case.judgment_date
     button: |
-      **When did the **Housing Court** enter judgment against you?**
+      **When did the Housing Court enter judgment against you?**
 
       Date: ${ showifdef('lower_court_case.judgment_date') }
   - Edit: |-
@@ -158,19 +158,19 @@ review:
   - Edit: |-
       housing_court
     button: |
-      **Select the **Housing Court** department and division where your case was heard.**
+      **Select the Housing Court department and division where your case was heard.**
 
       ${ showifdef('housing_court') }
   - Edit: |-
       lower_court_case.docket_number
     button: |
-      **What is the **Housing Court** docket number for your case?**
+      **What is the Housing Court docket number for your case?**
 
       Docket number: ${ showifdef('lower_court_case.docket_number') }
   - Edit: |-
       is_initial_filing
     button: |
-      **Is this Motion to Stay the first document you are filing in the **Appeals Court**?**
+      **Is this Motion to Stay the first document you are filing in the Appeals Court?**
 
       ${ word(yesno(is_initial_filing)) }
   - Edit: |-
@@ -196,19 +196,19 @@ review:
   - Edit: |-
       lower_court_case.judgment_date
     button: |
-      **When did the **Housing Court** enter judgment against you?**
+      **When did the Housing Court enter judgment against you?**
 
       Date: ${ showifdef('lower_court_case.judgment_date') }
   - Edit: |-
       lower_court_case.judge
     button: |
-      **What is the name of the **Housing Court** judge who entered judgment against you?**
+      **What is the name of the Housing Court judge who entered judgment against you?**
 
       Name: ${ showifdef('lower_court_case.judge') }
   - Edit: |-
       no_notice_of_appeal_filed
     button: |
-      **When did you file a Notice of Appeal in the **Housing Court**?**
+      **When did you file a Notice of Appeal in the Housing Court?**
 
       I did not file a Notice of Appeal: ${ word(yesno(no_notice_of_appeal_filed)) }
 
@@ -216,13 +216,13 @@ review:
   - Edit: |-
       date_housing_court_denied_motion_to_stay
     button: |
-      **When did the **Housing Court** judge deny your Motion to Stay?**
+      **When did the Housing Court judge deny your Motion to Stay?**
 
       Date: ${ showifdef('date_housing_court_denied_motion_to_stay') }
   - Edit: |-
       housing_court_denying_order_text
     button: |
-      **Enter the text of the **Housing Court** judge's order denying your Motion to Stay in the Housing Court.**
+      **Enter the text of the Housing Court judge's order denying your Motion to Stay in the Housing Court.**
 
       ${ showifdef('housing_court_denying_order_text') }
   - Edit: |-
@@ -254,7 +254,7 @@ review:
   - Edit: |-
       procedural_history
     button: |
-      **Describe the events in your **Housing Court** case in the order they happened.**
+      **Describe the events in your Housing Court case in the order they happened.**
 
       ${ showifdef('procedural_history') }
   - Edit: |-
@@ -272,19 +272,19 @@ review:
   - Edit: |-
       defendant_harm
     button: |
-      **What harm will **you or your dependents** suffer if your Motion to Stay is denied?**
+      **What harm will you or your dependents suffer if your Motion to Stay is denied?**
 
       ${ showifdef('defendant_harm') }
   - Edit: |-
       plaintiff_harm
     button: |
-      **What harm will the **{plaintiff}** suffer if your Motion to Stay is granted?**
+      **What harm will the plaintiff suffer if your Motion to Stay is granted?**
 
       ${ showifdef('plaintiff_harm') }
   - Edit: |-
       public_interest_harm_yesno
     button: |
-      **Does your Motion to Stay have an effect on the **{public interest}**?**
+      **Does your Motion to Stay have an effect on the public interest?**
 
       ${ word(yesno(public_interest_harm_yesno)) }
 
