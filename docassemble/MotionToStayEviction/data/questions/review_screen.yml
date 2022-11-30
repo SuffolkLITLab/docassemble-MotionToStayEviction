@@ -40,7 +40,7 @@ review:
     button: |
       **Do you get any of these benefits?**
 
-      ${ showifdef('public_assistance_kinds') }
+      ${ public_assistance_kinds.true_values() }
   - Edit: |-
       has_household_members
     button: |
@@ -58,55 +58,55 @@ review:
 
       I can afford the costs: ${ word(yesno(can_afford)) }
   - Edit: |-
-      fees['Filing fee'].waive
+      fees["Filing fee"].waive
     button: |
       **What fees do you need the court to waive or pay?**
 
-      Filing fee or e-filing fee: ${ word(yesno(fees['Filing fee'].waive)) }
+      Filing fee or e-filing fee: ${ word(yesno(fees["Filing fee"].waive)) }
 
-      Amount (if known): ${ showifdef('fees['Filing fee'].amount') }
+      Amount (if known): ${ showifdef('fees["Filing fee"].amount') }
 
-      Costs of serving the other party: ${ word(yesno(fees['Service'].waive)) }
+      Costs of serving the other party: ${ word(yesno(fees["Service"].waive)) }
 
-      Amount (if known): ${ showifdef('fees['Service'].amount') }
+      Amount (if known): ${ showifdef('fees["Service"].amount') }
 
-      Expert witness services, including examinations and testimony: ${ word(yesno(fees['Costs of an expert witness'].waive)) }
+      Expert witness services, including examinations and testimony: ${ word(yesno(fees["Costs of an expert witness"].waive)) }
 
-      Amount (if known): ${ showifdef('fees['Costs of an expert witness'].amount') }
+      Amount (if known): ${ showifdef('fees["Costs of an expert witness"].amount') }
 
-      Describe the need for expert testimony/exams: ${ showifdef('fees['Costs of an expert witness'].description') }
+      Describe the need for expert testimony/exams: ${ showifdef('fees["Costs of an expert witness"].description') }
 
-      Deposition-related costs: ${ word(yesno(fees['Depositions'].waive)) }
+      Deposition-related costs: ${ word(yesno(fees["Depositions"].waive)) }
 
-      Amount (if known): ${ showifdef('fees['Depositions'].amount') }
+      Amount (if known): ${ showifdef('fees["Depositions"].amount') }
 
-      Who do you want to take a deposition of?: ${ showifdef('fees['Depositions'].description') }
+      Who do you want to take a deposition of?: ${ showifdef('fees["Depositions"].description') }
 
-      Fee for filing appeal: ${ word(yesno(fees['Appeal cost'].waive)) }
+      Fee for filing appeal: ${ word(yesno(fees["Appeal cost"].waive)) }
 
-      Amount (if known): ${ showifdef('fees['Appeal cost'].amount') }
+      Amount (if known): ${ showifdef('fees["Appeal cost"].amount') }
 
-      Appeal bond: ${ word(yesno(fees['Appeal bond'].waive)) }
+      Appeal bond: ${ word(yesno(fees["Appeal bond"].waive)) }
 
-      Amount (if known): ${ showifdef('fees['Appeal bond'].amount') }
+      Amount (if known): ${ showifdef('fees["Appeal bond"].amount') }
 
-      CD or cassette recordings of trial or hearing: ${ word(yesno(fees['recordings'].waive)) }
+      CD or cassette recordings of trial or hearing: ${ word(yesno(fees["recordings"].waive)) }
 
-      Written transcript of trial or hearing: ${ word(yesno(fees['transcript'].waive)) }
+      Written transcript of trial or hearing: ${ word(yesno(fees["transcript"].waive)) }
 
-      Amount (if known): ${ showifdef('fees['transcript'].amount') }
+      Amount (if known): ${ showifdef('fees["transcript"].amount') }
 
-      Other fee paid to the court: ${ word(yesno(fees['Other'].waive)) }
+      Other fee paid to the court: ${ word(yesno(fees["Other"].waive)) }
 
-      Amount (if known): ${ showifdef('fees['Other'].amount') }
+      Amount (if known): ${ showifdef('fees["Other"].amount') }
 
-      Describe the other fee/cost: ${ showifdef('fees['Other'].description') }
+      Describe the other fee/cost: ${ showifdef('fees["Other"].description') }
 
-      Other special fees or costs: ${ word(yesno(fees['Other cost'].waive)) }
+      Other special fees or costs: ${ word(yesno(fees["Other cost"].waive)) }
 
-      Amount (if known): ${ showifdef('fees['Other cost'].amount') }
+      Amount (if known): ${ showifdef('fees["Other cost"].amount') }
 
-      Describe the other fee/cost: ${ showifdef('fees['Other cost'].description') }
+      Describe the other fee/cost: ${ showifdef('fees["Other cost"].description') }
   - Edit: |-
       dont_know_docket_number
     button: |
@@ -230,7 +230,7 @@ review:
     button: |
       **Select the issues of law in your case.**
 
-      ${ showifdef('legal_issues') }
+      ${ legal_issues.true_values() }
 
       Other: ${ showifdef('other_legal_issues') }
   - Edit: |-
