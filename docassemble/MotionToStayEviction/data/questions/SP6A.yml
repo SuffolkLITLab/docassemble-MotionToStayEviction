@@ -749,15 +749,18 @@ subquestion: |
   How did your tenancy or former ownership of the property end? Why were you evicted?
   
   This is called the **factual history**.
+
+  ${ collapse_template(facts_help) }
 fields:
   - no label: statement_of_facts
     input type: area 
     rows: 6
-help:
-  label: |
-    Example
-  content: |
-    For example, if you filed a complaint with your local inspectional services department, describe the complaint including the date it was made and the resolution after the inspection.
+---
+template: facts_help
+subject: |
+  What if I need an example?
+content: |
+  For example, if you filed a complaint with your local inspectional services department, describe the complaint including the date it was made and the resolution after the inspection.
 ---
 id: likelihood of success
 question: |

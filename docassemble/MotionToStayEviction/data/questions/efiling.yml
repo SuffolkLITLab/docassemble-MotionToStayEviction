@@ -235,7 +235,7 @@ subquestion: |
 
   ${ collapse_template(debug_details) }
 
-continue button field: show_resp
+continue button field: show_efile_resp
 continue button label: Back to download screen
 ---
 ############
