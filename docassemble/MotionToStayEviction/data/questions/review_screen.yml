@@ -182,7 +182,7 @@ review:
   - Edit: |-
       forty_eight_hour_notice
     button: |
-      **Have you received a {48-hour notice}?**
+      **Have you received a 48-hour notice?**
 
       Have you received a 48-hour notice?: ${ word(yesno(forty_eight_hour_notice)) }
   - Edit: |-
