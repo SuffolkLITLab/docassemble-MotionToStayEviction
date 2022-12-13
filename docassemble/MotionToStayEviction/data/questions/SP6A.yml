@@ -267,11 +267,13 @@ code: |
     if hasattr(user, 'party_type'):
       delattr(user, 'party_type')
   users.there_is_another = False
+  users.revisit = True
   for other_party in other_parties.complete_elements():
     other_party.is_new = True
     del other_party.tyler_id
     del other_party.party_type
   other_parties.there_is_another = False
+  other_parties.revisit = True
   add_new_existing_users = True
 ---
 only sets: add_appeals_existing_users
