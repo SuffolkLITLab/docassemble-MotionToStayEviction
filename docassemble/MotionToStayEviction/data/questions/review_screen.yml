@@ -1,0 +1,352 @@
+---
+event: review_case_info
+id: |
+  review screen
+question: |
+  Review your answers
+review:
+  - Edit: users.revisit
+    button: |
+      **Your party: (Edit to change name and address)**
+
+      %  for my_var in users:
+        * ${ my_var.name }
+      % endfor
+  - Edit: other_parties.revisit
+    button: |
+      **The other party: (Edit to change name and address)**
+      
+      % for my_var in other_parties:
+        * ${ my_var.name }
+      % endfor
+  - Edit: users[0].address.address
+    button: |
+      **Your address:**
+      ${ users[0].address.on_on_line() }
+  - Edit: |
+      case_new_or_existing
+    button: |
+      **Is this a new case?**
+
+      ${ showifdef('case_new_or_existing') }
+  - label: Edit
+    fields:
+      - public_assistance_kinds
+      - recompute:
+        - is_indigent
+    button: |
+      **Do you get any of these benefits?**
+
+      ${ public_assistance_kinds.true_values() }
+  - label: Edit
+    fields:
+      - has_household_members
+      - recompute:
+        - is_indigent      
+    button: |
+      **About your income and household**
+
+      Does anyone else live with you as part of your household?: ${ word(yesno(has_household_members)) }
+
+      How many people? Don't count yourself.: ${ showifdef('household_additional_size') }
+
+      What is the total (after tax) income for your household?: ${ showifdef('hh_income.value') }
+  - label: Edit
+    fields:
+      - can_afford
+      - recompute:
+        - is_indigent
+    button: |
+      **Can you afford to pay the court costs?**
+
+      I can afford the costs: ${ word(yesno(can_afford)) }
+  - Edit: |
+      fees["Filing fee"].waive
+    button: |
+      **What fees do you need the court to waive or pay?**
+
+      % for fee in fees:
+      % if fees[fee] and hasattr(fees[fee], "waive") and fees[fee].waive:
+      * ${ fee } ${ f"({currency(fees[fee].amount)})" if fees[fee].amount else ""}
+      % if hasattr(fees[fee], "description"):
+          * ${ fees[fee].description}
+      % endif
+      % endif
+      % endfor
+  - Edit: |
+      dont_know_docket_number
+    button: |
+      **Docket Number**
+
+      I do not know the docket number: ${ word(yesno(dont_know_docket_number)) }
+
+      Docket number: ${ showifdef('docket_numbers[0]') }
+
+      What case do you want fees waived for? Briefly explain how the clerk can find your case.: ${ showifdef('docket_numbers[0]') }
+  - Edit: |
+      housing_court
+    button: |
+      **Select the Housing Court department and division where your case was heard.**
+
+      ${ showifdef('housing_court') }
+  - Edit: |
+      lower_court_case.docket_number
+    button: |
+      **What is the Housing Court docket number for your case?**
+
+      Docket number: ${ showifdef('lower_court_case.docket_number') }
+  - Edit: |
+      lower_court_case.judgment_appealing
+    button: |
+      **What judgment are you appealing?**
+
+      ${ showifdef('lower_court_case.judgment_appealing') }
+
+      Other: ${ showifdef('other_judgment_appealing') }
+  - Edit: |
+      lower_court_case.judgment_date
+    button: |
+      **When did the Housing Court enter judgment against you?**
+
+      Date: ${ showifdef('lower_court_case.judgment_date') }
+  - Edit: |
+      noa_service_date
+    button: |
+      **When will you deliver copies of your Notice of Appeal to the plaintiffs' attorney(s)?**
+
+      Date: ${ showifdef('noa_service_date') }
+  - Edit: |
+      user_wants_affidavit
+    button: |
+      **Do you want to submit an affidavit of indigency?**
+
+      Do you want to file an affidavit of indigency?: ${ word(yesno(user_wants_affidavit)) }
+  - Edit: |
+      housing_court
+    button: |
+      **Select the Housing Court department and division where your case was heard.**
+
+      ${ showifdef('housing_court') }
+  - Edit: |
+      lower_court_case.docket_number
+    button: |
+      **What is the Housing Court docket number for your case?**
+
+      Docket number: ${ showifdef('lower_court_case.docket_number') }
+  - Edit: |
+      is_initial_filing
+    button: |
+      **Is this Motion to Stay the first document you are filing in the Appeals Court?**
+
+      ${ word(yesno(is_initial_filing)) }
+  - Edit: |
+      appeals_court_docket_number
+    button: |
+      **What is the **Appeals Court** docket number for your case?**
+
+      ${ showifdef('appeals_court_docket_number') }
+  - Edit: |
+      forty_eight_hour_notice
+    button: |
+      **Have you received a 48-hour notice?**
+
+      Have you received a 48-hour notice?: ${ word(yesno(forty_eight_hour_notice)) }
+  - Edit: |
+      eviction_date
+    button: |
+      **When is the sheriff or constable planning to evict you?**
+
+      Date: ${ showifdef('eviction_date') }
+
+      Time: ${ showifdef('eviction_time') }
+  - Edit: |
+      lower_court_case.judgment_date
+    button: |
+      **When did the Housing Court enter judgment against you?**
+
+      Date: ${ showifdef('lower_court_case.judgment_date') }
+  - Edit: |
+      lower_court_case.judge
+    button: |
+      **What is the name of the Housing Court judge who entered judgment against you?**
+
+      Name: ${ showifdef('lower_court_case.judge') }
+  - Edit: |
+      no_notice_of_appeal_filed
+    button: |
+      **When did you file a Notice of Appeal in the Housing Court?**
+
+      I did not file a Notice of Appeal: ${ word(yesno(no_notice_of_appeal_filed)) }
+
+      Date filed: ${ showifdef('date_notice_of_appeal_filed') }
+  - Edit: |
+      date_housing_court_denied_motion_to_stay
+    button: |
+      **When did the Housing Court judge deny your Motion to Stay?**
+
+      Date: ${ showifdef('date_housing_court_denied_motion_to_stay') }
+  - Edit: |
+      housing_court_denying_order_text
+    button: |
+      **Enter the text of the Housing Court judge's order denying your Motion to Stay in the Housing Court.**
+
+      ${ showifdef('housing_court_denying_order_text') }
+  - Edit: |
+      legal_issues
+    button: |
+      **Select the issues of law in your case.**
+
+      ${ legal_issues.true_values() }
+
+      Other: ${ showifdef('other_legal_issues') }
+  - Edit: |
+      relief_sought
+    button: |
+      **What are you asking for?**
+
+      ${ showifdef('relief_sought') }
+  - Edit: |
+      parties_to_be_served
+    button: |
+      **List the name and address (or email address) of each attorney or self-represented party that you will deliver copies of your motion, memorandum, and supporting materials to.**
+
+      ${ showifdef('parties_to_be_served') }
+  - Edit: |
+      service_date
+    button: |
+      **When will you deliver copies of your motion, memorandum, and supporting materials to the plaintiffs' attorney(s)?**
+
+      Date: ${ showifdef('service_date') }
+  - Edit: |
+      procedural_history
+    button: |
+      **Describe the events in your Housing Court case in the order they happened.**
+
+      ${ showifdef('procedural_history') }
+  - Edit: |
+      statement_of_facts
+    button: |
+      **Describe the **facts** of your case.**
+
+      ${ showifdef('statement_of_facts') }
+  - Edit: |
+      likelihood_of_success
+    button: |
+      **Why is your appeal likely to succeed?**
+
+      ${ showifdef('likelihood_of_success') }
+  - Edit: |
+      defendant_harm
+    button: |
+      **What harm will you or your dependents suffer if your Motion to Stay is denied?**
+
+      ${ showifdef('defendant_harm') }
+  - Edit: |
+      plaintiff_harm
+    button: |
+      **What harm will the plaintiff suffer if your Motion to Stay is granted?**
+
+      ${ showifdef('plaintiff_harm') }
+  - Edit: |
+      public_interest_harm_yesno
+    button: |
+      **Does your Motion to Stay have an effect on the public interest?**
+
+      ${ word(yesno(public_interest_harm_yesno)) }
+
+      What effect would your Motion to Stay have on the **public interest**?: ${ showifdef('public_interest_harm') }
+  - Edit: |
+      argument_summary
+    button: |
+      **Summarize your argument**
+
+      ${ showifdef('argument_summary') }
+---
+continue button field: |
+  users.revisit
+id: |
+  revisit users
+question: |
+  Edit your answers about yourself and other parties on your side of the case
+subquestion: |
+  ${ users.table }
+---
+continue button field: |
+  notice_of_appeal.revisit
+id: |
+  revisit notice_of_appeal
+question: |
+  Edit your answers about Notice Of Appeal
+subquestion: |
+  ${ notice_of_appeal.table }
+---
+continue button field: |
+  lower_court_case.revisit
+id: |
+  revisit lower_court_case
+question: |
+  Edit your answers about Lower Court Case
+subquestion: |
+  ${ lower_court_case.table }
+---
+continue button field: |
+  housing_case_search.revisit
+id: |
+  revisit housing_case_search
+question: |
+  Edit your answers about Housing Case Search
+subquestion: |
+  ${ housing_case_search.table }
+---
+continue button field: |
+  appeals_case_search.revisit
+id: |
+  revisit appeals_case_search
+question: |
+  Edit your answers about Appeals Case Search
+subquestion: |
+  ${ appeals_case_search.table }
+---
+continue button field: |
+  exhibit_doc.revisit
+id: |
+  revisit exhibit_doc
+question: |
+  Edit your answers about Exhibit Doc
+subquestion: |
+  ${ exhibit_doc.table }
+---
+continue button field: |
+  exhibit_doc.revisit
+id: |
+  revisit exhibit_doc
+question: |
+  Edit your answers about Exhibit Doc
+subquestion: |
+  ${ exhibit_doc.table }
+---
+continue button field: |
+  users.revisit
+id: |
+  revisit users
+question: |
+  Edit your answers about Users
+subquestion: |
+  ${ users.table }
+---
+columns:
+  - exhibits[i]: |
+      row_item.exhibits[i] if hasattr(row_item, 'exhibits[i]') else ''
+rows: |
+  exhibit_doc
+table: |
+  exhibit_doc.table
+---
+columns:
+  - exhibits[i]: |
+      row_item.exhibits[i] if hasattr(row_item, 'exhibits[i]') else ''
+rows: |
+  exhibit_doc
+table: |
+  exhibit_doc.table
+

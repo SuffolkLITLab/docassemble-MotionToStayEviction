@@ -10,6 +10,7 @@ include:
   - docassemble.MassAppealsCourt:efiling.yml
   - efiling.yml
   - NOA.yml
+  - review_screen.yml
 ---
 metadata:
   title: Appeal or Stay Your Eviction
@@ -267,11 +268,13 @@ code: |
     if hasattr(user, 'party_type'):
       delattr(user, 'party_type')
   users.there_is_another = False
+  users.revisit = True
   for other_party in other_parties.complete_elements():
     other_party.is_new = True
     del other_party.tyler_id
     del other_party.party_type
   other_parties.there_is_another = False
+  other_parties.revisit = True
   add_new_existing_users = True
 ---
 only sets: add_appeals_existing_users
@@ -1123,32 +1126,6 @@ subquestion: |
   
   ${exhibit_doc.exhibits.add_action() }
 continue button field: review_exhibits
----
-id: review screen
-event: review_case_info
-question: |
-  Review screen
-subquestion: |
-  Edit your answer below.
-review:
-  - Edit: users.revisit
-    button: |
-      **Your party: (Edit to change name and address)**
-
-      %  for my_var in users:
-        * ${ my_var.name }
-      % endfor
-  - Edit: other_parties.revisit
-    button: |
-      **The other party: (Edit to change name and address)**
-      
-      % for my_var in other_parties:
-        * ${ my_var.name }
-      % endfor
-  - Edit: users[0].address.address
-    button: |
-      **Your address:**
-      ${ users[0].address.on_on_line() }
 ---
 code: |
   email_attachment_too_big = al_court_bundle.as_pdf().size_in_bytes() > 10 * 1024 * 1024
