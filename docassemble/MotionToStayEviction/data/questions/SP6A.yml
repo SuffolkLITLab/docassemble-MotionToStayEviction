@@ -1,7 +1,6 @@
 ---
 include:
-  - docassemble.AssemblyLine:assembly_line.yml 
-  - docassemble.AffidavitOfIndigencySupplement:affidavit_of_indigency_supplement_body.yml
+  - docassemble.AssemblyLine:assembly_line.yml
   - docassemble.ALAffidavitOfIndigency:affidavit_body.yml
   - docassemble.EFSPIntegration:efiling_integration.yml
   - docassemble.EFSPIntegration:case_search.yml
@@ -93,7 +92,6 @@ sections:
   - review_case_info: Case Information
   - review_stay: Motion to Stay Eviction
   - review_indigency: Affidavit of Indigency
-  - review_indigency_supplement: Affidavit of Indigency Supplement
   - review_efile_info: Complete Forms
 ---
 id: interview order
@@ -213,12 +211,8 @@ code: |
     fees['Filing fee'].amount = 315.00
     ask_affidavit_questions
     if is_indigent:
-      if need_supplement:
-        nav.set_section('review_indigency_supplement')
-        indigency_supplement_intro
-        interview_order_affidavit_of_indigency_supplement
       if can_check_efile:
-        affidavit_of_indigency_bundle.completed
+        affidavitofindigency_attachment.completed
     else:
       doesnt_qualify_interstitial
   nav.set_section('review_efile_info')
@@ -476,60 +470,6 @@ subquestion: |
   qualify for a fee waiver. The fee to file a Motion to Stay
   is $315.00.
 ---
-id: explain affidavit of indigency
-continue button field: indigency_supplement_intro
-question: |
-  Fee waiver supplement questions
-subquestion: |
-  The next questions will ask for more detailed information
-  about your financials, which will fill out the fee waiver
-  supplement application.
----
-id: qualify on face
-continue button field: qualify_interstitial
-question: |
-  % if need_supplement:
-  You need to submit a supplemental affidavit to learn if you qualify
-  % else:
-  Based on your answers, it looks like you qualify for a fee waiver
-  % endif
-subquestion: |
-  % if public_assistance_kinds.any_true():
-  Based on the information you gave us so far, you should qualify for a fee
-  waiver. Learn more at [MassLegalHelp.org](https://www.masslegalhelp.org/what-if-the-clerk-does-not-approve-my-affidavit-of-indigency-right-away-).
-  
-  You receive these public benefits: ${public_assistance_kinds.true_values()}
-  % elif household_income_qualifies:
-  Based on the information you gave us so far, you should qualify for a fee
-  waiver. Learn more at [MassLegalHelp.org](https://www.masslegalhelp.org/what-if-the-clerk-does-not-approve-my-affidavit-of-indigency-right-away-).
-  
-  **You earn less than the income limit.**
-
-  You said that your ${income_period(hh_income.period).lower()} income
-  is ${currency(hh_income.amount(period_to_use=hh_income.period))}.
-  
-  The limit for a household of ${nice_number(household_size)} is 125% of
-  the poverty level, or ${currency(household_income_limit/hh_income.period)}.
-  % elif not can_afford:
-  You told us that you can't afford to pay the fees and pay for the necessities
-  of life. A judge will take a closer look at your income and expenses and decide
-  if you qualify for sure.
-  
-  On the next screens, you will complete the supplemental affidavit, and package it.
-  % endif
-  
-  On the next screen, we'll ask you about the specific fees you want waived.
-help: |
-  If you get certain public benefits, or if you earn less than 125% of 
-  the federal poverty level, the law says that you qualify for a fee waiver.
-  If you earn more than that but still cannot afford to pay the costs
-  of going to court, you need to give the court more information. If the 
-  court agrees, they may waive your court costs. It is up to a judge to 
-  decide.
-  
-  * [What if the clerk does not approve my affidavit right away?](https://www.masslegalhelp.org/what-if-the-clerk-does-not-approve-my-affidavit-of-indigency-right-away-)
-  * [What if the clerk denies my affidavit?](https://www.masslegalhelp.org/what-if-the-clerk-denies-my-affidavit-of-indigency-)
----
 id: plaintiff
 question: |
   Who is the **{plaintiff}** in your Housing Court case? 
@@ -638,7 +578,7 @@ question: |
 subquestion: |
   Before using this form, you must first ask for a Stay in the ${ housing_court }.
   
-  For more information, call the Trial Court’s Emergency HelpLine: 833-91-COURT (833-912-6878) open Monday - Friday from 8:30 am - 4:30 pm. 
+  For more information, call the Trial Court’s Emergency HelpLine: 833-91-COURT ([833-912-6878](tel:+18339126878)) open Monday - Friday from 8:30 am - 4:30 pm. 
     
 fields:
   - Date: date_housing_court_denied_motion_to_stay
@@ -846,13 +786,7 @@ code: |
   notice_of_appeal.enabled = no_notice_of_appeal_filed
 ---
 code: |
-  affidavit_of_indigency_bundle.enabled = is_initial_filing and is_indigent
----
-code: |
   affidavitofindigency_attachment.enabled = is_initial_filing and is_indigent
----
-code: |
-  affidavit_of_indigency_supplement_attachment.enabled = is_initial_filing and is_indigent and need_supplement
 ---
 if: efile_setup and (not is_initial_filing or (is_initial_filing and not user_wants_affidavit))
 code: |
@@ -1098,12 +1032,11 @@ validation code: |
     exhibit_doc.exhibits[i].instanceName = temp_name
 ---
 objects:
-  - al_court_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, affidavit_of_indigency_bundle], filename="motion_to_stay_eviction", title="Court bundle", enabled=True)
-  - al_user_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, notice_of_appeal, affidavit_of_indigency_bundle], filename="motion_to_stay_eviction", title="All Your documents")
+  - al_court_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, affidavitofindigency_attachment], filename="motion_to_stay_eviction", title="Court bundle", enabled=True)
+  - al_user_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, notice_of_appeal, affidavitofindigency_attachment], filename="motion_to_stay_eviction", title="All Your documents")
 ---
 objects:
   - motion_to_stay_bundle: ALDocumentBundle.using(elements=[motion_attachment, exhibit_doc], title="Motion To Stay (Eviction)", filename="motion_to_stay_eviction")
-  - affidavit_of_indigency_bundle: ALDocumentBundle.using(elements=[affidavitofindigency_attachment, affidavit_of_indigency_supplement_attachment], title="Affidavit of Indigency", filename="affidavit_of_indigency")
 ---
 objects:
   - general_cover_sheet: ALDocument.using(title="Cover Sheet", filename="cover-sheet")

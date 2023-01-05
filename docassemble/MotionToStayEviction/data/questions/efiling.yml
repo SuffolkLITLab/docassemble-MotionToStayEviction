@@ -95,11 +95,11 @@ code: |
   motion_to_stay_bundle.filing_type_default = '6553'
 ---
 code: |
-  affidavit_of_indigency_bundle.filing_type_filters = ['Indigency Affidavit']
-  affidavit_of_indigency_bundle.filing_type_default = '8411'
+  affidavitofindigency_attachment.filing_type_filters = ['Indigency Affidavit']
+  affidavitofindigency_attachment.filing_type_default = '8411'
 ---
 code: |
-  affidavit_of_indigency_bundle.document_type = "6587" # impounded, all are by default
+  affidavitofindigency_attachment.document_type = "6587" # impounded, all are by default
 ---
 code: |
   efile_case_category_filters = ['Appeals Court Single Justice - Civil', 'Civil']
@@ -359,8 +359,9 @@ code: |
   disclaimers = list(filter(lambda dis: dis.get('code') not in redundant_disclaimers, disclaimers_tmp))
 ---
 code: |
-  sent_email_to_court
+  motion_to_stay_bundle.description = comments_to_clerk
   efile
+  sent_email_to_court
   efile_and_email = True
 ---
 if: not email_attachment_too_big
@@ -370,7 +371,29 @@ objects:
 # Don't include the exhibits (in al_court_bundle -> motion_to_stay_bundle -> exhibit_doc) if they're too big
 if: email_attachment_too_big
 objects:
-  - al_final_form_to_file: ALDocumentBundle.using(elements=[al_cover_page, motion_attachment, affidavit_of_indigency_bundle], filename=al_court_bundle.filename, title=al_court_bundle.title)
+  - al_final_form_to_file: ALDocumentBundle.using(elements=[al_cover_page, motion_attachment, affidavitofindigency_attachment], filename=al_court_bundle.filename, title=al_court_bundle.title)
 ---
 code: |
   should_cc_user = False
+---
+id: efile comments instructions
+question: |
+  Do you have any comments for the clerk?
+subquestion: |
+  Before we deliver your form, you can include comments
+  that will be sent to the clerk at ${trial_court}.
+  
+  For example, you may have special instructions about how and when to reach
+  you that you did not already include in the contact information section.
+  
+  These comments _may_ be included in the public file.
+
+  Are there any instructions that you would like to give to the clerk that will
+  receive your forms?
+
+  ${ collapse_template(help_comments_to_clerk_template) }
+fields:
+  - Information for clerk: comments_to_clerk
+    datatype: area
+    rows: 4
+    required: False

@@ -111,7 +111,7 @@ Feature: Get through SP6A interview
       | x[0].pages | small_pdf.pdf | exhibit_doc.exhibits.has_exhibits |
       | x.document_type | 6586 | motion_to_stay_bundle.document_type |
       | x.has_courtesy_copies | False | motion_to_stay_bundle.has_courtesy_copies |
-      | x.has_courtesy_copies | False | affidavit_of_indigency_bundle.has_courtesy_copies |
+      | x.has_courtesy_copies | False | affidavitofindigency_attachment.has_courtesy_copies |
       | x.document_type | 6586 | affidavitofindigency_attachment.document_type |
       | motion_to_stay_bundle.has_courtesy_copies | False | |
       | procedural_history | A lot of stuff happened | |
@@ -185,7 +185,7 @@ Feature: Get through SP6A interview
       | x[0].pages | small_pdf.pdf | exhibit_doc.exhibits.has_exhibits |
       | x.document_type | 6586 | motion_to_stay_bundle.document_type |
       | x.has_courtesy_copies | False | motion_to_stay_bundle.has_courtesy_copies |
-      | x.has_courtesy_copies | False | affidavit_of_indigency_bundle.has_courtesy_copies |
+      | x.has_courtesy_copies | False | affidavitofindigency_attachment.has_courtesy_copies |
       | x.document_type | 6586 | affidavitofindigency_attachment.document_type |
       | motion_to_stay_bundle.has_courtesy_copies | False | |
       | procedural_history | A lot of stuff happened | |
@@ -204,7 +204,7 @@ Feature: Get through SP6A interview
       | user_ask_role | defendant | |
       | has_household_members | False | |
       | hh_income.value | 1000000 | |
-      | hh_income.period | 12 | |
+      | hh_income.times_per_year | 12 | |
       | can_afford | False | |
       | users[0].birthdate | 12/12/1998 | |
       | user_grade_school_completed | 11th grade | |
