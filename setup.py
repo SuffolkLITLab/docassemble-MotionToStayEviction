@@ -43,17 +43,17 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 setup(name='docassemble.MotionToStayEviction',
-      version='0.15.1',
-      description=('A docassemble extension.'),
+      version='0.16.0',
+      description=('A motion for the Appeals Court of Massachusetts, to stay an eviction.'),
       long_description='# docassemble.MotionToStayEviction\n\nA docassemble extension.\n\n## Author\n\nMia Bonardi, mbonardi@su.suffolk.edu\n\n',
       long_description_content_type='text/markdown',
       author='Mia Bonardi',
       author_email='mbonardi@su.suffolk.edu',
       license='The MIT License (MIT)',
-      url='https://docassemble.org',
+      url='https://courtformsonline.org',
       packages=find_packages(),
       namespace_packages=['docassemble'],
-      install_requires=['docassemble.MAVirtualCourt>=1.0.22', 'docassemble.MassAppealsCourt>=0.1.0', 'docassemble-EFSPIntegration', 'docassemble-MassAppealsCourt', 'docassemble-ALAffidavitOfIndigency', 'docassemble-AffidavitOfIndigencySupplement', 'docassemble-MACourts>=0.0.58.3'],
+      install_requires=['docassemble.MAVirtualCourt>=1.0.22', 'docassemble.MassAppealsCourt>=0.1.0', 'docassemble-EFSPIntegration', 'docassemble-MassAppealsCourt', 'docassemble-ALAffidavitOfIndigency>=2.1.1' 'docassemble-MACourts>=0.0.58.3'],
       zip_safe=False,
       package_data=find_package_data(where='docassemble/MotionToStayEviction/', package='docassemble.MotionToStayEviction'),
      )
