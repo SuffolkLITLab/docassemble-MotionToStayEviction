@@ -117,21 +117,20 @@ fields:
           {"ze/zir/zirs": "Ze/zir/zirs"},
       ], 5) + [
         {"self-described": "Something else"},
-        {"unknown": "Unknown"}
       ]
     none of the above: Prefer not to say
     required: False
     help: |
       A pronoun is a word that can be used in place of your name. For example: he, she, or they.
       Learn more at [pronouns.org](https://pronouns.org/).
-  - Self-described pronouns: users[0].pronouns_self_described
+  - Self-described pronouns (one set per line): users[0].pronouns_self_described
     datatype: area
     show if: users[0].pronouns["self-described"]
 ---
 code: |
   def get_pronouns(person):
     if person.pronouns.all_false():
-        return {str(person.pronoun_prefer_not_to_say_label)}
+        return {"Prefer not to say"}
     pronouns = set(person.pronouns.true_values()) - {'self-described'}
     if person.pronouns.get("self-described"):
         pronouns = pronouns.union(person.pronouns_self_described.splitlines())
