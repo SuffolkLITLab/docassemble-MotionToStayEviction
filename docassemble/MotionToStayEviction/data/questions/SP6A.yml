@@ -4,6 +4,7 @@ include:
   - docassemble.AffidavitofIndigencyMAVC:affidavit_body.yml
   - NOA.yml
   - old_mavc_appeals_basic_questions.yml
+  - docassemble.ALToolbox:collapse_template.yml
 ---
 metadata:
   title: Appeal or Stay Your Eviction
@@ -83,10 +84,71 @@ code: |
     ask_affidavit_questions
     if not is_indigent:
       doesnt_qualify_interstitial
+  get_pronouns # Make sure this is defined before template is rendered
   preview_screen
   basic_questions_signature_flow
   users[0].signature
   download
+---
+imports:
+  - random
+---
+id: users's name
+question: |
+  What is your name?
+fields:
+  - First Name: users[0].name.first
+  - Middle Name: users[0].name.middle
+    required: False
+  - Last Name: users[0].name.last
+  - Suffix: users[0].name.suffix
+    code: |
+      name_suffix()
+    required: False
+  # Hardcoding pronouns here although they're implemented more neatly
+  # in current AssemblyLine
+  - What are your pronouns? (optional): users[0].pronouns
+    datatype: checkboxes
+    code: |
+      random.sample([
+          {"she/her/hers": "She/her/hers" },
+          {"he/him/his": "He/him/his" },
+          {"they/them/theirs": "They/them/theirs" },
+          {"ze/hir/hirs": "Ze/hir/hirs" },
+          {"ze/zir/zirs": "Ze/zir/zirs"},
+      ], 5) + [
+        {"self-described": "Something else"},
+      ]
+    none of the above: Prefer not to say
+    required: False
+    help: |
+      A pronoun is a word that can be used in place of your name. For example: he, she, or they.
+      Learn more at [pronouns.org](https://pronouns.org/).
+  - note: |
+      ${ collapse_template(explain_why_pronouns) }
+  - Self-described pronouns (one set per line): users[0].pronouns_self_described
+    datatype: area
+    show if: users[0].pronouns["self-described"]
+---
+template: explain_why_pronouns
+subject: |
+  How will you use my pronouns?
+content: |
+  The pronouns that you write here will be added to the bottom
+  of your motion to the Appeals Court.
+
+  Sharing your pronouns is optional. If you share your pronouns,
+  it may help the judge use the right words when they talk to you
+  in court or in their written decision.
+---
+code: |
+  def get_pronouns(person):
+    if person.pronouns.all_false():
+        return {"Prefer not to say"}
+    pronouns = set(person.pronouns.true_values()) - {'self-described'}
+    if person.pronouns.get("self-described"):
+        pronouns = pronouns.union(person.pronouns_self_described.splitlines())
+    return pronouns
 ---
 code: |
   max_mb_per_file = 15
