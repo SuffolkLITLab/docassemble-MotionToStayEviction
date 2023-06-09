@@ -4,6 +4,7 @@ include:
   - docassemble.AffidavitofIndigencyMAVC:affidavit_body.yml
   - NOA.yml
   - old_mavc_appeals_basic_questions.yml
+  - docassemble.ALToolbox:collapse_template.yml
 ---
 metadata:
   title: Appeal or Stay Your Eviction
@@ -123,9 +124,22 @@ fields:
     help: |
       A pronoun is a word that can be used in place of your name. For example: he, she, or they.
       Learn more at [pronouns.org](https://pronouns.org/).
+  - note: |
+      ${ collapse_template(explain_why_pronouns) }
   - Self-described pronouns (one set per line): users[0].pronouns_self_described
     datatype: area
     show if: users[0].pronouns["self-described"]
+---
+template: explain_why_pronouns
+subject: |
+  How will you use my pronouns?
+content: |
+  The pronouns that you write here will be added to the bottom
+  of your motion to the Appeals Court.
+
+  Sharing your pronouns is optional. If you share your pronouns,
+  it may help the judge use the right words when they talk to you
+  in court or in their written decision.
 ---
 code: |
   def get_pronouns(person):
