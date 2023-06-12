@@ -109,16 +109,12 @@ fields:
   # in current AssemblyLine
   - What are your pronouns? (optional): users[0].pronouns
     datatype: checkboxes
-    code: |
-      random.sample([
-          {"she/her/hers": "She/her/hers" },
-          {"he/him/his": "He/him/his" },
-          {"they/them/theirs": "They/them/theirs" },
-          {"ze/hir/hirs": "Ze/hir/hirs" },
-          {"ze/zir/zirs": "Ze/zir/zirs"},
-      ], 5) + [
-        {"self-described": "Something else"},
-      ]
+    choices:
+      - She/her/hers: she/her/hers
+      - He/him/his: he/him/his
+      - They/them/theirs: they/them/theirs
+      - Ze/zir/zirs: ze/zir/zirs
+      - Something else: self-described
     none of the above: Prefer not to say
     required: False
     help: |
@@ -126,8 +122,7 @@ fields:
       Learn more at [pronouns.org](https://pronouns.org/).
   - note: |
       ${ collapse_template(explain_why_pronouns) }
-  - Self-described pronouns (one set per line): users[0].pronouns_self_described
-    datatype: area
+  - Self-described pronouns: users[0].pronouns_self_described
     show if: users[0].pronouns["self-described"]
 ---
 template: explain_why_pronouns
@@ -138,7 +133,7 @@ content: |
   of your motion to the Appeals Court.
 
   Sharing your pronouns is optional. If you share your pronouns,
-  it may help the judge use the right words when they talk to you
+  it may help the judge use the right words when they mention you
   in court or in their written decision.
 ---
 code: |
