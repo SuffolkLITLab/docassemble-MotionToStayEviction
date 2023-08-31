@@ -198,17 +198,33 @@ fields:
   - My preferred language is: user_preferred_language
     show if: user_needs_interpreter
 ---
+code: |
+ def will_send_to_real_court():
+    """
+    For legacy email to court forms, this checks to see if the form
+    is being run locally, or on the dev, test, or production servers.
+
+    The text "dev" or "test" needs to be in the URL root in the DA config: can change in `/config`.
+    """
+    return not (
+        get_config("debug")
+        or "dev" in get_config("url root")
+        or "test" in get_config("url root")
+        or "localhost" in get_config("url root")
+    ) 
+---
 comment: |
   Send to court code--tweaked slightly for MAC
 need:
+  - will_send_to_real_court
   - email_to_court_template
   - court_email
   - should_cc_user
 code: |
-  if 'dev' in get_config('url root') or 'test' in get_config('url root'):
-    email_to_use = "massaccess@suffolk.edu"
-  else:
+  if will_send_to_real_court():
     email_to_use = court_email
+  else:
+    email_to_use = "massaccess@suffolk.edu"
   
   # temporary for testing
   # email_to_use = "massaccess@suffolk.edu"
