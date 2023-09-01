@@ -98,7 +98,6 @@ id: interview order
 mandatory: True
 code: |
   nav.set_section('review_case_info')
-  user_ask_role = "defendant"
   appeals_basic_questions_intro_screen
   info_screen
   is_initial_filing
@@ -230,6 +229,9 @@ code: |
   basic_questions_signature_flow
   users[0].signature
   download
+---
+code: |
+  user_ask_role = "defendant"
 ---
 id: are-you-using-fee-waiver
 question: |
@@ -598,6 +600,8 @@ question: |
   Select the issues of law in your case.
 subquestion: |
   A statement of the issue(s) of law is a brief statement of the legal reason that the single justice should allow your motion to stay.
+
+  ${ collapse_template(legal_issues_examples) }
 fields:
   - no label: legal_issues
     datatype: checkboxes
@@ -612,12 +616,13 @@ fields:
     none of the above: False  
   - Other: other_legal_issues
     show if: legal_issues["Other"]
-help:
-  label: |
-    Examples
-  content: |
-    * For example, if the Housing Court judge's order is unreasonable in light of the facts that that the judge heard at the hearing or trial, the issue of law would be whether the judge's order was an abuse of discretion.
-    * For example, if you thought the judge mistakenly did not allow you to present a piece of evidence at the hearing or trial, the issue of law would be whether the judge improperly excluded evidence at the hearing or trial. 
+---
+template: legal_issues_examples
+subject: |
+  Examples
+content: |
+  * For example, if the Housing Court judge's order is unreasonable in light of the facts that that the judge heard at the hearing or trial, the issue of law would be whether the judge's order was an abuse of discretion.
+  * For example, if you thought the judge mistakenly did not allow you to present a piece of evidence at the hearing or trial, the issue of law would be whether the judge improperly excluded evidence at the hearing or trial. 
 ---
 id: relief_sought
 question: |

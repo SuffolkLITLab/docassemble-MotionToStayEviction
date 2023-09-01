@@ -104,8 +104,10 @@ code: |
 code: |
   efile_case_category_filters = ['Appeals Court Single Justice - Civil', 'Civil']
   efile_case_category_default = '8151'
+  efile_case_category_exclude = None
   efile_case_type_filters = ['Motion for stay of judgment MRAP 6(a)', 'MRAP 6(a)']
   efile_case_type_default = '8157'
+  efile_case_type_exclude = None
 ---
 code: |
   if not is_initial_filing and 'P' in appeals_case_search.docket_number_from_user:
@@ -116,10 +118,12 @@ code: |
 code: |
   users[i].party_type_filters = ['Defendant/Appellant', 'Defendant/Petitioner']
   users[i].party_type_default = '1729'
+  users[i].party_type_exclude = None
 ---
 code: |
   other_parties[i].party_type_filters = ['Plaintiff/Appellee', 'Plaintiff/Respondent']
   other_parties[i].party_type_default = '1736'
+  other_parties[i].party_type_exclude = None
 ---
 generic object: DAObject
 id: user chosen filing_type
@@ -300,10 +304,6 @@ code: |
 ---
 if: is_initial_filing
 code: |
-  user_wants_efile = user_wants_affidavit
----
-if: is_initial_filing
-code: |
   is_defendant_filters = [
     CodeType('1331'),
     'defendant',
@@ -330,24 +330,30 @@ fields:
     code: |
       appeals_case_search.get_lookup_choices(False)
 ---
-## Some of the existing cases have party types like "Defdendant/Pititioner".
+## Some of the existing cases have party types like "Defendant/Petitioner".
 ## We need to stop matching "respondent", etc. to get it right.
 if: not is_initial_filing
 code: |
   # TODO(brycew): harder, because it's affected by user_started_case
   is_defendant_filters = [
-    CodeType('1729'),
+    CodeType('5788'),
     CodeType('598'),
+    'Defendant/Appellee',
+    'Defendant/Appellant',
+    'Defendant/Petitioner',
+    'Defendant/Respondent',
     'defendant',
-    'appellant'
   ]
 ---
 if: not is_initial_filing
 code: |
   is_plaintiff_filters = [
-    CodeType('1736'),
+    CodeType('5779'),
+    'Plaintiff/Appellee',
+    'Plaintiff/Appellant',
+    'Plaintiff/Petitioner',
+    'Plaintiff/Respondent',
     'plaintiff',
-    'appellee',
   ]
 ---
 code: |
