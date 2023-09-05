@@ -2,6 +2,10 @@ Feature: Get through SP6A interview
 
   Runs the `SP6A.yml` interview to completion, with several different variations.
 
+  Some example docket numbers:
+  * 99H85SC000016
+  * 2005-P
+
   @sp6a_interview @si1 @fast
   Scenario: sp6a starts
     Given I start the interview at "SP6A.yml"

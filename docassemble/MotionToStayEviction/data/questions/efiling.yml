@@ -3,6 +3,7 @@ include:
   - docassemble.EFSPIntegration:efiling_integration.yml
   - docassemble.EFSPIntegration:toga_payments.yml
 ---
+
 code: |
   trial_court_resp = proxy_conn.get_courts(with_names=True)
   trial_court_options = sorted([(court['code'], court['name']) for court in trial_court_resp.data or []], key=lambda c: c[1])
@@ -38,15 +39,38 @@ code: |
     max_mb_per_file = 15
     max_total_exhibit_size = 50 * 1024 * 1024
 ---
+id: user-wants-efile
+question: |
+  Do you want to e-file this document directly with the court?
+subquestion: |
+  You are able to electronically-file (e-file) this document with the Appeals Court!
+  This means you don't have to print out the document. The court
+  will communicate with you through your email or phone.
+
+  You will have to use your eFileMA account to e-file this document. 
+  If you don't wish to use your account or don't wish to make an account,
+  you can choose not to efile.
+
+  If you have not yet asked for a Stay in the Housing Court, you will still
+  need to manually print out and deliver the Notice of Appeal to the Housing Court.
+  **The Notice of Appeal cannot be e-filed.**
+
+  If you don't have a eFileMA account, you can make one in the next screens.
+fields:
+  - Do you want to e-file?: user_wants_efile
+    datatype: yesnoradio
+---
 generic object: DAObject
 id: document type
 question: |
-  Document type - ${ x.title }
+  Should your ${ x.title } be impounded?
 subquestion: |
-  If a judge has ordered that this case is sealed, select
-  "Impounded". You should also attach a copy of the judge's order.
+  If a judge has ordered this case sealed, select
+  "Impounded". You should also attach a copy of the judge's order as an exhibit.
+
+  If the judge hasn't ordered this case sealed, it should be public.
 fields:
-  - Document type: x.document_type
+  - The judge has ordered this document to be: x.document_type
     input type: radio
     code: |
       x.document_type_options
@@ -166,48 +190,6 @@ content: |
   * the next two numbers, "84", are the housing court "code" and refer to a speific court
   * the next two letters, "CV", are the case-type code
   * the last 6 numbers, "000436", are the case's sequence number
----
-reconsider:
-  - tyler_payment_account_options
-id: payment account
-question: |
-  Payment Account
-subquestion: |
-  Select an existing account below, or add a payment account
-  using the 
-  [eFileMA site](https://massachusetts.tylerhost.net/ofsweb/){:target="_blank"}
-  
-  Refresh this page when you have finished adding the account.
-fields:
-  - Payment Account: tyler_payment_id
-    datatype: dropdown
-    code: |
-      tyler_payment_account_options
----
-code: |
-  allowable_card_types = full_court_info.get('allowablecardtypes', [])
-  res = proxy_conn.get_payment_account_list().data
-  if res:
-    tyler_payment_account_options = filter_payment_accounts(res, allowable_card_types)
-  else:
-    tyler_payment_account_options = []
-  if not tyler_payment_account_options:
-    payment_kickout
-    #new_payment_account
----
-id: payment kickout
-event: payment_kickout
-question: |
-  You need to add a payment account
-subquestion: |
-  Add a payment account using the
-  % if get_config('efile proxy').get('url') == 'https://efile.suffolklitlab.org':
-  [eFileMA site](https://massachusetts.tylerhost.net/ofsweb/){:target="_blank"}.
-  % else:
-  [eFileMA site](https://massachusetts-stage.tylerhost.net/ofsweb/){:target="_blank"}.
-  % endif
-
-  Refresh this page when you have added a new payment account.
 ---
 id: submitted form
 question: |

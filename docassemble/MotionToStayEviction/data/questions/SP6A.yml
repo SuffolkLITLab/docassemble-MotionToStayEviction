@@ -35,6 +35,9 @@ code: |
 code: |
   admin_interview = "docassemble.EFSPIntegration:admin_interview.yml"
 ---
+code: |
+  form_uses_efiling = True
+---
 objects:
   - lower_court_case: DAObject
 ---
@@ -100,19 +103,13 @@ code: |
   nav.set_section('review_case_info')
   appeals_basic_questions_intro_screen
   info_screen
-  is_initial_filing
 
-  can_check_efile
-
-  if is_initial_filing and efile_setup:
-    user_wants_affidavit
-  elif not can_check_efile:
+  if not is_initial_filing and not can_check_efile:
     appeals_court_docket_number
 
   if can_check_efile:
     tyler_login
 
-  if can_check_efile:
     if not is_initial_filing:
       appeals_case_search.do_what_choice
       appeals_case_search.case_was_found
@@ -139,11 +136,12 @@ code: |
   else:
     needs_all_info = True
     housing_court
-    lower_court_case.docket_number
   if housing_court in just_bmc_courts:
     warn_bmc_court
   if housing_court in just_district_courts:
     warn_district_court
+  if not can_check_efile:
+    lower_court_case.docket_number
   lower_court_case.judge
 
   if forty_eight_hour_notice:
@@ -200,10 +198,12 @@ code: |
   trial_court = housing_court
   if can_check_efile:
     motion_to_stay_bundle.completed
+    if motion_to_stay_bundle.document_type_map[motion_to_stay_bundle.document_type]['name'] == "Impounded":
+      add_judge_seal_order
     lead_contact = users[0]
     # TODO(brycew): hack until Tyler responsd
     trial_court.court_id = trial_court.tyler_code if hasattr(trial_court, 'tyler_code') and trial_court.tyler_code else ''
-  if is_initial_filing and show_affidavit:
+  if is_initial_filing:
     nav.set_section('review_indigency')
     indigency_intro
     fees['Filing fee'].waive = True
@@ -216,9 +216,9 @@ code: |
       doesnt_qualify_interstitial
   nav.set_section('review_efile_info')
   if can_check_efile:
-    if not is_initial_filing or (is_initial_filing and is_indigent):
+    if no_payment_needed:
       # have gotten permission: can use waiver method for subsequent filings
-      tyler_payment_id = get_config('efile proxy', {}).get('global waivers', {}).get('massachusetts', '')
+      tyler_payment_id = default_jurisdiction_waiver
     else:
       tyler_payment_id
     all_required_screens_shown
@@ -231,25 +231,12 @@ code: |
   download
 ---
 code: |
-  user_ask_role = "defendant"
----
-id: are-you-using-fee-waiver
-question: |
-  Do you want to submit an affidavit of indigency?
-subquestion: |
-  If you are paying for this motion with an affidivat of indigency, also called a
-  fee waiver, you can fill out and
-  electronically file (e-file) both forms at the same time in this program.
-  This means you don’t have to print out the forms. The court will communicate
-  with you by email. You will have to provide your email to e-file your motion to stay and affidavit of indigency.
-fields:
-  - Do you want to file an affidavit of indigency?: user_wants_affidavit
-    datatype: yesnoradio
+  no_payment_needed = (is_initial_filing and is_indigent) or not is_initial_filing
 ---
 code: |
-  show_affidavit = is_initial_filing and (not efile_setup or user_wants_affidavit)
+  user_ask_role = "defendant"
 ---
-if: can_check_efile and (not is_initial_filing or (is_initial_filing and is_indigent))
+if: can_check_efile and no_payment_needed
 code: |
   # Skip showing this screen to users, we already out set the payment method to be a waiver
   review_fees_screen = True
@@ -427,7 +414,7 @@ question: |
 fields:
   - no label: appeals_court_docket_number
 ---
-if: can_check_efile
+if: not is_initial_filing and can_check_efile
 code: |
   appeals_court_docket_number = appeals_case_search.found_case.docket_number
 ---
@@ -782,7 +769,7 @@ subquestion: |
   It is important that you include in your Motion to Stay anything that you want the court to know about your case.
 fields:
   - no label: argument_summary
-    input type: area 
+    input type: area
     rows: 6
 ---
 code: |
@@ -793,7 +780,7 @@ code: |
 code: |
   affidavitofindigency_attachment.enabled = is_initial_filing and is_indigent
 ---
-if: efile_setup and (not is_initial_filing or (is_initial_filing and not user_wants_affidavit))
+if: not is_initial_filing and can_check_efile
 code: |
   is_indigent = False
 ---
@@ -830,7 +817,7 @@ subquestion: |
   
   1. The [:file-download: Notice of Appeal]( ${ notice_of_appeal['final'].pdf.url_for()} ),
   which needs to be delivered to the **${ housing_court }**. You need to deliver
-  it on your own. Call the ${ housing_court } at ${ housing_court.phone }
+  it on your own. Call the ${ housing_court } at [${ housing_court.phone }](tel:+1${ housing_court.phone.replace('(', '').replace(')', '').replace(' ', '').replace('-', '')})
   to find out how.
   2. Your Appeal, which needs to be delivered to ${ appeals_court }. You can deliver it to the Appeals Court in
   person or by e-filing through [the court's website](https://massachusetts.tylertech.cloud/ofsweb).
@@ -851,12 +838,11 @@ subquestion: |
   1. Download and save or print a copy of this form for your 
   records.
   
-  The Appeals Court Clerk's Office number is 617-921-4443 
+  The Appeals Court Clerk's Office number is [617-921-4443](tel:+16179214443).
   
   The Appeals Court Clerk's Office is open:
 
-  Monday - Friday
-
+  Monday - Friday  
   8:30am - 4:30pm
 
   ${ al_user_bundle.download_list_html() }
@@ -890,7 +876,7 @@ subquestion: |
   1. The [:file-download: Notice of Appeal]( ${ notice_of_appeal['final'].pdf.url_for()} ),
   which needs to be delivered to the **${ housing_court }**. 
   **The Notice of Appeal will not be e-filed.** You need to deliver
-  this on your own. Call the ${ housing_court } at ${ housing_court.phone }
+  this on your own. Call the ${ housing_court } at [${ housing_court.phone }](tel:+1${ housing_court.phone.replace('(', '').replace(')', '').replace(' ', '').replace('-', '')})
   to find out how.
   2. Your Appeal, which needs to be delivered to ${ appeals_court }. You can deliver the appeal by following the steps below.
   
@@ -907,7 +893,7 @@ subquestion: |
 
   The [:file-download: Notice of Appeal]( ${ notice_of_appeal['final'].pdf.url_for()} ),
   still needs to be delivered to the **${ housing_court }**. 
-  **It has not be e-filed.** Call the ${ housing_court } at ${ housing_court.phone }
+  **It has not be e-filed.** Call the ${ housing_court } at [${ housing_court.phone }](tel:+1${ housing_court.phone.replace('(', '').replace(')', '').replace(' ', '').replace('-', '')})
   to find out how to deliver this on your own.
 
   % endif
@@ -924,10 +910,11 @@ subquestion: |
 
   If you do not hear from the court in 1 business day, call the Appeals Court Clerk's Office.
   
-  The Appeals Court Clerk's Office phone number is 617-921-4443. The office is open:
+  The Appeals Court Clerk's Office phone number is [617-921-4443](tel:+16179214443).
 
-  Monday - Friday
+  The Appeals Court Clerk's Office is open:
 
+  Monday - Friday  
   8:30am - 4:30pm
 
   % if not (defined('efile') and efile):
@@ -989,16 +976,23 @@ fields:
     show if: 
       variable: x.has_exhibits
       is: False
+    validation messages:
+      minlength: |
+        If you don't have any documents to share, you must state that filing a complete record appendix is impracticable.
   - First document title: x[0].title
     maxlength: 60
     show if: x.has_exhibits
-  - Tap "browse" and choose all of the documents you want to upload at once. You can edit or add additional documents on the next screen.: x[0].pages 
+  - Tap "browse" and choose all of the documents you want to upload at once.: x[0].pages 
     datatype: files
     show if: x.has_exhibits
     maximum image size: 1024
     image upload type: jpeg
+    # Note: we have to limit images to JPG and PNGs, as docassemble will error out if we give it anything else to OCR, including SVGs.
     accept: |
-      "image/*, image/png,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,.pdf"
+      "image/jpeg, image/png,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,.pdf"
+  - note: |
+      You can edit or add additional documents on the next screen.
+    show if: x.has_exhibits
 validation code: |
   if x.has_exhibits:
     if sum(exhibit.size_in_bytes() for exhibit in x[0].pages) > (15 * 1024 * 1024):
@@ -1064,6 +1058,20 @@ subquestion: |
   
   ${exhibit_doc.exhibits.add_action() }
 continue button field: review_exhibits
+---
+id: review exhibits
+question: |
+  Add the judges order to seal the case to your exhibits
+subquestion: |
+  You said that the judge ordered your case to be impounded; if you have the judges order, you
+  can click "add another" to add the order.
+
+  If you already added the judges order, you can continue.
+  
+  ${ exhibit_doc.exhibits.table }
+  
+  ${exhibit_doc.exhibits.add_action() }
+continue button field: add_judge_seal_order
 ---
 code: |
   email_attachment_too_big = al_court_bundle.as_pdf().size_in_bytes() > 10 * 1024 * 1024

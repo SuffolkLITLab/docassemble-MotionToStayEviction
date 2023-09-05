@@ -116,12 +116,6 @@ review:
 
       Date: ${ showifdef('noa_service_date') }
   - Edit: |
-      user_wants_affidavit
-    button: |
-      **Do you want to submit an affidavit of indigency?**
-
-      Do you want to file an affidavit of indigency?: ${ word(yesno(user_wants_affidavit)) }
-  - Edit: |
       housing_court
     button: |
       **Select the Housing Court department and division where your case was heard.**
@@ -174,11 +168,20 @@ review:
   - Edit: |
       no_notice_of_appeal_filed
     button: |
+      % if no_notice_of_appeal_filed:
+      **I did not file a Notice of Appeal**.
+
+      % else:
       **When did you file a Notice of Appeal in the Housing Court?**
 
-      I did not file a Notice of Appeal: ${ word(yesno(no_notice_of_appeal_filed)) }
-
       Date filed: ${ showifdef('date_notice_of_appeal_filed') }
+      % endif
+  - Edit: |
+      review_exhibits
+    button: |
+      **Exhibits**:
+
+      ${ exhibit_doc }
   - Edit: |
       date_housing_court_denied_motion_to_stay
     button: |
