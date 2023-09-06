@@ -883,13 +883,17 @@ subquestion: |
   2. Your Appeal, which needs to be delivered to ${ appeals_court }. You can deliver the appeal by following the steps below.
   
   Follow these steps to deliver the Appeal to the ${ appeals_court }:
+
+  1. Download and save or print a copy of the below forms for your records.
+  1. Click the "E-File" button below to send it to the court.
+
+  If you do not hear from the court in 1 business day, call the Appeals Court Clerk's Office.
+  
   % endif
 
   % elif defined('efile') and efile:
 
   Your Appeal has been delivered to ${ appeals_court }.
-
-  If you do not hear from the court in 1 business day, call the Appeals Court Clerk's Office.
 
   % if no_notice_of_appeal_filed:
 
@@ -899,7 +903,12 @@ subquestion: |
   to find out how to deliver this on your own.
 
   % endif
-  
+
+  You can click "View" below to open the form in a new window, or you can download and save or print a copy of this form for your 
+  records.
+
+  If you do not hear from the court in 1 business day, call the Appeals Court Clerk's Office.
+
   % elif defined('efile') and not efile:
 
   E-filing was not successful. Call the clerk and try delivering
@@ -907,11 +916,6 @@ subquestion: |
 
   % endif
 
-  1. Download and save or print a copy of the below forms for your records.
-  1. Click the "E-File" button below to send it to the court.
-
-  If you do not hear from the court in 1 business day, call the Appeals Court Clerk's Office.
-  
   The Appeals Court Clerk's Office phone number is [617-921-4443](tel:+16179214443).
 
   The Appeals Court Clerk's Office is open:
@@ -1129,3 +1133,106 @@ attachment:
   variable name: general_cover_sheet[i]
   filename: cover-sheet.docx
   docx template file: general_cover_sheet.docx
+---
+template: email_confirmation
+subject: |
+  Important Motion to Stay (Eviction) e-filing information
+content: |
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>MassAccess</title>
+  </head>
+  <body>
+  <p>Hello ${ users[0].name },</p>
+  <p><strong>Your Motion to Stay (Eviction) forms were sent to the Appeals Count. They will accept or reject your filing.</strong></p>
+  <p>A person in the court has to accept the forms before they are officially filed.</p>
+  <p><strong>What's next?</strong></p>
+  <p>You should receive an email from Odyssey eFileMA (no-reply@efilingmail.tylertech.cloud). Your forms were given an Envelope Number, which will be used to track your filing.</p>
+  <p>The court clerk will review what you filed.</p>
+  <ul>
+    <li>If it looks good, they will <strong>accept</strong> it. You will receive another email from Odyssey eFileMA explaining that the envelope was accepted. The email will include a link to a copy of your court forms with the clerk's stamp.</li>
+    <li>If there is something wrong with the filing, they will <strong>reject</strong> it. You should receive another email from Odyssey eFileMA with an explanation of what needs to be fixed.</li>
+  </ul>
+  <p>Contact the clerk at <a href="tel:+16179214443">617-921-4443</a> if you have questions.</p>
+  <p>Thank you for using Court Forms Online.<br/>
+  <a href="https://courtformsonline.org">Court Forms Online</a>
+  </p>
+  </body>
+  </html>
+---
+template: neutral_email
+subject: |
+  Clerk response to your e-filed Motion to Stay (Eviction)
+content: |
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>MassAccess</title>
+  </head>
+  <body>
+  <p>Hello ${ users[0].name },</p>
+  <p><strong>The Appeals Court clerk has sent a response to your filing in {{ case_title }}.</strong></p>
+
+  <p><q>{{ status }}</q></p>
+
+  <p>{{ message_text }}</p>
+
+  <p>Contact the clerk at <a href="tel:+16179214443">617-921-4443</a> if you have questions.</p>
+
+  <p>Thank you for using Court Forms Online.<br/>
+  <a href="https://courtformsonline.org">Court Forms Online</a>
+  </p>
+  </body>
+  </html>
+---
+template: acceptance_email
+subject: |
+  Clerk response to your e-filed Motion to Stay (Eviction)
+content: |
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>MassAccess</title>
+  </head>
+  <body>
+  <p>Hello ${ users[0].name },</p>
+  <p><strong>The Appeals Court clerk has sent a response to your filing in {{ case_title }}.</strong></p>
+
+  <p><q>{{ status }}</q></p>
+
+  <p>{{ message_text }}</p>
+
+  <p>Contact the clerk at <a href="tel:+16179214443">617-921-4443</a> if you have questions.</p>
+
+  <p>Thank you for using Court Forms Online.<br/>
+  <a href="https://courtformsonline.org">Court Forms Online</a>
+  </p>
+  </body>
+  </html>
+---
+template: rejection_email
+subject: |
+  Clerk response to your e-filed Motion to Stay (Eviction)
+content: |
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>MassAccess</title>
+  </head>
+  <body>
+  <p>Hello ${ users[0].name },</p>
+  <p><strong>The Appeals Court clerk has sent a response to your filing in {{ case_title }}.</strong></p>
+
+  <p><q>{{ status }}</q></p>
+
+  <p>{{ message_text }}</p>
+
+  <p>Contact the clerk at <a href="tel:+16179214443">617-921-4443</a> if you have questions.</p>
+
+  <p>Thank you for using Court Forms Online.<br/>
+  <a href="https://courtformsonline.org">Court Forms Online</a>
+  </p>
+  </body>
+  </html>
+---
