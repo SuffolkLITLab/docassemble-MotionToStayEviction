@@ -119,11 +119,16 @@ code: |
   motion_to_stay_bundle.filing_type_default = '6553'
 ---
 code: |
+  if hasattr(motion_attachment, "document_type"):
+    motion_to_stay_bundle.document_type = motion_attachment.document_type
+---
+code: |
   affidavitofindigency_attachment.filing_type_filters = ['Indigency Affidavit']
   affidavitofindigency_attachment.filing_type_default = '8411'
 ---
 code: |
-  affidavitofindigency_attachment.document_type = "6587" # impounded, all are by default
+  affidavitofindigency_attachment.document_type_filters = ['impounded']
+  affidavitofindigency_attachment.document_type_default = "6587" # impounded, all are by default
 ---
 code: |
   efile_case_category_filters = ['Appeals Court Single Justice - Civil', 'Civil']
@@ -154,12 +159,12 @@ id: user chosen filing_type
 question: |
   What is the filing type of this filing?
 subquestion: |
-  We found a few filing codes that could be used to file your fee waiver. Choose the one that you think best fits your case.
+  We found a few filing codes that could be used to file your ${ x.title }. Choose the one that you think best fits your case.
 fields:
   - Filing type: x.user_chosen_filing_type
     datatype: dropdown
     code: |
-      x.filtered_filing_options
+      x.filtered_filing_type_options
 ---
 # TODO(brycew): eventually add back attorney ids
 generic object: ALIndividual
@@ -263,6 +268,50 @@ subquestion: |
 
 fields:
   - Case number: housing_case_search.non_indexed_docket_number
+---
+event: should_search_for_housing_court
+question: |
+  You need to enter a Housing Court Docket Number
+subquestion: |
+  The docket number you entered, ${ housing_case_search.docket_number_from_user },
+  is an Appeals court docket number. If you meant to use a different docket number,
+  you should press **Undo** below to enter a different number.
+
+  If this is your Appeals court docket number, then
+  you should press the button below.
+
+  ${ action_button_html(url_action('correct_to_appeals_docket'), label=housing_case_search.docket_number_from_user + " is my Appeals docket number")}
+---
+event: should_search_for_appeals_court
+question: |
+  You need to enter an Appeals Court Docket Number
+subquestion: |
+  The docket number you entered, ${ appeals_case_search.docket_number_from_user },
+  is not a appeals court docket number. If you meant to use a different docket number,
+  you should press **Undo** below to enter a different number.
+---
+event: correct_to_appeals_docket
+code: |
+  # Move over the docket number from the housing search to the appeals search.
+  is_initial_filing = False
+  timing = 'Subsequent'
+  appeals_case_search.do_what_choice = housing_case_search.do_what_choice
+  # This only happens when entering docket numbers, so we can assume that it exists
+  appeals_case_search.docket_number_from_user = housing_case_search.docket_number_from_user
+  appeals_case_search.court_id = housing_case_search.court_id
+  court_id = appeals_case_search.court_id
+  # appeals_case_search.found_case = housing_case_search.found_case.copy_deep('appeals_case_search.found_case')
+  # appeals_case_search.case_was_found = housing_case_search.case_was_found
+---
+event: correct_to_housing_docket
+code: |
+  # Move over the docket number from the appeals search to the housing search.
+  is_initial_filing = True
+  timing = 'Initial'
+  housing_case_search.do_what_choice = appeals_case_search.do_what_choice
+  housing_case_search.court_id = appeals_case_search.court_id
+  #housing_case_search.found_case = appeals_case_search.found_case.copy_deep('housing_case_search.found_case')
+  #housing_case_search.case_was_found = appeals_case_search.case_was_found
 ---
 comment: |
   For the housing case, we want to get the docket number first if they have it,

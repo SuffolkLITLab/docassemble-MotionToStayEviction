@@ -104,9 +104,6 @@ code: |
   appeals_basic_questions_intro_screen
   info_screen
 
-  if not is_initial_filing and not can_check_efile:
-    appeals_court_docket_number
-
   if can_check_efile:
     tyler_login
 
@@ -124,6 +121,8 @@ code: |
     if is_initial_filing:
       housing_case_search.can_file_non_indexed_case = True
       housing_case_search.do_what_choice
+      if housing_case_search.court_id == "appeals:acp" or housing_case_search.court_id == "appeals:acsj":
+        should_search_for_housing_court
       if housing_case_search.case_was_found:
         needs_all_info = False
         lower_court_case.docket_number = housing_case_search.found_case.docket_number
@@ -135,7 +134,10 @@ code: |
         lower_court_case.docket_number = housing_case_search.non_indexed_docket_number
   else:
     needs_all_info = True
+    if not is_initial_filing:
+      appeals_court_docket_number
     housing_court
+
   if housing_court in just_bmc_courts:
     warn_bmc_court
   if housing_court in just_district_courts:
