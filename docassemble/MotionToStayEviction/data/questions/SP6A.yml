@@ -225,6 +225,15 @@ code: |
       tyler_payment_id
     all_required_screens_shown
     ready_to_efile
+  if ready_to_efile:
+    email_confirmation_subject = email_confirmation.subject
+    email_confirmation_contents = email_confirmation.content
+    acceptance_subject = acceptance_email.subject
+    acceptance_contents = acceptance_email.content
+    rejected_subject = rejection_email.subject
+    rejected_contents = rejection_email.content
+    neutral_subject = neutral_email.subject
+    neutral_contents = neutral_email.content
   done_ocr
   users[0].pronouns
   preview_screen
