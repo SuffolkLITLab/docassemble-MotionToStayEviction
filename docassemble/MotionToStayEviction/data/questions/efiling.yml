@@ -389,11 +389,11 @@ code: |
 ---
 code: |
   redundant_disclaimers = [
-    "5863", # A certificate of service is included
-    "6110", # All scanned PDFs are text searchable using optical character recognition (OCR)
+    "A certificate of service is included."
+    "All scanned PDFs are text searchable using optical character recognition (OCR)."
   ]
   disclaimers_tmp = sorted(proxy_conn.get_disclaimers(court_id).data, key=lambda yy: yy.get("listorder", yy.get("code")))
-  disclaimers = list(filter(lambda dis: dis.get('code') not in redundant_disclaimers, disclaimers_tmp))
+  disclaimers = list(filter(lambda dis: dis.get('requirementText') not in redundant_disclaimers, disclaimers_tmp))
 ---
 code: |
   motion_to_stay_bundle.description = comments_to_clerk
