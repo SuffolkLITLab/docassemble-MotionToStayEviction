@@ -53,7 +53,7 @@ setup(name='docassemble.MotionToStayEviction',
       url='https://courtformsonline.org',
       packages=find_packages(),
       namespace_packages=['docassemble'],
-      install_requires=['docassemble.MAVirtualCourt>=1.0.22', 'docassemble.MassAppealsCourt>=0.1.0', 'docassemble-EFSPIntegration', 'docassemble-MassAppealsCourt', 'docassemble-ALAffidavitOfIndigency>=2.1.1', 'docassemble-MACourts>=0.0.58.3'],
+      install_requires=['docassemble.MassAppealsCourt>=0.1.0', 'docassemble-EFSPIntegration', 'docassemble-ALAffidavitOfIndigency>=2.1.1', 'docassemble-MACourts>=0.0.58.3'],
       zip_safe=False,
       package_data=find_package_data(where='docassemble/MotionToStayEviction/', package='docassemble.MotionToStayEviction'),
      )
