@@ -192,7 +192,7 @@ content: |
   
   * the first 2 numbers, "15" are the case's filing year
   * the third letter is always an "H" in the housing courts
-  * the next two numbers, "84", are the housing court "code" and refer to a speific court
+  * the next two numbers, "84", are the housing court "code" and refer to a specific court
   * the next two letters, "CV", are the case-type code
   * the last 6 numbers, "000436", are the case's sequence number
 ---

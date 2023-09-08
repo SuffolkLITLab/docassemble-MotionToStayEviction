@@ -203,7 +203,7 @@ code: |
     if motion_to_stay_bundle.document_type_map[motion_to_stay_bundle.document_type]['name'] == "Impounded":
       add_judge_seal_order
     lead_contact = users[0]
-    # TODO(brycew): hack until Tyler responsd
+    # TODO(brycew): hack until Tyler responds
     trial_court.court_id = trial_court.tyler_code if hasattr(trial_court, 'tyler_code') and trial_court.tyler_code else ''
   if is_initial_filing:
     nav.set_section('review_indigency')
@@ -1076,12 +1076,12 @@ continue button field: review_exhibits
 ---
 id: review exhibits
 question: |
-  Add the judges order to seal the case to your exhibits
+  Add the judge's order to seal the case to your exhibits
 subquestion: |
-  You said that the judge ordered your case to be impounded; if you have the judges order, you
+  You said that the judge ordered your case to be impounded; if you have the judge's order, you
   can click "add another" to add the order.
 
-  If you already added the judges order, you can continue.
+  If you already added the judge's order, you can continue.
   
   ${ exhibit_doc.exhibits.table }
   
@@ -1110,7 +1110,7 @@ content: |
 
   % else:
 
-  E-filing was attempted, but failed. All filing information is availabe here,
+  E-filing was attempted, but failed. All filing information is available here,
   but please contact the Suffolk LIT Lab so we can correct the issue.
 
   % endif
@@ -1124,7 +1124,6 @@ content: |
   Other phone | ${showifdef('users[0].phone_number')}
   Email | ${showifdef('users[0].email')}
   Contact details/other | ${showifdef('users[0].other_contact_method')}
-
 
 
   % if defined('comments_to_clerk'):
