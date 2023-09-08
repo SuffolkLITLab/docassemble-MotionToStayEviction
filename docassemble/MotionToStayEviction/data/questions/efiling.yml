@@ -1,0 +1,436 @@
+---
+include:
+  - docassemble.EFSPIntegration:efiling_integration.yml
+  - docassemble.EFSPIntegration:toga_payments.yml
+---
+
+code: |
+  trial_court_resp = proxy_conn.get_courts(with_names=True)
+  trial_court_options = sorted([(court['code'], court['name']) for court in trial_court_resp.data or []], key=lambda c: c[1])
+  trial_court_map = {court['code']: court['name'] for court in trial_court_resp.data or []}
+---
+generic object: ALDocumentBundle
+code: |
+  x.optional_services.there_are_any = False
+---
+generic object: DAObject
+code: |
+  x.filing_description = ''
+  x.reference_number = None
+  x.filing_parties = ['users[0]']
+  x.filing_action = 'efile'
+---
+code: |
+  motion_to_stay_bundle.description = comments_to_clerk
+  motion_to_stay_bundle.reference_number = None
+  motion_to_stay_bundle.filing_parties = ['users[0]']
+  motion_to_stay_bundle.filing_action = 'efile'
+---
+if: can_check_efile
+only sets:
+  - max_total_exhibit_size
+  - max_mb_per_file
+code: |
+  allowed_sizes = get_max_allowed_sizes(proxy_conn, court_id)
+  if allowed_sizes:
+    max_mb_per_file = allowed_sizes[0] / 1024 / 1024
+    max_total_exhibit_size = allowed_sizes[1]
+  else:
+    max_mb_per_file = 15
+    max_total_exhibit_size = 50 * 1024 * 1024
+---
+id: user-wants-efile
+question: |
+  Do you want to e-file this document directly with the court?
+subquestion: |
+  You are able to electronically-file (e-file) this document with the Appeals Court!
+  This means you don't have to print out the document. The court
+  will communicate with you through your email or phone.
+
+  You will have to use your eFileMA account to e-file this document. 
+  If you don't wish to use your account or don't wish to make an account,
+  you can choose not to efile.
+
+  If you have not yet asked for a Stay in the Housing Court, you will still
+  need to manually print out and deliver the Notice of Appeal to the Housing Court.
+  **The Notice of Appeal cannot be e-filed.**
+
+  If you don't have a eFileMA account, you can make one in the next screens.
+fields:
+  - Do you want to e-file?: user_wants_efile
+    datatype: yesnoradio
+---
+generic object: DAObject
+id: document type
+question: |
+  Should your ${ x.title } be impounded?
+subquestion: |
+  If a judge has ordered this case sealed, select
+  "Impounded". You should also attach a copy of the judge's order as an exhibit.
+
+  If the judge hasn't ordered this case sealed, it should be public.
+fields:
+  - The judge has ordered this document to be: x.document_type
+    input type: radio
+    code: |
+      x.document_type_options
+    default: ${ matching_tuple_option('public', x.document_type_options) }
+---
+id: not-in-case-kickout
+event: not_in_case_kickout
+question: |
+  You might have the wrong case
+subquestion: |
+  % if len(target_case.maybe_user_partips) > 0:
+  You said that you weren't ${ comma_and_list(target_case.maybe_user_partips, and_string='or') }. 
+  % else:
+  There aren't any participants in this case that you can be.
+  % endif
+  You need to already be a part of the case to file an appeal.
+
+  Press the **Back** button to go back and select a different case or chose the opposing side.
+---
+need:
+  - users
+  - is_plaintiff_party
+  - is_defendant_party
+  - target_case.found_case
+  - target_case.self_in_case
+only sets: to_add_participants
+code: |
+  users.clear()
+  if target_case.self_in_case not in ['is_self', 'is_filing']:
+    not_in_case_kickout
+  else:
+    target_case.self_partip_choice.is_new = False
+    target_case.self_partip_choice.is_form_filler = target_case.self_in_case == 'is_self'
+    # Change where DA thinks this obj came from, so it says "you", and not "NAME"
+    users.append(target_case.self_partip_choice.copy_deep('users[0]'))
+    if hasattr(users[-1].address, 'address'):
+      users[-1].address.geocode()
+    if is_plaintiff_party(users[0]):
+      user_ask_role = 'plaintiff'
+    elif is_defendant_party(users[0]):
+      user_ask_role = 'defendant'
+    to_add_participants = [p for p in target_case.found_case.participants if p.instanceName != target_case.self_partip_choice.instanceName and not is_unused_party(p)]
+---
+code: |
+  motion_to_stay_bundle.filing_type_filters = ['Motion to stay a judgment MRAP 6(a)', 'MRAP 6(a)']
+  motion_to_stay_bundle.filing_type_default = '6553'
+---
+code: |
+  if hasattr(motion_attachment, "document_type"):
+    motion_to_stay_bundle.document_type = motion_attachment.document_type
+---
+code: |
+  affidavitofindigency_attachment.filing_type_filters = ['Indigency Affidavit']
+  affidavitofindigency_attachment.filing_type_default = '8411'
+---
+code: |
+  affidavitofindigency_attachment.document_type_filters = ['impounded']
+  affidavitofindigency_attachment.document_type_default = "6587" # impounded, all are by default
+---
+code: |
+  efile_case_category_filters = ['Appeals Court Single Justice - Civil', 'Civil']
+  efile_case_category_default = '8151'
+  efile_case_category_exclude = None
+  efile_case_type_filters = ['Motion for stay of judgment MRAP 6(a)', 'MRAP 6(a)']
+  efile_case_type_default = '8157'
+  efile_case_type_exclude = None
+---
+code: |
+  if not is_initial_filing and 'P' in appeals_case_search.docket_number_from_user:
+    court_id = 'appeals:acp'
+  else:
+    court_id = 'appeals:acsj'
+---
+code: |
+  users[i].party_type_filters = ['Defendant/Appellant', 'Defendant/Petitioner']
+  users[i].party_type_default = '1729'
+  users[i].party_type_exclude = None
+---
+code: |
+  other_parties[i].party_type_filters = ['Plaintiff/Appellee', 'Plaintiff/Respondent']
+  other_parties[i].party_type_default = '1736'
+  other_parties[i].party_type_exclude = None
+---
+generic object: DAObject
+id: user chosen filing_type
+question: |
+  What is the filing type of this filing?
+subquestion: |
+  We found a few filing codes that could be used to file your ${ x.title }. Choose the one that you think best fits your case.
+fields:
+  - Filing type: x.user_chosen_filing_type
+    datatype: dropdown
+    code: |
+      x.filtered_filing_type_options
+---
+# TODO(brycew): eventually add back attorney ids
+generic object: ALIndividual
+code: |
+  if hasattr(x, 'existing_attorney_ids'):
+    x.attorney_ids = x.existing_attorney_ids
+  else:
+    x.attorney_ids = []
+---
+generic object: EFCaseSearch
+template: x.docket_lookup_choice
+content: |
+  Docket number
+---
+template: housing_case_search.case_number_format_template
+subject: What does my housing docket number look like?
+content: |
+  The docket number is a number that the court assigns your case.
+
+  The housing court docket number will usually similar to this:
+
+  15H84CV000436
+
+  It has 5 parts:
+  
+  * the first 2 numbers, "15" are the case's filing year
+  * the third letter is always an "H" in the housing courts
+  * the next two numbers, "84", are the housing court "code" and refer to a specific court
+  * the next two letters, "CV", are the case-type code
+  * the last 6 numbers, "000436", are the case's sequence number
+---
+id: submitted form
+question: |
+  % if efile_resp.response_code == 200:
+  Your forms were submitted!
+  % else:
+  Something went wrong delivering your form
+  % endif
+subquestion: |
+  % if efile_resp.response_code == 200:
+  You should receive a confirmation email within 10-15 minutes, and
+  you should receive an update from the clerk of the Appeals Court on your filing
+  within 48 hours.
+
+  % if no_notice_of_appeal_filed:
+  If you haven't yet, you must click **Back to download screen** to download the
+  Notice of Appeal form, which needs to be delivered to the **${ housing_court }**. 
+  The Notice of Appeal form has not been e-filed. You need to deliver it on your own.
+  % else:
+  We recommend you continue down below to download the form for your own records.
+  Click **Back to download screen** to get a copy of your forms and instructions.
+  % endif
+
+  % endif
+  
+  Here are the forms that you submitted:
+  
+  ${ al_court_bundle.as_pdf() }
+
+  ${ collapse_template(debug_details) }
+
+continue button field: show_efile_resp
+continue button label: Back to download screen
+---
+############
+## Housing case search
+############
+---
+id: case lookup
+question: |
+  Find your Housing court case
+fields:
+  - How do you want to find your case?: housing_case_search.do_what_choice
+    datatype: radio
+    code: |
+      housing_case_search.get_lookup_choices(False)
+---
+if: housing_case_search.can_file_non_indexed_case
+id: no cases found from housing search
+question: |
+  No cases found
+subquestion: |
+  % if housing_case_search.cms_connection_issue:
+  The court's case management system isn't online, and the case you are searching for might exist.
+  % endif
+
+  % if housing_case_search.search_went_wrong():
+  Something went wrong with the e-filing system when searching for cases.
+  % endif
+
+  You can either continue to manually enter the information about your case, or hit "${ word('back') }" to 
+  try a new search.
+continue button field: housing_case_search.warn_no_results
+---
+id: ask non-indexed docket number
+generic object: EFCaseSearch
+question: |
+  What is the **Housing Court** docket number for your case?
+subquestion: |
+  ${ collapse_template(housing_case_search.case_number_format_template) }
+
+fields:
+  - Case number: housing_case_search.non_indexed_docket_number
+---
+event: should_search_for_housing_court
+question: |
+  You need to enter a Housing Court Docket Number
+subquestion: |
+  The docket number you entered, ${ housing_case_search.docket_number_from_user },
+  is an Appeals court docket number. If you meant to use a different docket number,
+  you should press **Undo** below to enter a different number.
+
+  If this is your Appeals court docket number, then
+  you should press the button below.
+
+  ${ action_button_html(url_action('correct_to_appeals_docket'), label=housing_case_search.docket_number_from_user + " is my Appeals docket number")}
+---
+event: should_search_for_appeals_court
+question: |
+  You need to enter an Appeals Court Docket Number
+subquestion: |
+  The docket number you entered, ${ appeals_case_search.docket_number_from_user },
+  is not a appeals court docket number. If you meant to use a different docket number,
+  you should press **Undo** below to enter a different number.
+---
+event: correct_to_appeals_docket
+code: |
+  # Move over the docket number from the housing search to the appeals search.
+  is_initial_filing = False
+  timing = 'Subsequent'
+  appeals_case_search.do_what_choice = housing_case_search.do_what_choice
+  # This only happens when entering docket numbers, so we can assume that it exists
+  appeals_case_search.docket_number_from_user = housing_case_search.docket_number_from_user
+  appeals_case_search.court_id = housing_case_search.court_id
+  court_id = appeals_case_search.court_id
+  # appeals_case_search.found_case = housing_case_search.found_case.copy_deep('appeals_case_search.found_case')
+  # appeals_case_search.case_was_found = housing_case_search.case_was_found
+---
+event: correct_to_housing_docket
+code: |
+  # Move over the docket number from the appeals search to the housing search.
+  is_initial_filing = True
+  timing = 'Initial'
+  housing_case_search.do_what_choice = appeals_case_search.do_what_choice
+  housing_case_search.court_id = appeals_case_search.court_id
+  #housing_case_search.found_case = appeals_case_search.found_case.copy_deep('housing_case_search.found_case')
+  #housing_case_search.case_was_found = appeals_case_search.case_was_found
+---
+comment: |
+  For the housing case, we want to get the docket number first if they have it,
+  don't need to ask for the court
+code: |
+  housing_case_search.do_what_choice
+  housing_case_search.found_case
+  if housing_case_search.found_case and housing_case_search.do_what_choice == 'docket_lookup':
+    housing_case_search.display_case
+  if housing_case_search.found_case is None and housing_case_search.can_file_non_indexed_case:
+    housing_case_search.non_indexed_docket_number
+  housing_case_search.case_was_found = housing_case_search.found_case is not None
+---
+code: |
+  if housing_case_search.do_what_choice == 'docket_lookup' and housing_case_search.found_case is None and housing_case_search.can_file_non_indexed_case:
+    housing_case_search.non_indexed_docket_number = housing_case_search.docket_number_from_user
+---
+if: not can_check_efile
+code: |
+  users[0].is_form_filler = False
+---
+if: is_initial_filing
+code: |
+  is_defendant_filters = [
+    CodeType('1331'),
+    'defendant',
+  ]
+
+  is_plaintiff_filters = [
+    CodeType('1332'),
+    'plaintiff',
+  ]
+---
+##################################
+## Appeals case search
+##################################
+---
+code: |
+  appeals_case_search.case_number_format_template = explain_appeals_docket_format_template
+---
+id: case lookup
+question: |
+  Find your Appeals court case
+fields:
+  - How do you want to find your case?: appeals_case_search.do_what_choice
+    datatype: radio
+    code: |
+      appeals_case_search.get_lookup_choices(False)
+---
+## Some of the existing cases have party types like "Defendant/Petitioner".
+## We need to stop matching "respondent", etc. to get it right.
+if: not is_initial_filing
+code: |
+  # TODO(brycew): harder, because it's affected by user_started_case
+  is_defendant_filters = [
+    CodeType('5788'),
+    CodeType('598'),
+    'Defendant/Appellee',
+    'Defendant/Appellant',
+    'Defendant/Petitioner',
+    'Defendant/Respondent',
+    'defendant',
+  ]
+---
+if: not is_initial_filing
+code: |
+  is_plaintiff_filters = [
+    CodeType('5779'),
+    'Plaintiff/Appellee',
+    'Plaintiff/Appellant',
+    'Plaintiff/Petitioner',
+    'Plaintiff/Respondent',
+    'plaintiff',
+  ]
+---
+code: |
+  redundant_disclaimers = [
+    "A certificate of service is included."
+    "All scanned PDFs are text searchable using optical character recognition (OCR)."
+  ]
+  disclaimers_tmp = sorted(proxy_conn.get_disclaimers(court_id).data, key=lambda yy: yy.get("listorder", yy.get("code")))
+  disclaimers = list(filter(lambda dis: dis.get('requirementText') not in redundant_disclaimers, disclaimers_tmp))
+---
+code: |
+  motion_to_stay_bundle.description = comments_to_clerk
+  efile
+  sent_email_to_court
+  efile_and_email = True
+---
+if: not email_attachment_too_big
+objects:
+  - al_final_form_to_file: ALDocumentBundle.using(elements=[al_cover_page, al_court_bundle], filename=al_court_bundle.filename, title=al_court_bundle.title)
+---
+# Don't include the exhibits (in al_court_bundle -> motion_to_stay_bundle -> exhibit_doc) if they're too big
+if: email_attachment_too_big
+objects:
+  - al_final_form_to_file: ALDocumentBundle.using(elements=[al_cover_page, motion_attachment, affidavitofindigency_attachment], filename=al_court_bundle.filename, title=al_court_bundle.title)
+---
+code: |
+  should_cc_user = False
+---
+id: efile comments instructions
+question: |
+  Do you have any comments for the clerk?
+subquestion: |
+  Before we deliver your form, you can include comments
+  that will be sent to the clerk at the Appeals Court.
+  
+  For example, you may have special instructions about how and when to reach
+  you that you did not already include in the contact information section.
+  
+  These comments _may_ be included in the public file.
+
+  Are there any instructions that you would like to give to the clerk that will
+  receive your forms?
+
+  ${ collapse_template(help_comments_to_clerk_template) }
+fields:
+  - Information for clerk: comments_to_clerk
+    datatype: area
+    rows: 4
+    required: False

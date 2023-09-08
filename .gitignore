@@ -1,0 +1,7 @@
+# Local testing files from alkiln
+alkiln_test*
+.env
+.envrc
+cucumber-report*
+debug_log*
+runtime_config.json

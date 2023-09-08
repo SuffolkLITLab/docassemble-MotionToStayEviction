@@ -1,69 +1,189 @@
 ---
 include:
-  - docassemble.MAVirtualCourt:basic-questions.yml
-  - docassemble.AffidavitofIndigencyMAVC:affidavit_body.yml
+  - docassemble.AssemblyLine:assembly_line.yml
+  - docassemble.ALAffidavitOfIndigency:affidavit_body.yml
+  - docassemble.EFSPIntegration:efiling_integration.yml
+  - docassemble.EFSPIntegration:case_search.yml
+  - docassemble.MassAccess:massaccess.yml
+  - docassemble.MassAppealsCourt:appeals-basic-questions.yml
+  - docassemble.MassAppealsCourt:efiling.yml
+  - efiling.yml
   - NOA.yml
-  - old_mavc_appeals_basic_questions.yml
-  - docassemble.ALToolbox:collapse_template.yml
+  - review_screen.yml
 ---
 metadata:
   title: Appeal or Stay Your Eviction
----
-features:
-  javascript:
-    - limit_upload_size.js
 ---
 code: |
   bcc_failsafe = "cc@example.com"
 ---
 code: |
+  jurisdiction_id = 'massachusetts'
+---
+code: |
+  al_form_type ="appeal"
+---
+code: |
+  proxy_conn = ProxyConnection(credentials_code_block='tyler_login', default_jurisdiction=jurisdiction_id)
+---
+code: |
   interview_short_title = "Ask the Appeals Court to Stop Your Eviction"
 ---
+code: |
+  logged_out_interview = 'docassemble.MassAccess:efile-account-interview.yml'
+---
+code: |
+  admin_interview = "docassemble.EFSPIntegration:admin_interview.yml"
+---
+code: |
+  form_uses_efiling = True
+---
 objects:
-  - prepped_exhibits: DAFile.using(filename='exhibits.pdf')
+  - lower_court_case: DAObject
+---
+objects:
+  - housing_case_search: EFCaseSearch
+  - appeals_case_search: EFCaseSearch
+---
+#code: |
+#  housing_case_search.court_id = housing_case_search.trial_court # court_from_docket_number(lower_court_case.docket_number)
+#---
+id: housing trial court
+question: |
+  Which court was your housing case in?
+fields:
+  - Court Location: housing_case_search.court_id
+    datatype: dropdown
+    code: |
+      [opt for opt in trial_court_options if ('Housing' in opt[1] or 'Superior' in opt[1] or 'BMC' in opt[1] or 'District Court' in opt[1]) and opt[0] != 'hc']
+---
+code: |
+  if housing_case_search.do_what_choice == 'docket_lookup':
+    found_courts = all_courts.courts_from_docket_number(housing_case_search.docket_number_from_user)
+    housing_case_search.court_id = found_courts[0].tyler_code
+    if housing_case_search.court_id is None:
+      del housing_case_search.court_id
+---
+only sets: efile_setup
+# Overrides EFSPIntegration, don't bother getting the court id before this
+code: |
+  efile_setup = 'appeals' in available_efile_courts
+---
+id: housing trial court
+question: |
+  Which Appeals court is your case in?
+fields:
+  - Court Location: appeals_case_search.court_id
+    datatype: dropdown
+    code: |
+      [opt for opt in trial_court_options if 'Appeals' in opt[1]]
+---
+if: can_check_efile and appeals_case_search.do_what_choice == 'docket_lookup'
+code: |
+  appeals_case_search.court_id = all_courts.courts_from_docket_number(appeals_case_search.docket_number_from_user)[0].tyler_code
+---
+# Uses max_size from Tyler
+if: can_check_efile
+objects:
+  - exhibit_doc: ALExhibitDocument.using(title="Exhibits", filename='exhibits', bates_prefix="EX-", include_exhibit_cover_page=True, include_table_of_contents=True, add_page_numbers=True, auto_ocr=True, maximum_size=max_total_exhibit_size)
+---
+if: not can_check_efile
+objects:
+  - exhibit_doc: ALExhibitDocument.using(title="Exhibits", filename='exhibits', bates_prefix="EX-", include_exhibit_cover_page=True, include_table_of_contents=True, add_page_numbers=True, auto_ocr=True)
+---
+sections:
+  - review_case_info: Case Information
+  - review_stay: Motion to Stay Eviction
+  - review_indigency: Affidavit of Indigency
+  - review_efile_info: Complete Forms
 ---
 id: interview order
 mandatory: True
 code: |
-  # has_evidence
-  user_role = "defendant"
+  nav.set_section('review_case_info')
   appeals_basic_questions_intro_screen
   info_screen
-  users[0].name.first
-  users[0].address.address
-  users[0].mobile_number
-  user_needs_interpreter
-  users.there_is_another = False
-  users.gathered = True
-  plaintiff_name
-  
-  # Copy plaintiff name into the "Other Parties" list
-  other_parties.auto_gather=False
-  other_parties[0].name.first = plaintiff_name
-  other_parties.gathered=True
-  
-  defendant_name
+
+  if can_check_efile:
+    tyler_login
+
+    if not is_initial_filing:
+      appeals_case_search.do_what_choice
+      appeals_case_search.case_was_found
+      lower_court_case.docket_number = appeals_case_search.found_case.docket_number
+      previous_case_id = appeals_case_search.found_case.tracking_id
+      target_case = appeals_case_search
+      add_appeals_existing_users
+
+    efile_case_category
+    efile_case_type
+
+    if is_initial_filing:
+      housing_case_search.can_file_non_indexed_case = True
+      housing_case_search.do_what_choice
+      if housing_case_search.court_id == "appeals:acp" or housing_case_search.court_id == "appeals:acsj":
+        should_search_for_housing_court
+      if housing_case_search.case_was_found:
+        needs_all_info = False
+        lower_court_case.docket_number = housing_case_search.found_case.docket_number
+        target_case = housing_case_search
+        add_new_existing_users
+      else:
+        needs_all_info = True
+        housing_court
+        lower_court_case.docket_number = housing_case_search.non_indexed_docket_number
+  else:
+    needs_all_info = True
+    if not is_initial_filing:
+      appeals_court_docket_number
+    housing_court
+
+  if housing_court in just_bmc_courts:
+    warn_bmc_court
+  if housing_court in just_district_courts:
+    warn_district_court
+  if not can_check_efile:
+    lower_court_case.docket_number
+  lower_court_case.judge
+
   if forty_eight_hour_notice:
     eviction_date
     eviction_time
-  housing_court
-  housing_court_docket_number
-  housing_court_judgment_date
-  housing_court_judge
+
+  user_started_case
+  users.gather(complete_attribute='complete')
+  user_needs_interpreter
+  other_parties.gather(complete_attribute='complete')
+
+  nav.set_section('review_stay')
+  lower_court_case.judgment_date
+  lower_court_case.judgment_appealing
   date_housing_court_denied_motion_to_stay
   housing_court_denying_order_text
+
+  # Copy plaintiff name into the "Other Parties" list
+  defendant_name
+
+  if is_initial_filing and can_check_efile and housing_case_search.case_was_found:
+    lower_court_case.title = housing_case_search.found_case.title
+  elif not is_initial_filing and can_check_efile and appeals_case_search.case_was_found:
+    lower_court_case.title = appeals_case_search.found_case.title
+  else:
+    lower_court_case.title = f"{plaintiff_name} v. {defendant_name}"
+
+  if is_initial_filing:
+    docket_numbers[0] = "Case being filed"
+    explain_need_affidavit
+
   if no_notice_of_appeal_filed:
     noa_variables
     noa_confirmation
-  if not is_first_document:
-    appeals_court_docket_number
-  else:
-    explain_need_affidavit
+
   # WARNING: file size error is not currently translatable
-  file_size_vars
-  if has_evidence:
+  max_mb_per_file
+  if exhibit_doc.exhibits.has_exhibits:
+    exhibit_doc.exhibits.gather()
     review_exhibits
-    ocr_task
   procedural_history
   statement_of_facts
   procedural_history
@@ -71,117 +191,147 @@ code: |
   plaintiff_harm
   public_interest_harm_yesno
   legal_issues
-  relief_sought 
+  relief_sought
   likelihood_of_success
   argument_summary
   method_of_service
   parties_to_be_served
   service_date
-  if is_first_document:
+  trial_court = housing_court
+  if can_check_efile:
+    motion_to_stay_bundle.completed
+    if motion_to_stay_bundle.document_type_map[motion_to_stay_bundle.document_type]['name'] == "Impounded":
+      add_judge_seal_order
+    lead_contact = users[0]
+    # TODO(brycew): hack until Tyler responds
+    trial_court.court_id = trial_court.tyler_code if hasattr(trial_court, 'tyler_code') and trial_court.tyler_code else ''
+  if is_initial_filing:
+    nav.set_section('review_indigency')
     indigency_intro
     fees['Filing fee'].waive = True
     fees['Filing fee'].amount = 315.00
     ask_affidavit_questions
-    if not is_indigent:
+    if is_indigent:
+      if can_check_efile:
+        affidavitofindigency_attachment.completed
+    else:
       doesnt_qualify_interstitial
-  get_pronouns # Make sure this is defined before template is rendered
+  nav.set_section('review_efile_info')
+  if can_check_efile:
+    if no_payment_needed:
+      # have gotten permission: can use waiver method for subsequent filings
+      tyler_payment_id = default_jurisdiction_waiver
+    else:
+      tyler_payment_id
+    all_required_screens_shown
+    ready_to_efile
+  if ready_to_efile:
+    email_confirmation_subject = email_confirmation.subject
+    email_confirmation_contents = email_confirmation.content
+    acceptance_subject = acceptance_email.subject
+    acceptance_contents = acceptance_email.content
+    rejected_subject = rejection_email.subject
+    rejected_contents = rejection_email.content
+    neutral_subject = neutral_email.subject
+    neutral_contents = neutral_email.content
+  done_ocr
+  users[0].pronouns
   preview_screen
   basic_questions_signature_flow
   users[0].signature
   download
 ---
-imports:
-  - random
----
-id: users's name
-question: |
-  What is your name?
-fields:
-  - First Name: users[0].name.first
-  - Middle Name: users[0].name.middle
-    required: False
-  - Last Name: users[0].name.last
-  - Suffix: users[0].name.suffix
-    code: |
-      name_suffix()
-    required: False
-  # Hardcoding pronouns here although they're implemented more neatly
-  # in current AssemblyLine
-  - What are your pronouns? (optional): users[0].pronouns
-    datatype: checkboxes
-    choices:
-      - She/her/hers: she/her/hers
-      - He/him/his: he/him/his
-      - They/them/theirs: they/them/theirs
-      - Ze/zir/zirs: ze/zir/zirs
-      - Something else: self-described
-    none of the above: Prefer not to say
-    required: False
-    help: |
-      A pronoun is a word that can be used in place of your name. For example: he, she, or they.
-      Learn more at [pronouns.org](https://pronouns.org/).
-  - note: |
-      ${ collapse_template(explain_why_pronouns) }
-  - Self-described pronouns: users[0].pronouns_self_described
-    show if: users[0].pronouns["self-described"]
----
-template: explain_why_pronouns
-subject: |
-  How will you use my pronouns?
-content: |
-  The pronouns that you write here will be added to the bottom
-  of your motion to the Appeals Court.
-
-  Sharing your pronouns is optional. If you share your pronouns,
-  it may help the judge use the right words when they mention you
-  in court or in their written decision.
+code: |
+  no_payment_needed = (is_initial_filing and is_indigent) or not is_initial_filing
 ---
 code: |
-  def get_pronouns(person):
-    if person.pronouns.all_false():
-        return {"Prefer not to say"}
-    pronouns = set(person.pronouns.true_values()) - {'self-described'}
-    if person.pronouns.get("self-described"):
-        pronouns = pronouns.union(person.pronouns_self_described.splitlines())
-    return pronouns
+  user_ask_role = "defendant"
 ---
+if: can_check_efile and no_payment_needed
+code: |
+  # Skip showing this screen to users, we already out set the payment method to be a waiver
+  review_fees_screen = True
+---
+only sets: add_new_existing_users
+code: |
+  add_existing_users
+  for user in users.complete_elements():
+    user.is_new = True
+    if hasattr(user, 'tyler_id'):
+      delattr(user, 'tyler_id')
+    if hasattr(user, 'party_type'):
+      delattr(user, 'party_type')
+  users.there_is_another = False
+  users.revisit = True
+  for other_party in other_parties.complete_elements():
+    other_party.is_new = True
+    del other_party.tyler_id
+    del other_party.party_type
+  other_parties.there_is_another = False
+  other_parties.revisit = True
+  add_new_existing_users = True
+---
+only sets: add_appeals_existing_users
+code: |
+  add_existing_users
+  users.there_is_another = False
+  other_parties.there_is_another = False
+  add_appeals_existing_users = True
+---
+code: |
+  users[0].name.first
+  users[0].address.address
+  users[0].mobile_number
+  users[0].complete
+  if can_check_efile:
+    users[0].party_type
+    users[0].is_new
+  users[0].complete = True
+---
+code: |
+  if is_initial_filing:
+    all_party_type_options, all_party_type_map = \
+      choices_and_map(proxy_conn.get_party_types(housing_case_search.court_id, None).data)
+  else:
+    all_party_type_options, all_party_type_map = \
+      choices_and_map(proxy_conn.get_party_types(appeals_case_search.court_id, None).data)
+---
+code: |
+  if is_initial_filing:
+    target_case = housing_case_search
+  else:
+    target_case = appeals_case_search
+---
+if: not can_check_efile
 code: |
   max_mb_per_file = 15
-  file_size_vars = True
-#---
-#code: |
-#  try:
-#    exhibits_total_size = sum(exhibit.size_in_bytes() for exhibit in exhibits)
-#  except:
-#    exhibits_total_size = 15 * 1024 * 1024
 ---
 id: noa confirmation
 question: |
   Here is what your Notice of Appeal looks like.
 subquestion: |
-  ${ pdf_concatenate(Notice_of_Appeal['preview']) }
+  ${ notice_of_appeal.as_pdf(key='preview') }
   
   You will have a chance to add your signature to this document and download it at the end of this interview.
   
   Failure to file a Notice of Appeal in the ${ housing_court } may result in your Motion to Stay being denied.
+
+  % if can_check_efile:
+  **Note**: the Notice of Appeal with **not** be e-filed for you. You must file it yourself.
+  % endif
 continue button field: noa_confirmation
 ---
-need: prepped_exhibits
-code: |
-  ocr_task = background_action('process_exhibits')
+generic object: DAObject
+id: filing courtesy copy info
+question: |
+  Would you like to send anyone a copy of your ${ x.title } by email?
+fields:
+  - I would like to send someone a copy: x.has_courtesy_copies
+    datatype: yesnoradio
+  - What emails do you want to send to? (one per line): x.courtesy_copies_raw
+    datatype: area
+    show if: x.has_courtesy_copies
 ---
-event: process_exhibits
-code: |
-  prepped_exhibits.initialize(filename="exhibits.pdf")
-  prepped_exhibits.make_ocr_pdf(exhibits, psm=1)
-  prepped_exhibits.bates_number(prefix='EX-')
-  background_response_action('save_results',results=prepped_exhibits)
----
-event: save_results
-code: |
-  prepped_exhibits = action_argument('results')
-  background_response()
---- 
 id: info screen
 question: |
   Motion to Stay Eviction
@@ -195,22 +345,18 @@ subquestion: |
   To use this form, you will need relevant Housing Court documents including:
   
     * the Housing Court's docket
-    
     * the complaint
-    
     * your answer
-    
     * the judgment
-    
     * filings related to your motion to stay in the Housing Court
   
-  This form cannot be directly emailed to the Supreme Judicial Court. For more information, contact the Supreme Judicial Court Clerk's office: (617) 557-1020.
+  This form cannot be directly emailed to the Supreme Judicial Court. For more information, contact the Supreme Judicial Court Clerk's office: [(617) 557-1020](tel:+16175571020).
   
   For more information on what you need to file an appeal, view the [Housing Appeal Guide](https://www.mass.gov/guides/housing-appeals-guide#-automatic-stay-pending-appeal-).
 continue button field: info_screen
 ---
 objects:
-  - users: PeopleList.using(there_are_any=True)
+  - users: ALPeopleList.using(there_are_any=True)
 ---
 id: housing court division 
 question: | 
@@ -218,24 +364,87 @@ question: |
 fields:
   - no label: housing_court
     datatype: object
-    choices: macourts.filter_courts(["Housing Court"])
+    choices: valid_housing_courts
 --- 
-id: housing court docket number 
+code: |
+  valid_housing_courts = all_courts.filter_courts(["Housing Court", "District Court", "Boston Municipal Court"])
+  if can_check_efile and is_initial_filing and housing_case_search.case_was_found:
+    valid_housing_courts = [court for court in valid_housing_courts if court.tyler_code == housing_case_search.found_case.court_id]
+    if len(valid_housing_courts) == 1:
+      housing_court = valid_housing_courts[0]
+---
+code: |
+  just_bmc_courts = all_courts.filter_courts(["Boston Municipal Court"])
+---
+code: |
+  just_district_courts = all_courts.filter_courts(["District Court"])
+---
+id: warn bmc court
+question: |
+  This might not be the right form for you
+subquestion: |
+  You said that you are appealing a case from the Boston Municipal Courts.
+  The Boston Municipal Courts have their own appeals division that you should
+  appeal to before the Appeals Court.
+  
+  For more information, see [the District Court Appellate Division website](https://www.mass.gov/district-court-appellate-division).
+
+  You can continue if you are sure you want to file this Motion with the Appeals Court.
+continue button field: warn_bmc_court
+# TODO: maybe color yellow
+---
+id: warn district court
+question: |
+  This might not be the right form for you
+subquestion: |
+  You said that you are appealing a case from the District Courts.
+  The District Courts have their own appeals division that you should
+  appeal to before the Appeals Court.
+
+  For more information, visit [the District Court Appellate Division website](https://www.mass.gov/district-court-appellate-division).
+
+  You can continue if you are sure you want to file this Motion with the Appeals Court.
+continue button field: warn_district_court
+---
+id: housing court docket number
 question: |
   What is the **Housing Court** docket number for your case?
 fields:
-  - Docket number: housing_court_docket_number
+  - Docket number: lower_court_case.docket_number
 --- 
-id: appeals court docket number 
+id: is_initial_filing
 question: |
   Is this Motion to Stay the first document you are filing in the **Appeals Court**?
 fields:
-  - no label: is_first_document
+  - no label: is_initial_filing
     datatype: yesnoradio
-  - What is the **Appeals Court** docket number for your case?: appeals_court_docket_number
-    show if:
-      variable: is_first_document
-      is: False
+---
+id: appeals court docket number
+question: |
+  What is the **Appeals Court** docket number for your case?
+fields:
+  - no label: appeals_court_docket_number
+---
+if: not is_initial_filing and can_check_efile
+code: |
+  appeals_court_docket_number = appeals_case_search.found_case.docket_number
+---
+template: explain_appeals_docket_format_template
+subject: What does my appeals court docket number look like?
+content: |
+  The docket number is a number that the court assigns your case.
+
+  The Appels Court docket number will be similar to this:
+
+  2022-P-0001
+
+  It has 3 parts, each separated by a hyphen ("-").
+
+  * the first 4 numbers ("2022") are the case's filing year
+  * the middle letter ("P" in this case) is either "P" or "J".
+    The Appeals Court hears cases either as a panel ("P") or in
+    a single-justice session ("J").
+  * the last numbers ("0001") are the sequence number
 ---
 id: explain_need_affidavit
 question: |
@@ -246,6 +455,11 @@ subquestion: |
   
   We will ask you questions to help you find out a little later.
 continue button field: explain_need_affidavit
+---
+# Will always ask if this is true
+if: is_initial_filing and efile_setup
+code: |
+  explain_need_affidavit = True
 ---
 id: explain affidavit of indigency
 continue button field: indigency_intro
@@ -268,7 +482,7 @@ fields:
 terms:
   plaintiff: |
     This could be your landlord or the current owner of the property, such as a foreclosing bank or purchaser. 
---- 
+---
 id: defendant
 question: |
   Who is the **defendant** in your Housing Court case?
@@ -280,6 +494,14 @@ fields:
   - Defendant(s): defendant_name
     input type: area 
     rows: 6
+--- 
+code: |
+  if user_started_case:
+    plaintiff_name = users.full_names()
+    defendant_name = other_parties.full_names()
+  else:
+    plaintiff_name = other_parties.full_names()
+    defendant_name = users.full_names()
 ---
 id: 48 hour notice
 question: |
@@ -289,8 +511,10 @@ subquestion: |
   [${eviction_notice.show(width='20em')}](${eviction_notice.url_for()})
   </CENTER>
   
-  A 48-Hour Notice can look like the one above.
-yesno: forty_eight_hour_notice
+  A 48-hour notice can look like the one above.
+fields:
+  - Have you received a 48-hour notice?: forty_eight_hour_notice
+    datatype: yesnoradio
 terms:
   48-hour notice: |
     A notice from the constable or sheriff telling you they will move you out on a certain day and time.
@@ -305,7 +529,7 @@ subquestion: |
   This answer is 48 hours from when you received the {48-Hour Notice}.
 fields:   
   - Date: eviction_date
-    datatype: date 
+    datatype: date
   - Time: eviction_time
     datatype: time
 terms:
@@ -316,14 +540,15 @@ id: date of housing court judgment
 question: |
   When did the **Housing Court** enter judgment against you?
 fields:
-  - Date: housing_court_judgment_date
-    datatype: date  
+  - Date: lower_court_case.judgment_date
+    datatype: date
+    max: ${ today() }
 ---
 id: name of housing court judge
 question: |
   What is the name of the **Housing Court** judge who entered judgment against you?
 fields:
-  - Name: housing_court_judge
+  - Name: lower_court_case.judge
 ---
 id: date notice of appeal filed
 question: |  
@@ -341,6 +566,7 @@ fields:
     datatype: yesno
   - Date filed: date_notice_of_appeal_filed
     datatype: date
+    max: ${ today() }
     hide if: no_notice_of_appeal_filed
 --- 
 objects:
@@ -352,11 +578,12 @@ question: |
 subquestion: |
   Before using this form, you must first ask for a Stay in the ${ housing_court }.
   
-  For more information, call the Trial Court’s Emergency HelpLine: 833-91-COURT (833-912-6878) open Monday - Friday from 8:30 am - 4:30 pm. 
+  For more information, call the Trial Court’s Emergency HelpLine: 833-91-COURT ([833-912-6878](tel:+18339126878)) open Monday - Friday from 8:30 am - 4:30 pm. 
     
 fields:
   - Date: date_housing_court_denied_motion_to_stay
     datatype: date  
+    max: ${ today() }
 ---
 id: housing court judge order text
 question: |
@@ -371,6 +598,8 @@ question: |
   Select the issues of law in your case.
 subquestion: |
   A statement of the issue(s) of law is a brief statement of the legal reason that the single justice should allow your motion to stay.
+
+  ${ collapse_template(legal_issues_examples) }
 fields:
   - no label: legal_issues
     datatype: checkboxes
@@ -385,12 +614,13 @@ fields:
     none of the above: False  
   - Other: other_legal_issues
     show if: legal_issues["Other"]
-help:
-  label: |
-    Examples
-  content: |
-    * For example, if the Housing Court judge's order is unreasonable in light of the facts that that the judge heard at the hearing or trial, the issue of law would be whether the judge's order was an abuse of discretion.
-    * For example, if you thought the judge mistakenly did not allow you to present a piece of evidence at the hearing or trial, the issue of law would be whether the judge improperly excluded evidence at the hearing or trial. 
+---
+template: legal_issues_examples
+subject: |
+  Examples
+content: |
+  * For example, if the Housing Court judge's order is unreasonable in light of the facts that that the judge heard at the hearing or trial, the issue of law would be whether the judge's order was an abuse of discretion.
+  * For example, if you thought the judge mistakenly did not allow you to present a piece of evidence at the hearing or trial, the issue of law would be whether the judge improperly excluded evidence at the hearing or trial. 
 ---
 id: relief_sought
 question: |
@@ -413,7 +643,7 @@ subquestion: |
   You should not provide a copy of your Affidavit of Indigency, if any, to anyone except the Appeals Court.  
 field: method_of_service
 dropdown:
-  - Efile and serve (efilema.com): efile and serve (efilema.com)
+  - E-file and serve (efilema.com): efile and serve (efilema.com)
   - Email: email
   - Mail: mail
   - Hand delivery: hand delivery
@@ -433,9 +663,11 @@ question: |
   When will you deliver copies of your motion, memorandum, and supporting materials to the plaintiffs' attorney(s)?
 subquestion: |
   You are required to provide a copy of this motion, memorandum, and supporting materials to the plaintiffs' attorney(s).
+
 fields:
   - Date: service_date
-    datatype: date  
+    datatype: date
+    min: ${ today() }
 ---
 id: procedural history
 question: |
@@ -448,11 +680,8 @@ subquestion: |
   It is important to describe whether the judgment was:
   
     * entered against you after a default, 
-     
     * on an order for summary judgment, 
-     
     * after a trial, **or**
-     
     * pursuant to an agreement for judgment.  
 fields:
   - no label: procedural_history
@@ -466,15 +695,18 @@ subquestion: |
   How did your tenancy or former ownership of the property end? Why were you evicted?
   
   This is called the **factual history**.
+
+  ${ collapse_template(facts_help) }
 fields:
   - no label: statement_of_facts
     input type: area 
     rows: 6
-help:
-  label: |
-    Example
-  content: |
-    For example, if you filed a complaint with your local inspectional services department, describe the complaint including the date it was made and the resolution after the inspection.
+---
+template: facts_help
+subject: |
+  What if I need an example?
+content: |
+  For example, if you filed a complaint with your local inspectional services department, describe the complaint including the date it was made and the resolution after the inspection.
 ---
 id: likelihood of success
 question: |
@@ -514,6 +746,9 @@ question: |
   Does your Motion to Stay have an effect on the **{public interest}**?
 subquestion:  |
   Your motion must show that the stay does not harm the public interest.
+
+  ${ collapse_template(public_interest_explainer)}
+
 fields:
   - no label: public_interest_harm_yesno
     datatype: yesnoradio
@@ -523,6 +758,11 @@ fields:
     show if: public_interest_harm_yesno
 terms:
   public interest: |
+    ${ public_interest_explainer }
+---
+template: public_interest_explainer
+subject: What is the "public interest"?
+content: |
     The public interest is most often implicated:
     
     * in cases involving a federal subsidy ("section 9 voucher") 
@@ -540,33 +780,22 @@ subquestion: |
   It is important that you include in your Motion to Stay anything that you want the court to know about your case.
 fields:
   - no label: argument_summary
-    input type: area 
+    input type: area
     rows: 6
 ---
 code: |
-  if is_first_document and is_indigent:
-    final_form_to_file = [general_cover_sheet, combined_motion, affidavitofindigency_attachment]
-  else:
-    final_form_to_file = [general_cover_sheet, combined_motion ]
+  motion_to_stay_bundle.enabled = True
+  general_cover_sheet.enabled = not can_check_efile
+  notice_of_appeal.enabled = no_notice_of_appeal_filed
 ---
 code: |
-  form_to_file_no_cover = combined_motion
+  affidavitofindigency_attachment.enabled = is_initial_filing and is_indigent
 ---
+if: not is_initial_filing and can_check_efile
 code: |
-  form_to_sign_temp = []
-  #if has_evidence:
-  #  form_to_sign_temp = [motion_attachment["preview"], exhibits]
-  #else:
-  #  form_to_sign_temp = [motion_attachment["preview"]]
-  # Dont need to show them the exhibits again--it can be slow w/ big addendum
-  form_to_sign_temp = [motion_attachment["preview"]]
-  if no_notice_of_appeal_filed:
-    form_to_sign_temp.append(Notice_of_Appeal['preview'])
-
-  form_to_sign = pdf_concatenate(form_to_sign_temp, filename="motion_to_stay_eviction.pdf")
+  is_indigent = False
 ---
 id: review before signature
-need: form_to_sign
 continue button field: preview_screen
 question: |
   Nearly finished
@@ -575,114 +804,161 @@ subquestion: |
   
   Do not forget to come back to this page to click to the final step of signing and sending the form to the court. 
   
-   ${ form_to_sign }
+   ${ al_user_bundle.as_pdf(key="preview") }
 
 progress: 95
 ---
+if: |
+  not ready_to_efile
 id: download form
 event: download
 decoration: file-download
 question: |
-  % if not defined('email_success') or not email_success:
+  Download Form
+subquestion: |
+  Thank you ${users[0]}. Your form is ready to download.
+
+  You can edit your form before sending it by pressing "Make changes" below.
+
+  ${ action_button_html(url_action('review_case_info'), label=':edit: Make changes', color='success', size="md") }
+  
+  
+  % if no_notice_of_appeal_filed:
+  **You have two documents to download:** 
+  
+  1. The [:file-download: Notice of Appeal]( ${ notice_of_appeal['final'].pdf.url_for()} ),
+  which needs to be delivered to the **${ housing_court }**. You need to deliver
+  it on your own. Call the ${ housing_court } at [${ housing_court.phone }](tel:+1${ housing_court.phone.replace('(', '').replace(')', '').replace(' ', '').replace('-', '')})
+  to find out how.
+  2. Your Appeal, which needs to be delivered to ${ appeals_court }. You can deliver it to the Appeals Court in
+  person or by e-filing through [the court's website](https://massachusetts.tylertech.cloud/ofsweb).
+
+  % endif
+
+  % if not user_wants_efile:
+  You indicated that you didn't want to e-file the Motion to Stay document in this interview. You will have to restart this process if you
+  wish to e-file it using our website.
+  % else:
+
+  We are not able to e-file the Motion to Stay document. Please call the clerk and try delivering the files below in
+  person or by e-filing through [the court's website](https://massachusetts.tylertech.cloud/ofsweb).
+  
+  % endif
+  
+  1. Click "View" below to open the form in a new window.
+  1. Download and save or print a copy of this form for your 
+  records.
+  
+  The Appeals Court Clerk's Office number is [617-921-4443](tel:+16179214443).
+  
+  The Appeals Court Clerk's Office is open:
+
+  Monday - Friday  
+  8:30am - 4:30pm
+
+  ${ al_user_bundle.download_list_html() }
+  
+progress: 100
+section: download
+---
+if:
+  ready_to_efile
+id: download form
+event: download
+decoration: file-download
+question: |
+  % if not defined('efile') or not efile:
   Review, Download, and Send Form
   % else:
   Form delivered
   % endif
 subquestion: |
-  % if not defined('email_success') or not email_success:
+  % if not defined('efile') or not efile:
   Thank you ${users[0]}. Your form is ready to send to the court. **It is not
   delivered until you complete the delivery process below.**
+
+  You can edit your form before sending it by pressing "Make changes" below.
+
+  ${ action_button_html(url_action('review_case_info'), label=':edit: Make changes', color='success', size="md") }
   
   % if no_notice_of_appeal_filed:
   **You have two documents to deliver:** 
   
-  1. The [:file-download: Notice of Appeal]( ${ Notice_of_Appeal['final'].pdf.url_for()} ),
-  which needs to be delivered to the **${ housing_court }**. You need to deliver
-  this on your own. Call the ${ housing_court } at ${ housing_court.phone }
+  1. The [:file-download: Notice of Appeal]( ${ notice_of_appeal['final'].pdf.url_for()} ),
+  which needs to be delivered to the **${ housing_court }**. 
+  **The Notice of Appeal will not be e-filed.** You need to deliver
+  this on your own. Call the ${ housing_court } at [${ housing_court.phone }](tel:+1${ housing_court.phone.replace('(', '').replace(')', '').replace(' ', '').replace('-', '')})
   to find out how.
-  2. Your Appeal, which needs to be delivered to ${ courts[0] }. You can deliver the appeal by following the steps below.
+  2. Your Appeal, which needs to be delivered to ${ appeals_court }. You can deliver the appeal by following the steps below.
   
-  Follow these steps to deliver the Appeal to the ${ courts[0] }:
+  Follow these steps to deliver the Appeal to the ${ appeals_court }:
+
+  1. Download and save or print a copy of the below forms for your records.
+  1. Click the "E-File" button below to send it to the court.
+
+  If you do not hear from the court in 1 business day, call the Appeals Court Clerk's Office.
+  
   % endif
-  
-  1. Click the preview image below to open the form in a new window.
-  1. Download and save or print a copy of this form for your 
+
+  % elif defined('efile') and efile:
+
+  Your Appeal has been delivered to ${ appeals_court }.
+
+  % if no_notice_of_appeal_filed:
+
+  The [:file-download: Notice of Appeal]( ${ notice_of_appeal['final'].pdf.url_for()} ),
+  still needs to be delivered to the **${ housing_court }**. 
+  **It has not be e-filed.** Call the ${ housing_court } at [${ housing_court.phone }](tel:+1${ housing_court.phone.replace('(', '').replace(')', '').replace(' ', '').replace('-', '')})
+  to find out how to deliver this on your own.
+
+  % endif
+
+  You can click "View" below to open the form in a new window, or you can download and save or print a copy of this form for your 
   records.
-  1. Click "Submit to ${courts[0]}" to send it to the court. 
-  1. You will have a chance to add instructions to the clerk and see the cover page before final delivery.
-  % else:
-  If you do not hear from the court in 1 business day, call the   Appeals Court Clerk's Office: 617-921-4443 
-  
-  The Appeals Court Clerk's Office is open:  
+
+  If you do not hear from the court in 1 business day, call the Appeals Court Clerk's Office.
+
+  % elif defined('efile') and not efile:
+
+  E-filing was not successful. Call the clerk and try delivering
+  the files below a different way.
+
+  % endif
+
+  The Appeals Court Clerk's Office phone number is [617-921-4443](tel:+16179214443).
+
+  The Appeals Court Clerk's Office is open:
+
   Monday - Friday  
   8:30am - 4:30pm
-  % endif
-  
-  ${ form_to_file_no_cover }  
-  
-  % if not defined('email_success'):
-    ${ action_button_html( url_action('form_delivery_complete'), id_tag="submitToCourt", label="Submit to " + str(courts[0].name), icon=send_icon, size="md", color="primary")}
-    
-  Or download/email below:
-  % elif not email_success:
-  Email delivery has failed. Call the clerk and try delivering
-  the files below a different way.
-  
-  % for file in final_form_to_file:
-  % if hasattr(file, 'info'):
-  * [:file-download: ${ file.info.get("filename") }](${file.url_for()})
-  % elif hasattr(file, 'file_info'):
-  * [:file-download: ${ file.file_info.get("filename") }](${file.url_for()})
-  % else:
-  * [:file-download: ${ str(file) }](${file.url_for()})
-  % endif
-  % endfor 
 
-  % else:
-    Your email has already been delivered to ${courts[0]}
-
-  % for file in final_form_to_file:
-  % if hasattr(file, 'info'):
-  * [:file-download: ${ file.info.get("filename") }](${file.url_for()})
-  % elif hasattr(file, 'file_info'):
-  * [:file-download: ${ file.file_info.get("filename") }](${file.url_for()})
-  % else:
-  * [:file-download: ${ str(file) }](${file.url_for()})
+  % if not (defined('efile') and efile):
+  ${ action_button_html(url_ask([{'recompute': ['efile_and_email']}]), label='E-File', id_tag='efile-button', icon='file-export', size='md')}
   % endif
-  % endfor 
-  % endif
+  
+  ${ al_user_bundle.download_list_html() }
+  
 progress: 100
 section: download
-attachment code: motion_attachment["final"]
 ---
 code: |
-  if has_evidence:
-    if not ocr_task.ready():
+  if exhibit_doc.exhibits.has_exhibits:
+    if not exhibit_doc.ocr_ready():
       waiting_screen
-    if not prepped_exhibits.ok:
-      try:
-        combined_motion_temp = pdf_concatenate(motion_attachment['final'], exhibits, filename="motion_to_stay_eviction.pdf")
-      except:
-        combined_motion_temp = motion_attachment['final']
-    else:      
-      prepped_exhibits.set_attributes(private=False)
-      if prepped_exhibits.size_in_bytes() < 10 * 1024 * 1024:
-        combined_motion_temp = pdf_concatenate(motion_attachment["final"], prepped_exhibits, filename="motion_to_stay_eviction.pdf")
-      else:
-        combined_motion_temp = [motion_attachment["final"]]
-  else:
-    combined_motion_temp = [motion_attachment["final"]]
-  #if no_notice_of_appeal_filed:
-  #  combined_motion_temp.append(Notice_of_Appeal['final'])
-  combined_motion = pdf_concatenate(combined_motion_temp, filename="motion_to_stay_eviction.pdf")
+  done_ocr = True
 ---
 event: waiting_screen
 reload: True
 question: |
-  <i class="fas fa-cog fa-spin"></i> Please wait while we process your documents . . . <i class="fas fa-cog fa-spin"></i>
+  <i class="fas fa-cog fa-spin"></i> Adding OCR text to your document . . .<i class="fas fa-cog fa-spin"></i>
+subquestion: |
+  The Appeals Court requires documents to have searchable text. Since you uploaded exhibits, we are adding
+  that searchable text with optical character recognition (OCR).
+
+  This process started when you uploaded the exhibits, and should take about 
 ---
 objects:
-  - motion_attachment: DADict
+  - motion_attachment: ALDocument.using(enabled=True, has_addendum=False, title="Motion to Stay - Eviction", filename="motion-to-stay-eviction")
 ---
 attachment:
   - name: Motion to Stay Eviction
@@ -690,71 +966,100 @@ attachment:
     filename: Motion_To_Stay_Eviction
     docx template file: Motion_To_Stay_Eviction.docx
 ---
-objects:
-  - exhibits: DAFileList.using(auto_gather=False, gathered=True)
----
+generic object: ALExhibitList
 id: record appendix
 question: |
-  You are required to submit copies of relevant Housing Court documents. 
-subquestion: |  
-  Examples include: 
+  You are required to submit copies of relevant Housing Court documents.
+subquestion: |
+  Examples include:
   
     * the Housing Court's docket 
-    
     * the complaint
-    
     * your answer
-    
     * the judgment
-    
     * filings related to your motion to stay in the Housing Court.
     
   If you entered into an agreement for judgment, include a copy of the agreement for judgment.
 fields:
-  - Do you have any documents to share with the judge?: has_evidence
+  - Do you have any documents to share with the judge?: x.has_exhibits
     datatype: yesnoradio
-  - I state that filing a complete record appendix is impracticable.: no_record_statement
-    datatype: yesno
+  - no label: no_record_statement
+    datatype: checkboxes
+    choices:
+      - I state that filing a complete record appendix is impracticable.: no_record
+    minlength: 1
     show if: 
-      variable: has_evidence      
+      variable: x.has_exhibits
       is: False
-  - Tap "browse" and choose all of the documents you want to upload at once. You can edit or add additional documents on the next screen.: exhibits
+    validation messages:
+      minlength: |
+        If you don't have any documents to share, you must state that filing a complete record appendix is impracticable.
+  - First document title: x[0].title
+    maxlength: 60
+    show if: x.has_exhibits
+  - Tap "browse" and choose all of the documents you want to upload at once.: x[0].pages 
     datatype: files
-    show if: has_evidence
+    show if: x.has_exhibits
     maximum image size: 1024
-    image upload type: jpeg    
+    image upload type: jpeg
+    # Note: we have to limit images to JPG and PNGs, as docassemble will error out if we give it anything else to OCR, including SVGs.
     accept: |
-      "image/*, image/png,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,.pdf"
+      "image/jpeg, image/png,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,.pdf"
+  - note: |
+      You can edit or add additional documents on the next screen.
+    show if: x.has_exhibits
 validation code: |
-  if has_evidence and sum(exhibit.size_in_bytes() for exhibit in exhibits) > (15 * 1024 * 1024):
-    validation_error("Please upload a file smaller than 15 MB.")
+  if x.has_exhibits:
+    if sum(exhibit.size_in_bytes() for exhibit in x[0].pages) > (15 * 1024 * 1024):
+      validation_error("Upload a file smaller than 15 MB.")
+    try:
+      pdf_concatenate(x[0].pages)
+    except:
+      validation_error("Unable to convert this file. Please upload a new one.", field="x[0].pages")
+    x[0].pages.reset_gathered()  # docassemble sets this attribute but we want to force gathering additional pages
 ---
-table: exhibits.table
-rows: exhibits
+table: exhibit_doc.exhibits.table
+rows: exhibit_doc.exhibits
 allow reordering: True
 columns:
-  - File name: showifdef(row_item.attr_name('filename'))
+  - File name: str(", ").join([fn[:18] + ("..." if len(fn[18:]) > 3 else fn[18:]) for fn in [showifdef(p.attr_name('filename')) for p in row_item.pages]])
   # - Size: row_item.size_in_bytes() / 1024 / 1024
-  - Thumbnail: row_item.show(width="100px")  
+  - Thumbnail: row_item.pages.show(width="100px")
 delete buttons: True
 ---
 id: add additional document
 question: |
-  Exhibit document ${i+1}  
+  Exhibit document ${i+1}
 fields:
-  - no label: exhibits[i]
+  - no label: exhibit_doc.exhibits[i]
     datatype: file
     accept: |
       "image/*, image/png,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,.pdf"   
 validation code: |
   # Upload field creates a DAFileList
   # We want it to be a plain DAFile instead
-  if isinstance(exhibits[i], DAFileList):
-    temp_name = exhibits[i].instanceName
-    exhibits[i] = next(iter(exhibits[i]))
+  if isinstance(exhibit_doc.exhibits[i], DAFileList):
+    temp_name = exhibit_doc.exhibits[i].instanceName
+    exhibit_doc.exhibits[i] = next(iter(exhibit_doc.exhibits[i]))
     # Make sure the "instanceName" shows the correct position in the list,
     # instead of showing a nested DAFileList's instanceName
-    exhibits[i].instanceName = temp_name
+    exhibit_doc.exhibits[i].instanceName = temp_name
+---
+objects:
+  - al_court_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, affidavitofindigency_attachment], filename="motion_to_stay_eviction", title="Court bundle", enabled=True)
+  - al_user_bundle: ALDocumentBundle.using(elements=[motion_to_stay_bundle, notice_of_appeal, affidavitofindigency_attachment], filename="motion_to_stay_eviction", title="All Your documents")
+---
+objects:
+  - motion_to_stay_bundle: ALDocumentBundle.using(elements=[motion_attachment, exhibit_doc], title="Motion To Stay (Eviction)", filename="motion_to_stay_eviction")
+---
+objects:
+  - general_cover_sheet: ALDocument.using(title="Cover Sheet", filename="cover-sheet")
+---
+code: |
+  general_cover_sheet.enabled = not can_check_efile
+---
+code: |
+  exhibit_doc.enabled = exhibit_doc.exhibits.has_exhibits
 ---
 id: review exhibits
 question: |
@@ -764,38 +1069,178 @@ subquestion: |
   to move an exhibit up or down in the list. Click "delete" or "add another"
   to change which exhibits you send to the court.
   
-  ${ exhibits.table }
+  ${ exhibit_doc.exhibits.table }
   
-  ${exhibits.add_action() }
-continue button field: review_exhibits 
+  ${exhibit_doc.exhibits.add_action() }
+continue button field: review_exhibits
 ---
+id: review exhibits
+question: |
+  Add the judge's order to seal the case to your exhibits
+subquestion: |
+  You said that the judge ordered your case to be impounded; if you have the judge's order, you
+  can click "add another" to add the order.
+
+  If you already added the judge's order, you can continue.
+  
+  ${ exhibit_doc.exhibits.table }
+  
+  ${exhibit_doc.exhibits.add_action() }
+continue button field: add_judge_seal_order
+---
+code: |
+  email_attachment_too_big = al_court_bundle.as_pdf().size_in_bytes() > 10 * 1024 * 1024
 ---
 id: email to court
 template: email_to_court_template
 subject: |
-  MassAccess submission from ${users} intended for ${courts[0]}
+  MassAccess submission from ${ users } intended for ${ appeals_court }
 content: |
-  % if has_evidence and prepped_exhibits.ok and prepped_exhibits.size_in_bytes() > 10 * 1024 * 1024:
-  **The user provided an attachment that is too large to email.**
-  [Link to exhibits](${ prepped_exhibits.url_for(external=True) } )
+  % if email_attachment_too_big:
+  **The user provided attachments that made the document too large to email.**
+  [Link to submitted motion](${ al_court_bundle.as_pdf('final').url_for(external=True) } )
   % endif
   
   At ${current_datetime().format_datetime()},
   ${users} submitted the attached ${package_title} form(s).
 
+  %if efile_resp.is_ok():
+
+  These forms were e-filed at in the envelope with id ${ envelope_id }.
+
+  % else:
+
+  E-filing was attempted, but failed. All filing information is available here,
+  but please contact the Suffolk LIT Lab so we can correct the issue.
+
+  % endif
+
   &nbsp;        | &nbsp;
   --------------|-----------
   Date of email | ${current_datetime().format_datetime()}
-  Pages | ${num_package_pages }  
+  Pages | ${ al_court_bundle.as_pdf('final').num_pages() }  
   Preferred language | ${ user_preferred_language if user_needs_interpreter else 'English' }
   Mobile phone | ${showifdef('users[0].mobile_number')}
   Other phone | ${showifdef('users[0].phone_number')}
   Email | ${showifdef('users[0].email')}
   Contact details/other | ${showifdef('users[0].other_contact_method')}
-  
+
+
+  % if defined('comments_to_clerk'):
+
   Comments for clerk: 
   
-  ${ showifdef('comments_to_clerk')}
+  ${ comments_to_clerk }
+
+  % endif
   
   Please contact ${users} in the next business day to
   confirm that you received this message.
+---
+attachment:
+  variable name: general_cover_sheet[i]
+  filename: cover-sheet.docx
+  docx template file: general_cover_sheet.docx
+---
+template: email_confirmation
+subject: |
+  Important Motion to Stay (Eviction) e-filing information
+content: |
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>MassAccess</title>
+  </head>
+  <body>
+  <p>Hello ${ users[0].name },</p>
+  <p><strong>Your Motion to Stay (Eviction) forms were sent to the Appeals Count. They will accept or reject your filing.</strong></p>
+  <p>A person in the court has to accept the forms before they are officially filed.</p>
+  <p><strong>What's next?</strong></p>
+  <p>You should receive an email from Odyssey eFileMA (no-reply@efilingmail.tylertech.cloud). Your forms were given an Envelope Number, which will be used to track your filing.</p>
+  <p>The court clerk will review what you filed.</p>
+  <ul>
+    <li>If it looks good, they will <strong>accept</strong> it. You will receive another email from Odyssey eFileMA explaining that the envelope was accepted. The email will include a link to a copy of your court forms with the clerk's stamp.</li>
+    <li>If there is something wrong with the filing, they will <strong>reject</strong> it. You should receive another email from Odyssey eFileMA with an explanation of what needs to be fixed.</li>
+  </ul>
+  <p>Contact the clerk at <a href="tel:+16179214443">617-921-4443</a> if you have questions.</p>
+  <p>Thank you for using Court Forms Online.<br/>
+  <a href="https://courtformsonline.org">Court Forms Online</a>
+  </p>
+  </body>
+  </html>
+---
+template: neutral_email
+subject: |
+  Clerk response to your e-filed Motion to Stay (Eviction)
+content: |
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>MassAccess</title>
+  </head>
+  <body>
+  <p>Hello ${ users[0].name },</p>
+  <p><strong>The Appeals Court clerk has sent a response to your filing in {{ case_title }}.</strong></p>
+
+  <p><q>{{ status }}</q></p>
+
+  <p>{{ message_text }}</p>
+
+  <p>Contact the clerk at <a href="tel:+16179214443">617-921-4443</a> if you have questions.</p>
+
+  <p>Thank you for using Court Forms Online.<br/>
+  <a href="https://courtformsonline.org">Court Forms Online</a>
+  </p>
+  </body>
+  </html>
+---
+template: acceptance_email
+subject: |
+  Clerk response to your e-filed Motion to Stay (Eviction)
+content: |
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>MassAccess</title>
+  </head>
+  <body>
+  <p>Hello ${ users[0].name },</p>
+  <p><strong>The Appeals Court clerk has sent a response to your filing in {{ case_title }}.</strong></p>
+
+  <p><q>{{ status }}</q></p>
+
+  <p>{{ message_text }}</p>
+
+  <p>Contact the clerk at <a href="tel:+16179214443">617-921-4443</a> if you have questions.</p>
+
+  <p>Thank you for using Court Forms Online.<br/>
+  <a href="https://courtformsonline.org">Court Forms Online</a>
+  </p>
+  </body>
+  </html>
+---
+template: rejection_email
+subject: |
+  Clerk response to your e-filed Motion to Stay (Eviction)
+content: |
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>MassAccess</title>
+  </head>
+  <body>
+  <p>Hello ${ users[0].name },</p>
+  <p><strong>The Appeals Court clerk has sent a response to your filing in {{ case_title }}.</strong></p>
+
+  <p><q>{{ status }}</q></p>
+
+  <p>{{ message_text }}</p>
+
+  <p>Contact the clerk at <a href="tel:+16179214443">617-921-4443</a> if you have questions.</p>
+
+  <p>Thank you for using Court Forms Online.<br/>
+  <a href="https://courtformsonline.org">Court Forms Online</a>
+  </p>
+  </body>
+  </html>
+---
