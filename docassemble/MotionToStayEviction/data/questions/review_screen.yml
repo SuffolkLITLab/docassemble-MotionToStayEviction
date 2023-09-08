@@ -1,3 +1,14 @@
+event: review_stay
+code: |
+  review_case_info
+---
+event: review_indigency
+code: |
+  review_case_info
+---
+event: review_efile_info
+code: |
+  review_case_info
 ---
 event: review_case_info
 id: |
