@@ -389,7 +389,7 @@ code: |
 ---
 code: |
   redundant_disclaimers = [
-    "A certificate of service is included."
+    "A certificate of service is included.",
     "All scanned PDFs are text searchable using optical character recognition (OCR)."
   ]
   disclaimers_tmp = sorted(proxy_conn.get_disclaimers(court_id).data, key=lambda yy: yy.get("listorder", yy.get("code")))
