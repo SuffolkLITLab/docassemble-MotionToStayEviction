@@ -43,7 +43,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 setup(name='docassemble.MotionToStayEviction',
-      version='1.0.0',
+      version='1.0.1',
       description=('A motion for the Appeals Court of Massachusetts, to stay an eviction.'),
       long_description='# docassemble.MotionToStayEviction\n\nA docassemble extension.\n\n## Author\n\nMia Bonardi, mbonardi@su.suffolk.edu\n\n',
       long_description_content_type='text/markdown',
