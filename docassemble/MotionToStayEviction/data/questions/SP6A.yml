@@ -110,6 +110,8 @@ code: |
     if not is_initial_filing:
       appeals_case_search.do_what_choice
       appeals_case_search.case_was_found
+      if appeals_case_search.court_id != "appeals:acp" and appeals_case_search.court_id != "appeals:acsj":
+        should_search_for_appeals_court
       lower_court_case.docket_number = appeals_case_search.found_case.docket_number
       previous_case_id = appeals_case_search.found_case.tracking_id
       target_case = appeals_case_search
