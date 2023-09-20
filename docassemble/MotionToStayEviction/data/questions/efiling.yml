@@ -310,6 +310,8 @@ code: |
   timing = 'Initial'
   housing_case_search.do_what_choice = appeals_case_search.do_what_choice
   housing_case_search.court_id = appeals_case_search.court_id
+  del previous_case_id
+  court_id = housing_case_search.court_id
   #housing_case_search.found_case = appeals_case_search.found_case.copy_deep('housing_case_search.found_case')
   #housing_case_search.case_was_found = appeals_case_search.case_was_found
 ---
