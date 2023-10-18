@@ -59,10 +59,14 @@ fields:
 ---
 code: |
   if housing_case_search.do_what_choice == 'docket_lookup':
-    found_courts = all_courts.courts_from_docket_number(housing_case_search.docket_number_from_user)
-    housing_case_search.court_id = found_courts[0].tyler_code
-    if housing_case_search.court_id is None:
-      del housing_case_search.court_id
+    try:
+      found_courts = all_courts.courts_from_docket_number(housing_case_search.docket_number_from_user)
+      housing_case_search.court_id = found_courts[0].tyler_code
+      if housing_case_search.court_id is None:
+        del housing_case_search.court_id
+    except KeyError:
+      # Bad formatted docket number, ignore
+      pass
 ---
 only sets: efile_setup
 # Overrides EFSPIntegration, don't bother getting the court id before this
@@ -861,7 +865,6 @@ subquestion: |
   ${ al_user_bundle.download_list_html() }
   
 progress: 100
-section: download
 ---
 if:
   ready_to_efile
@@ -941,7 +944,6 @@ subquestion: |
   ${ al_user_bundle.download_list_html() }
   
 progress: 100
-section: download
 ---
 code: |
   if exhibit_doc.exhibits.has_exhibits:
