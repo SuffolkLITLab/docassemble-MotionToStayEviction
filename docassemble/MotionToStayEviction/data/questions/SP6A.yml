@@ -364,8 +364,8 @@ continue button field: info_screen
 objects:
   - users: ALPeopleList.using(there_are_any=True)
 ---
-id: housing court division 
-question: | 
+id: housing court division
+question: |
   Select the **Housing Court** department and division where your case was heard.
 fields:
   - no label: housing_court
@@ -375,9 +375,13 @@ fields:
 code: |
   valid_housing_courts = all_courts.filter_courts(["Housing Court", "District Court", "Boston Municipal Court"])
   if can_check_efile and is_initial_filing and housing_case_search.case_was_found:
-    valid_housing_courts = [court for court in valid_housing_courts if court.tyler_code == housing_case_search.found_case.court_id]
-    if len(valid_housing_courts) == 1:
-      housing_court = valid_housing_courts[0]
+    matching_valid_housing_courts = [court for court in valid_housing_courts if court.tyler_code == housing_case_search.found_case.court_id]
+    if len(matching_valid_housing_courts) == 1:
+      housing_court = matching_valid_housing_courts[0]
+    elif len(matching_valid_housing_courts) > 1:
+      # If more than one, people can choose between the matching courts.
+      # Otherwise, they should be able to choose between all of them
+      valid_housing_courts = matching_valid_housing_courts
 ---
 code: |
   just_bmc_courts = all_courts.filter_courts(["Boston Municipal Court"])
