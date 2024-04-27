@@ -13,6 +13,66 @@ include:
 ---
 metadata:
   title: Appeal or Stay Your Eviction
+  short title: |
+    Eviction Appeal
+  description: |
+    If a judge has given your landlord the right to evict you, you can use this interview
+    to appeal or ask for a **stay** (temporary delay) in your eviction.
+
+    It will help you make a motion for the appeals court and a **notice of appeal** that will
+    be filed with the trial court. It can also make a request for a fee waiver (affidavit of 
+    indigency).
+
+    The motion is filed with the Appeals Court and can be efiled.
+  efilable: True
+  can_I_use_this_form: |
+    You can use this interview if the housing or district court judge's decision is final. You must also
+    file a notice of appeal in the housing or district court.
+
+    If you earn less than 150% of the federal poverty level or have enough 
+    expenses, you can electronically file this document for free.
+
+    This interview will make the **affidavit of indigency**, or fee waiver
+    form, for you.
+  before_you_start: |
+    Before you start, you need to get documents from your case in the Housing or District court, including:
+
+    * The docket, or history of decisions by the judge (you can get this online)
+    * A copy of the landlord's summons and complaint
+    * A copy of your answer, if you filed one
+    * A copy of the decision by the judge
+    * A copy of any documents you filed to ask the trial court to delay your eviction
+  maturity: production
+  estimated_completion_minutes: 20
+  estimated_completion_delta: 15
+  languages:
+    - en
+  help_page_url: https://www.masslegalhelp.org/housing-apartments-shelter/eviction/challenging-court-ordered-eviction
+  help_page_title: Challenging a court ordered eviction
+  LIST_topics: 
+    - HO-02-00-00-00
+    - CO-07-02-00-00
+  tags: 
+    - HO-02-00-00-00
+    - CO-07-02-00-00
+  jurisdiction: NAM-US-US+MA
+  original_form: n/a
+  original_form_published_on: 2020-10-01
+  review_date: 2024-04-27
+  form_titles:
+    - Motion to Stay Eviction
+    - Notice of Appeal
+    - Affidavit of Indigency
+  form_numbers:
+    - Affidavit of Indigency (3/23)
+  fees:
+    - Filing fee: 315.00
+  authors:
+    - Mia Bonardi
+    - Quinten Steenhuis
+    - Plocket
+    - Bryce Willey
+  update_notes: |
 ---
 code: |
   bcc_failsafe = "cc@example.com"
