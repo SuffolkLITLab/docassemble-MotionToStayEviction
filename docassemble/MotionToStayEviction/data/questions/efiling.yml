@@ -3,6 +3,63 @@ include:
   - docassemble.EFSPIntegration:efiling_integration.yml
   - docassemble.EFSPIntegration:toga_payments.yml
 ---
+################### Case specific codes ##########################
+# These are most likely to be customized on a per-interview basis and perhaps change over time:
+# 1. Case category (e.g., civil/criminal)
+# 2. Case type (applies to the whole envelope, e.g, motion to stay)
+# 3. Filing type (potentially multiple, one for each document in the envelope).
+# Note: the "_filters" are used for fuzzy matching by name, which can help when a code is removed unexpectedly.
+# Filters are searched in order, so make the left-most the most restrictive and specific.
+# Search URLs:
+# https://efile-test.suffolklitlab.org/jurisdictions/massachusetts/codes/courts?with_names=true
+# https://efile-test.suffolklitlab.org/jurisdictions/massachusetts/codes/courts/appeals:acsj/categories
+# https://efile-test.suffolklitlab.org/jurisdictions/massachusetts/codes/courts/appeals:acsj/case_types?category_id=8151
+# https://efile-test.suffolklitlab.org/jurisdictions/massachusetts/codes/courts/appeals:acsj/filing_types
+---
+code: |
+  motion_to_stay_bundle.filing_type_filters = ['MAC Rule 6.0 - Motion to Stay', 'Rule 6.0 - Motion to Stay', 'Motion to Stay']
+  motion_to_stay_bundle.filing_type_default = '101450'
+---
+code: |
+  affidavitofindigency_attachment.filing_type_filters = ['Indigency Affidavit']
+  affidavitofindigency_attachment.filing_type_default = '8411'
+---
+code: |
+  affidavitofindigency_attachment.document_type_filters = ['impounded']
+  affidavitofindigency_attachment.document_type_default = "6587" # impounded, all fee waivers are impounded by default
+---
+code: |
+  efile_case_category_filters = ['Appeals Court Single Justice - Civil', 'Civil']
+  efile_case_category_default = '8151'
+  efile_case_category_exclude = None
+  efile_case_type_filters = ['Rule 6.0 Motion to Stay']
+  efile_case_type_default = '101447'
+  efile_case_type_exclude = None
+---
+code: |
+  if not is_initial_filing and 'P' in appeals_case_search.docket_number_from_user:
+    court_id = 'appeals:acp'
+  else:
+    court_id = 'appeals:acsj'
+---
+code: |
+  users[i].party_type_filters = ['Defendant/Appellant', 'Defendant/Petitioner']
+  users[i].party_type_default = '1729'
+  users[i].party_type_exclude = None
+---
+code: |
+  other_parties[i].party_type_filters = ['Plaintiff/Appellee', 'Plaintiff/Respondent']
+  other_parties[i].party_type_default = '1736'
+  other_parties[i].party_type_exclude = None
+---
+code: |
+  # Here we set the whole bundle's document_type to the same as the document_type of the motion to stay
+  # Relates to if the case is impounded or not
+  if hasattr(motion_attachment, "document_type"):
+    motion_to_stay_bundle.document_type = motion_attachment.document_type
+---
+################################## End most commonly changed codes ############################
+---
 
 code: |
   trial_court_resp = proxy_conn.get_courts(with_names=True)
@@ -113,46 +170,6 @@ code: |
     elif is_defendant_party(users[0]):
       user_ask_role = 'defendant'
     to_add_participants = [p for p in target_case.found_case.participants if p.instanceName != target_case.self_partip_choice.instanceName and not is_unused_party(p)]
----
-code: |
-  motion_to_stay_bundle.filing_type_filters = ['Motion to stay a judgment MRAP 6(a)', 'MRAP 6(a)']
-  motion_to_stay_bundle.filing_type_default = '6553'
----
-code: |
-  if hasattr(motion_attachment, "document_type"):
-    motion_to_stay_bundle.document_type = motion_attachment.document_type
----
-code: |
-  affidavitofindigency_attachment.filing_type_filters = ['Indigency Affidavit']
-  affidavitofindigency_attachment.filing_type_default = '8411'
----
-code: |
-  affidavitofindigency_attachment.document_type_filters = ['impounded']
-  affidavitofindigency_attachment.document_type_default = "6587" # impounded, all are by default
----
-code: |
-  efile_case_category_filters = ['Appeals Court Single Justice - Civil', 'Civil']
-  efile_case_category_default = '8151'
-  efile_case_category_exclude = None
-  efile_case_type_filters = ['Motion for stay of judgment MRAP 6(a)', 'MRAP 6(a)']
-  efile_case_type_default = '8157'
-  efile_case_type_exclude = None
----
-code: |
-  if not is_initial_filing and 'P' in appeals_case_search.docket_number_from_user:
-    court_id = 'appeals:acp'
-  else:
-    court_id = 'appeals:acsj'
----
-code: |
-  users[i].party_type_filters = ['Defendant/Appellant', 'Defendant/Petitioner']
-  users[i].party_type_default = '1729'
-  users[i].party_type_exclude = None
----
-code: |
-  other_parties[i].party_type_filters = ['Plaintiff/Appellee', 'Plaintiff/Respondent']
-  other_parties[i].party_type_default = '1736'
-  other_parties[i].party_type_exclude = None
 ---
 generic object: DAObject
 id: user chosen filing_type
