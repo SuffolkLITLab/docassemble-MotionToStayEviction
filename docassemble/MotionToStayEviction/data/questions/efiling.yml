@@ -17,7 +17,7 @@ include:
 # https://efile-test.suffolklitlab.org/jurisdictions/massachusetts/codes/courts/appeals:acsj/filing_types
 ---
 code: |
-  motion_to_stay_bundle.filing_type_filters = ['MAC Rule 6.0 - Motion to Stay', 'Rule 6.0 - Motion to Stay', 'Motion to Stay']
+  motion_to_stay_bundle.filing_type_filters = ['MAC Rule 6.0 - Motion to Stay']
   motion_to_stay_bundle.filing_type_default = '101450'
 ---
 code: |
