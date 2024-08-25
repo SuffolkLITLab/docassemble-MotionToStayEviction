@@ -17,8 +17,9 @@ include:
 # https://efile-test.suffolklitlab.org/jurisdictions/massachusetts/codes/courts/appeals:acsj/filing_types
 ---
 code: |
-  motion_to_stay_bundle.filing_type_filters = ['MAC Rule 6.0 - Motion to Stay']
-  motion_to_stay_bundle.filing_type_default = '101450'
+  motion_to_stay_bundle.filing_type_filters = ['Rule 6.0 Motion to Stay']
+  # Prod and Stage have diverged; using prod value here
+  motion_to_stay_bundle.filing_type_default = '12634'
 ---
 code: |
   affidavitofindigency_attachment.filing_type_filters = ['Indigency Affidavit']
@@ -32,8 +33,9 @@ code: |
   efile_case_category_filters = ['Appeals Court Single Justice - Civil', 'Civil']
   efile_case_category_default = '8151'
   efile_case_category_exclude = None
-  efile_case_type_filters = ['Rule 6.0 Motion to Stay']
-  efile_case_type_default = '101447'
+  efile_case_type_filters = ['MAC Rule 6.0 - Motion to Stay']
+  # Prod and stage have diverged; using prod value here
+  efile_case_type_default = '12644'
   efile_case_type_exclude = None
 ---
 code: |
