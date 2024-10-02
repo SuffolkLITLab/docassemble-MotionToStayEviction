@@ -6,6 +6,7 @@ from distutils.util import convert_path
 
 standard_exclude = ('*.pyc', '*~', '.*', '*.bak', '*.swp*')
 standard_exclude_directories = ('.*', 'CVS', '_darcs', './build', './dist', 'EGG-INFO', '*.egg-info')
+
 def find_package_data(where='.', package='', exclude=standard_exclude, exclude_directories=standard_exclude_directories):
     out = {}
     stack = [(convert_path(where), '', package)]
@@ -43,9 +44,9 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 setup(name='docassemble.MotionToStayEviction',
-      version='1.2.1',
+      version='1.2.2',
       description=('A motion for the Appeals Court of Massachusetts, to stay an eviction.'),
-      long_description='# docassemble.MotionToStayEviction\n\nA docassemble extension.\n\n## Author\n\nMia Bonardi, mbonardi@su.suffolk.edu\n\n',
+      long_description='# A Docassemble interview for the Massachusetts Appeals Court Motion to Stay Eviction\r\n\r\nThis is a Docassemble interview to complete the Massachusetts Appeals Court Motion to Stay Eviction forms online. The live interview can be found at [https://www.courtformsonline.org/appeals/#stayeviction](https://www.courtformsonline.org/appeals/#stayeviction).\r\n',
       long_description_content_type='text/markdown',
       author='Mia Bonardi',
       author_email='mbonardi@su.suffolk.edu',
@@ -53,7 +54,7 @@ setup(name='docassemble.MotionToStayEviction',
       url='https://courtformsonline.org',
       packages=find_packages(),
       namespace_packages=['docassemble'],
-      install_requires=['docassemble.MassAppealsCourt>=0.2.3', 'docassemble-EFSPIntegration>=1.4.1', 'docassemble-ALAffidavitOfIndigency>=2.1.2', 'docassemble-MACourts>=0.0.58.3'],
+      install_requires=['docassemble.MassAppealsCourt>=0.2.3'],
       zip_safe=False,
       package_data=find_package_data(where='docassemble/MotionToStayEviction/', package='docassemble.MotionToStayEviction'),
      )
