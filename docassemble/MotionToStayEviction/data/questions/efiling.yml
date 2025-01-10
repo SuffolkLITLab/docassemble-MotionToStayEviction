@@ -33,7 +33,7 @@ code: |
   efile_case_category_filters = ['Appeals Court Single Justice - Civil', 'Civil']
   efile_case_category_default = '8151'
   efile_case_category_exclude = None
-  efile_case_type_filters = ['MAC Rule 6.0 - Motion to Stay']
+  efile_case_type_filters = ['MAC Rule 6.0']
   # Prod and stage have diverged; using prod value here
   efile_case_type_default = '12644'
   efile_case_type_exclude = None
