@@ -53,7 +53,7 @@ setup(name='docassemble.MotionToStayEviction',
       license='The MIT License (MIT)',
       url='https://courtformsonline.org',
       packages=find_namespace_packages(),
-      install_requires=['docassemble.MassAppealsCourt>=0.2.3', 'docassemble-EFSPIntegration>=1.4.1', 'docassemble-ALAffidavitOfIndigency>=2.1.2', 'docassemble-MACourts>=0.0.58.3']
+      install_requires=['docassemble.MassAppealsCourt>=0.2.3', 'docassemble-EFSPIntegration>=1.4.1', 'docassemble-ALAffidavitOfIndigency>=2.1.2', 'docassemble-MACourts>=0.0.58.3'],
       zip_safe=False,
       package_data=find_package_data(where='docassemble/MotionToStayEviction/', package='docassemble.MotionToStayEviction'),
      )
