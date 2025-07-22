@@ -1,6 +1,6 @@
 import os
 import sys
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 from fnmatch import fnmatchcase
 from distutils.util import convert_path
 
@@ -52,9 +52,8 @@ setup(name='docassemble.MotionToStayEviction',
       author_email='mbonardi@su.suffolk.edu',
       license='The MIT License (MIT)',
       url='https://courtformsonline.org',
-      packages=find_packages(),
-      namespace_packages=['docassemble'],
-      install_requires=['docassemble.MassAppealsCourt>=0.2.3'],
+      packages=find_namespace_packages(),
+      install_requires=['docassemble.MassAppealsCourt>=0.2.3', 'docassemble-EFSPIntegration>=1.4.1', 'docassemble-ALAffidavitOfIndigency>=2.1.2', 'docassemble-MACourts>=0.0.58.3']
       zip_safe=False,
       package_data=find_package_data(where='docassemble/MotionToStayEviction/', package='docassemble.MotionToStayEviction'),
      )
