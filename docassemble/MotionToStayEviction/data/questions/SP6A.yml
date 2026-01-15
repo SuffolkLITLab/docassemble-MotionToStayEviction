@@ -149,7 +149,7 @@ code: |
 # Uses max_size from Tyler
 if: can_check_efile
 objects:
-  - exhibit_doc: ALExhibitDocument.using(title="Exhibits", filename='exhibits', bates_prefix="EX-", include_exhibit_cover_page=True, include_table_of_contents=True, add_page_numbers=True, auto_ocr=True, maximum_size=max_total_exhibit_size)
+  - exhibit_doc: ALExhibitDocument.using(title="Exhibits", filename='exhibits', bates_prefix="EX-", include_exhibit_cover_page=True, include_table_of_contents=True, add_page_numbers=True, auto_ocr=True, maximum_size=max_total_exhibit_size, maximum_size_per_doc=max_per_file)
 ---
 if: not can_check_efile
 objects:
@@ -1074,8 +1074,16 @@ fields:
     show if: x.has_exhibits
 validation code: |
   if x.has_exhibits:
-    if sum(exhibit.size_in_bytes() for exhibit in x[0].pages) > (15 * 1024 * 1024):
+    this_doc_size = sum(exhibit.size_in_bytes() for exhibit in x[0].pages)
+    if hasattr(x, 'maximum_size_per_doc'):
+      if this_doc_size > x.maximum_size_per_doc:
+        validation_error(f"This document should be smaller than {humanize.naturalsize(x.maximum_size_per_doc)}")
+    if this_doc_size > (15 * 1024 * 1024):
       validation_error("Upload a file smaller than 15 MB.")
+    if hasattr(x, 'maximum_size'):
+      if this_doc_size > x.maximum_size:
+        suggested_size = x.maximum_size - this_doc_size
+        validation_error(f"All exhibits combined must be smaller than {humanize.naturalsize(x.maximum_size)}. Upload a file smaller than {humanize.naturalsize(suggested_size)}.")
     try:
       pdf_concatenate(x[0].pages)
     except:

@@ -91,9 +91,15 @@ only sets:
   - max_mb_per_file
 code: |
   allowed_sizes = get_max_allowed_sizes(proxy_conn, court_id)
+  one_mb = 1024 * 1024
   if allowed_sizes:
     max_mb_per_file = allowed_sizes[0] / 1024 / 1024
-    max_total_exhibit_size = allowed_sizes[1]
+    if allowed_size[0] > one_mb:
+      # OCR will increase file sizes a bit, so save some room
+      max_per_file = allowed_sizes[0] - one_mb
+    else:
+      max_per_file = allowed_sizes[0]
+    max_total_exhibit_size = allowed_sizes[1] - one_mb
   else:
     max_mb_per_file = 15
     max_total_exhibit_size = 50 * 1024 * 1024
