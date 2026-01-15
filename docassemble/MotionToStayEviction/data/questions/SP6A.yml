@@ -574,7 +574,7 @@ question: |
   Have you received a {48-hour notice}?
 subquestion: |
   <CENTER>
-  [${eviction_notice.show(width='20em')}](${eviction_notice.url_for()})
+  <a href="${eviction_notice.url_for()}">${ eviction_notice.show(width='20em') }</a>
   </CENTER>
   
   A 48-hour notice can look like the one above.
@@ -586,7 +586,7 @@ terms:
     A notice from the constable or sheriff telling you they will move you out on a certain day and time.
 ---
 objects:
-  - eviction_notice: DAStaticFile.using(filename='48_Hour_Notice.png', alt_text='48-Hour Notice')
+  - eviction_notice: DAStaticFile.using(filename='48_Hour_Notice.png', alt_text='An example 48-Hour Notice. Title reads "48 hours notice to vacate premises", will be addressed to the tenant, signed by a landlord or attorney, and will include the contact information of the constable.')
 ---
 id: 48 hour notice details
 question: |
