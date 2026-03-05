@@ -21,7 +21,7 @@ Feature: Get through SP6A interview
       | var | value | trigger |
       | acknowledged_information_use['I accept the terms of use.'] | True | |
       | is_initial_filing | True | |
-      | user_wants_affidavit | False | |
+      | user_wants_efile | False | |
       | users[0].name.first | Bob | |
       | users[0].name.last | Ma | |
       | users[0].email | example@example.com | |
@@ -76,7 +76,7 @@ Feature: Get through SP6A interview
       | var | value | trigger |
       | acknowledged_information_use['I accept the terms of use.'] | True | |
       | is_initial_filing | True | |
-      | user_wants_affidavit | True | |
+      | user_wants_efile | True | |
     And I set the variable "my_username" to secret "TYLER_EMAIL"
     And I set the variable "my_password" to secret "TYLER_PASSWORD"
     Then I tap to continue
@@ -150,7 +150,7 @@ Feature: Get through SP6A interview
       | var | value | trigger |
       | acknowledged_information_use['I accept the terms of use.'] | True | |
       | is_initial_filing | True | |
-      | user_wants_affidavit | True | |
+      | user_wants_efile | True | |
     And I set the variable "my_username" to secret "TYLER_EMAIL"
     And I set the variable "my_password" to secret "TYLER_PASSWORD"
     Then I tap to continue
