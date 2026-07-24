@@ -85,6 +85,7 @@ code: |
   motion_to_stay_bundle.filing_parties = ['users[0]']
   motion_to_stay_bundle.filing_action = 'efile'
 ---
+# TODO: has been moved to EFSPIntegration (v1.8.0), remove here once deployed 
 if: can_check_efile
 only sets:
   - max_total_exhibit_size
