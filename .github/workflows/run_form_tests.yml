@@ -1,0 +1,55 @@
+name: ALKiln automatic tests on GitHub Server
+
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      tags:
+        required: False
+        description: 'Optional. Use a "tag expression" specify which tagged tests to run (https://cucumber.io/docs/cucumber/api/#tag-expressions)'
+      # `show_docker_output` is an experimental ALKiln feature
+      show_docker_output:
+        required: false
+        default: false
+        type: boolean
+        description: 'Experimental feature. Show the docker logs while building the GitHub server container. It will also save the docker log artifact. This might show sensitive config information.'
+      # To run your tests on a schedule, delete the first "#" symbol at the beginning of each line below.
+      ## Also see https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
+      ## Also see https://crontab.guru/examples.html
+      #schedule:
+      #  - cron: '0 1 * * TUE'
+
+jobs:
+
+  alkiln-github-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x]
+      
+    steps:
+      # Place the root directory in this branch to access relative paths to action files
+      - uses: actions/checkout@v4
+
+      - name: "ALKiln - Start the isolated temporary docassemble server on GitHub"
+        id: github_server
+        uses: suffolkLITLab/ALKiln/action_for_github_server@v5
+        with:
+          SHOW_DOCKER_OUTPUT: "${{ github.event.inputs.show_docker_output }}"
+          CONFIG_CONTENTS: "${{ secrets.CONFIG_CONTENTS }}"
+      - run: echo "ALKiln finished starting the isolated GitHub docassemble server"
+        shell: bash
+
+      - name: "Run ALKiln tests"
+        if: ${{ success() }}
+        id: alkiln
+        uses: suffolkLITLab/ALKiln@v5
+        with:
+          # Required inputs. See https://assemblyline.suffolklitlab.org/docs/alkiln/writing/#sandbox-inputs
+          SERVER_URL: "${{ steps.github_server.outputs.SERVER_URL }}"
+          DOCASSEMBLE_DEVELOPER_API_KEY: "${{ steps.github_server.outputs.DOCASSEMBLE_DEVELOPER_API_KEY }}"
+          INSTALL_METHOD: "server"
+          # To learn more about these optional inputs, see
+          # https://assemblyline.suffolklitlab.org/docs/alkiln/writing/#optional-inputs
+          # ALKILN_TAG_EXPRESSION: "${{ env.ALKILN_TAG_EXPRESSION }}"
+          # ALKILN_VERSION: ""
