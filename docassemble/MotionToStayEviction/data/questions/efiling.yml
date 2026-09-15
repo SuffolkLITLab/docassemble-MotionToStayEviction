@@ -296,6 +296,7 @@ fields:
   - Case number: housing_case_search.non_indexed_docket_number
 ---
 event: should_search_for_housing_court
+id: "you need to enter a housing court docket number"
 question: |
   You need to enter a Housing Court Docket Number
 subquestion: |
@@ -309,6 +310,7 @@ subquestion: |
   ${ action_button_html(url_action('correct_to_appeals_docket'), label=housing_case_search.docket_number_from_user + " is my Appeals docket number")}
 ---
 event: should_search_for_appeals_court
+id: "you need to enter an appeals court docket number"
 question: |
   You need to enter an Appeals Court Docket Number
 subquestion: |
@@ -380,7 +382,7 @@ code: |
 code: |
   appeals_case_search.case_number_format_template = explain_appeals_docket_format_template
 ---
-id: case lookup
+id: "case lookup 2"
 question: |
   Find your Appeals court case
 fields:
