@@ -133,7 +133,7 @@ only sets: efile_setup
 code: |
   efile_setup = 'appeals' in available_efile_courts
 ---
-id: housing trial court
+id: "housing trial court 2"
 question: |
   Which Appeals court is your case in?
 fields:
@@ -816,7 +816,7 @@ subquestion:  |
   ${ collapse_template(public_interest_explainer)}
 
 fields:
-  - no label: public_interest_harm_yesno
+  - "Does your Motion to Stay have an effect on the **{public interest}**?": public_interest_harm_yesno
     datatype: yesnoradio
   - What effect would your Motion to Stay have on the **public interest**?: public_interest_harm
     input type: area 
@@ -928,7 +928,7 @@ progress: 100
 ---
 if:
   ready_to_efile
-id: download form
+id: "download form 2"
 event: download
 decoration: file-download
 question: |
@@ -1013,6 +1013,7 @@ code: |
 ---
 event: waiting_screen
 reload: True
+id: "i class fas fa cog fa spin i adding ocr text to your document i class fas fa cog fa spin i"
 question: |
   <i class="fas fa-cog fa-spin"></i> Adding OCR text to your document . . .<i class="fas fa-cog fa-spin"></i>
 subquestion: |
@@ -1047,7 +1048,7 @@ subquestion: |
 fields:
   - Do you have any documents to share with the judge?: x.has_exhibits
     datatype: yesnoradio
-  - no label: no_record_statement
+  - "You are required to submit copies of relevant Housing Court documents.": no_record_statement
     datatype: checkboxes
     choices:
       - I state that filing a complete record appendix is impracticable.: no_record
@@ -1146,7 +1147,7 @@ subquestion: |
   ${exhibit_doc.exhibits.add_action() }
 continue button field: review_exhibits
 ---
-id: review exhibits
+id: "review exhibits 2"
 question: |
   Add the judge's order to seal the case to your exhibits
 subquestion: |
