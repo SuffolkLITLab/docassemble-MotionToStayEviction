@@ -47,6 +47,9 @@ jobs:
         if: ${{ success() }}
         id: alkiln
         uses: suffolkLITLab/ALKiln@v5
+        env:
+          TYLER_EMAIL: "${{ secrets.TYLER_EMAIL }}"
+          TYLER_PASSWORD: "${{ secrets.TYLER_PASSWORD }}"
         with:
           # Required inputs. See https://assemblyline.suffolklitlab.org/docs/alkiln/writing/#sandbox-inputs
           SERVER_URL: "${{ steps.github_server.outputs.SERVER_URL }}"
