@@ -35,6 +35,9 @@ jobs:
         id: github_server
         uses: suffolkLITLab/ALKiln/action_for_github_server@v5
         with:
+          # ALKiln's continue-button selector needs an update for docassemble 1.10.8:
+          # https://github.com/SuffolkLITLab/ALKiln/issues/1117
+          DOCASSEMBLE_IMAGE: "jhpyle/docassemble:1.10.7"
           SHOW_DOCKER_OUTPUT: "${{ github.event.inputs.show_docker_output }}"
           CONFIG_CONTENTS: "${{ secrets.CONFIG_CONTENTS }}"
       - run: echo "ALKiln finished starting the isolated GitHub docassemble server"
