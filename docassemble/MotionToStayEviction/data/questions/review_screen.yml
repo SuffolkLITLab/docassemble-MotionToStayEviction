@@ -333,7 +333,7 @@ subquestion: |
 continue button field: |
   exhibit_doc.revisit
 id: |
-  revisit exhibit_doc
+  revisit exhibit_doc 2
 question: |
   Edit your answers about Exhibit Doc
 subquestion: |
@@ -342,7 +342,7 @@ subquestion: |
 continue button field: |
   users.revisit
 id: |
-  revisit users
+  revisit users 2
 question: |
   Edit your answers about Users
 subquestion: |
