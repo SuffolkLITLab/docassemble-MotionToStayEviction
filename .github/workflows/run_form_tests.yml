@@ -54,5 +54,7 @@ jobs:
           INSTALL_METHOD: "server"
           # To learn more about these optional inputs, see
           # https://assemblyline.suffolklitlab.org/docs/alkiln/writing/#optional-inputs
-          # ALKILN_TAG_EXPRESSION: "${{ env.ALKILN_TAG_EXPRESSION }}"
+          # E-filing scenarios require a configured Tyler proxy. The isolated
+          # server has no CONFIG_CONTENTS secret, so run them only by request.
+          ALKILN_TAG_EXPRESSION: "${{ github.event.inputs.tags || 'not @efile' }}"
           # ALKILN_VERSION: ""
