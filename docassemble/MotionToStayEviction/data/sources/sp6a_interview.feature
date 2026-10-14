@@ -1,5 +1,13 @@
 Feature: Get through SP6A interview
 
+  This file:
+  [x] Test that each interview starts without an error.
+  [x] Contains some additional example Steps. They use fake values and are commented out with a "#" so they won't run.
+
+  These tests are made to work with the ALKiln testing framework, an automated testing framework made under the Document Assembly Line Project.
+
+  Want to disable the tests? Want to learn more? See ALKiln's docs: https://suffolklitlab.github.io/docassemble-AssemblyLine-documentation/docs/automated_integrated_testing
+
   Runs the `SP6A.yml` interview to completion, with several different variations.
 
   Some example docket numbers:
@@ -240,6 +248,6 @@ Feature: Get through SP6A interview
     Given I start the interview at "SP6A.yml"
     And the maximum seconds for each Step in this Scenario is 40
 
-  @sp6a_interview @si6 @efile
+  @sp6a_interview @si6 @SPA
   Scenario: sp6a again?
     Given I start the interview at "SP6A.yml"
